@@ -3572,4 +3572,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routingAdBlockSummary => 'Local domain filter';
+
+  @override
+  String get batteryOptimizationTitle => 'Battery optimization';
+
+  @override
+  String get batteryOptimizationExempt => 'Unrestricted background access';
+
+  @override
+  String get batteryOptimizationRestricted => 'Restricted background access';
+
+  @override
+  String get batteryOptimizationUnavailable => 'Unavailable on this device';
+
+  @override
+  String get batteryOptimizationChecking => 'Checking system settings…';
+
+  @override
+  String get batteryOptimizationDescription =>
+      'Allow background access if VPN stops when the screen is off. This may increase battery use; your device may have additional restrictions.';
+
+  @override
+  String get batteryOptimizationOpenFailed =>
+      'Could not open battery settings. Open them from Android settings.';
 }

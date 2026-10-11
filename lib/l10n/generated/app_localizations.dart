@@ -6323,6 +6323,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Local domain filter'**
   String get routingAdBlockSummary;
+
+  /// No description provided for @batteryOptimizationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimization'**
+  String get batteryOptimizationTitle;
+
+  /// No description provided for @batteryOptimizationExempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrestricted background access'**
+  String get batteryOptimizationExempt;
+
+  /// No description provided for @batteryOptimizationRestricted.
+  ///
+  /// In en, this message translates to:
+  /// **'Restricted background access'**
+  String get batteryOptimizationRestricted;
+
+  /// No description provided for @batteryOptimizationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable on this device'**
+  String get batteryOptimizationUnavailable;
+
+  /// No description provided for @batteryOptimizationChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking system settings…'**
+  String get batteryOptimizationChecking;
+
+  /// No description provided for @batteryOptimizationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow background access if VPN stops when the screen is off. This may increase battery use; your device may have additional restrictions.'**
+  String get batteryOptimizationDescription;
+
+  /// No description provided for @batteryOptimizationOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open battery settings. Open them from Android settings.'**
+  String get batteryOptimizationOpenFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -46,6 +46,8 @@ object MeowDefaultNetworkMonitor {
     private var appliedInterfaceKey: String? = null
     private var heartbeatFuture: ScheduledFuture<*>? = null
     private var pendingNotifyRunnable: Runnable? = null
+    private var interfaceRetryFuture: ScheduledFuture<*>? = null
+    private val interfaceRetryDelaysMillis = longArrayOf(250, 500, 1_000, 2_000, 4_000, 8_000)
 
     private data class NetworkCandidate(
         val network: Network,
@@ -134,7 +136,7 @@ object MeowDefaultNetworkMonitor {
         }
         Log.i(TAG, "stop")
         MeowDiagnostics.log(TAG, "stop current=${describeCurrentState()}")
-        notifyDebounceGeneration.incrementAndGet()
+        advanceNotifyGeneration()
         networkInterfaceGeneration.incrementAndGet()
         MeowVpnService.setUnderlyingNetwork(null, "monitor_stop")
         stopHeartbeat()
@@ -203,7 +205,8 @@ object MeowDefaultNetworkMonitor {
 
     private fun listenerInterfaceLikelyStale(network: Network): Boolean {
         val name = MeowApplication.connectivity.getLinkProperties(network)?.interfaceName ?: return true
-        return runCatching { NetworkInterface.getByName(name)?.index ?: -1 }.getOrDefault(-1) < 0
+        val index = runCatching { NetworkInterface.getByName(name)?.index ?: -1 }.getOrDefault(-1)
+        return index < 0 || synchronized(lock) { appliedInterfaceKey != "$network:$name:$index" }
     }
 
     fun require(): Network {
@@ -322,7 +325,7 @@ object MeowDefaultNetworkMonitor {
             appliedInterfaceKey = null
             interfaceUpdateGate.reset()
         }
-        notifyDebounceGeneration.incrementAndGet()
+        advanceNotifyGeneration()
         if (newListener != null) {
             MeowDiagnostics.log(
                 TAG,
@@ -361,7 +364,7 @@ object MeowDefaultNetworkMonitor {
             }
         }
         if (detached) {
-            notifyDebounceGeneration.incrementAndGet()
+            advanceNotifyGeneration()
             MeowDiagnostics.log(TAG, "listener_detached current=${describeCurrentState()}")
         } else {
             MeowDiagnostics.log(TAG, "stale_listener_detach_ignored")
@@ -379,6 +382,18 @@ object MeowDefaultNetworkMonitor {
     }
 
     /** Start is not ready for URLTest until libbox has accepted the physical interface. */
+    fun reassertDefaultInterfaceAfterStart(): Boolean {
+        val applied = reassertDefaultInterfaceAndWait("after_start_or_reload_service")
+        if (!applied) {
+            // A successful TUN start is not a terminal failure just because
+            // Android has not accepted its upstream yet. Keep readiness false
+            // and let the same bounded, cancellable native recovery run.
+            reassertDefaultInterface("post_start_interface_pending")
+        }
+        return applied
+    }
+
+    /** Synchronous acknowledgement; a cached pre-TUN delivery is not enough. */
     fun reassertDefaultInterfaceAndWait(reason: String, timeoutMs: Long = 1_500L): Boolean {
         val deadline = System.currentTimeMillis() + timeoutMs
         repeat(3) {
@@ -391,7 +406,7 @@ object MeowDefaultNetworkMonitor {
             }
             val remaining = deadline - System.currentTimeMillis()
             if (remaining <= 0L) return false
-            val generation = notifyDebounceGeneration.incrementAndGet()
+            val generation = advanceNotifyGeneration()
             val updated = runCatching {
                 notifyExecutor.submit<Boolean> {
                     notifyListenerInternal(generation, null, force = true)
@@ -459,15 +474,14 @@ object MeowDefaultNetworkMonitor {
     }
 
     private fun notifyListener(immediate: Boolean = false, force: Boolean = false) {
-        val generation = notifyDebounceGeneration.incrementAndGet()
+        val generation = advanceNotifyGeneration()
         val capturedNetwork = synchronized(lock) {
             if (listener == null) return
             currentNetwork
         }
         val runnable = Runnable {
             notifyExecutor.execute {
-                runCatching { notifyListenerInternal(generation, capturedNetwork, force) }
-                    .onFailure { Log.e(TAG, "notifyListenerInternal failed", it) }
+                dispatchInterfaceUpdate(generation, capturedNetwork, force, 0)
             }
         }
         networkHandler.post {
@@ -478,6 +492,35 @@ object MeowDefaultNetworkMonitor {
             } else {
                 networkHandler.postDelayed(runnable, NETWORK_CHANGE_DEBOUNCE_MS)
             }
+        }
+    }
+
+    private fun advanceNotifyGeneration(): Long = synchronized(lock) {
+        interfaceRetryFuture?.cancel(false)
+        interfaceRetryFuture = null
+        notifyDebounceGeneration.incrementAndGet()
+    }
+
+    private fun dispatchInterfaceUpdate(generation: Long, network: Network?, force: Boolean, attempt: Int) {
+        val updated = runCatching { notifyListenerInternal(generation, network, force) }
+            .onFailure { MeowDiagnostics.log(TAG, "interface_update_failed attempt=$attempt", it) }
+            .getOrDefault(false)
+        if (updated) return
+        synchronized(lock) {
+            if (listener == null || notifyDebounceGeneration.get() != generation) return
+            if (attempt >= interfaceRetryDelaysMillis.size) {
+                MeowDiagnostics.log(TAG, "interface_retry_exhausted attempts=${attempt + 1}")
+                return
+            }
+            interfaceRetryFuture?.cancel(false)
+            interfaceRetryFuture = heartbeatExecutor.schedule({
+                if (notifyDebounceGeneration.get() != generation) return@schedule
+                notifyExecutor.execute {
+                    // Resolve the current physical network again. Never pin the
+                    // network captured before a handover or a Doze exit.
+                    dispatchInterfaceUpdate(generation, null, false, attempt + 1)
+                }
+            }, interfaceRetryDelaysMillis[attempt], TimeUnit.MILLISECONDS)
         }
     }
 
@@ -584,7 +627,9 @@ object MeowDefaultNetworkMonitor {
         }
         val notifyKey = "$effectiveNetwork:$interfaceName:$index"
         val gateDecision = interfaceUpdateGate.evaluate(notifyKey, force)
-        if (!gateDecision.shouldDispatch) return false
+        if (!gateDecision.shouldDispatch) {
+            return synchronized(lock) { listener === currentListener && appliedInterfaceKey == notifyKey }
+        }
         Log.i(TAG, "updateDefaultInterface: $interfaceName index=$index")
         MeowDiagnostics.log(
             TAG,
@@ -592,7 +637,8 @@ object MeowDefaultNetworkMonitor {
                 "duplicate=${gateDecision.duplicate} " +
                 "current=${describeNetwork(effectiveNetwork)}",
         )
-        MeowVpnService.setUnderlyingNetwork(
+        val bindingRequired = MeowVpnService.requiresUnderlyingNetworkBinding()
+        val bindingApplied = MeowVpnService.setUnderlyingNetwork(
             effectiveNetwork,
             if (force && gateDecision.duplicate) {
                 "default_interface_reassert"
@@ -608,7 +654,14 @@ object MeowDefaultNetworkMonitor {
             interfaceUpdateGate.failed(notifyKey)
             Log.e(TAG, "updateDefaultInterface failed", it)
         }.isSuccess
-        if (!updated) return false
+        if (!updated || (bindingRequired && !bindingApplied)) {
+            interfaceUpdateGate.failed(notifyKey)
+            synchronized(lock) {
+                if (listener === currentListener) appliedInterfaceKey = null
+            }
+            MeowDiagnostics.log(TAG, "interface_not_ready coreApplied=$updated bindingApplied=$bindingApplied bindingRequired=$bindingRequired")
+            return false
+        }
         val stillCurrent = synchronized(lock) {
             (listener === currentListener && notifyDebounceGeneration.get() == generation).also {
                 if (it) appliedInterfaceKey = notifyKey

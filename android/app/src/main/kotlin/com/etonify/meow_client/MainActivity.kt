@@ -2248,6 +2248,17 @@ class MainActivity : FlutterFragmentActivity() {
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
+            "meow_client/battery_optimization",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getStatus" -> result.success(BatteryOptimizationSettings.getStatus(this))
+                "openSettings" -> result.success(BatteryOptimizationSettings.openSettings(this))
+                else -> result.notImplemented()
+            }
+        }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
             quickSettingsMethodChannelName,
         ).setMethodCallHandler { call, result ->
             if (call.method != "requestAddTile") {

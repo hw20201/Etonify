@@ -1424,6 +1424,13 @@
   "routingBlockLeaksCompact": "Блокировать STUN/WebRTC",
   "routingBlockLeaksSummary": "Ограничивает обход прокси через WebRTC",
   "routingBypassLocalSummary": "Локальные адреса работают напрямую",
-  "routingAdBlockSummary": "Локальный фильтр доменов"
+  "routingAdBlockSummary": "Локальный фильтр доменов",
+  "batteryOptimizationTitle": "Оптимизация батареи",
+  "batteryOptimizationExempt": "Работа в фоне без ограничений",
+  "batteryOptimizationRestricted": "Работа в фоне ограничена",
+  "batteryOptimizationUnavailable": "Недоступно на этом устройстве",
+  "batteryOptimizationChecking": "Проверяем системные настройки…",
+  "batteryOptimizationDescription": "Разрешите работу в фоне, если VPN отключается при выключенном экране. Это может увеличить расход батареи. У прошивки могут быть дополнительные ограничения.",
+  "batteryOptimizationOpenFailed": "Не удалось открыть настройки батареи. Откройте их в настройках Android."
 
 }

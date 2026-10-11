@@ -3577,4 +3577,27 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get routingAdBlockSummary => 'Локальный фильтр доменов';
+
+  @override
+  String get batteryOptimizationTitle => 'Оптимизация батареи';
+
+  @override
+  String get batteryOptimizationExempt => 'Работа в фоне без ограничений';
+
+  @override
+  String get batteryOptimizationRestricted => 'Работа в фоне ограничена';
+
+  @override
+  String get batteryOptimizationUnavailable => 'Недоступно на этом устройстве';
+
+  @override
+  String get batteryOptimizationChecking => 'Проверяем системные настройки…';
+
+  @override
+  String get batteryOptimizationDescription =>
+      'Разрешите работу в фоне, если VPN отключается при выключенном экране. Это может увеличить расход батареи. У прошивки могут быть дополнительные ограничения.';
+
+  @override
+  String get batteryOptimizationOpenFailed =>
+      'Не удалось открыть настройки батареи. Откройте их в настройках Android.';
 }

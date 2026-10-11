@@ -4,6 +4,8 @@ import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
+import android.net.Network
+import android.net.VpnService
 import com.etonify.meow_client.MeowApplication
 import io.nekohasekai.libbox.InterfaceUpdateListener
 import java.net.NetworkInterface
@@ -17,22 +19,257 @@ import java.util.concurrent.atomic.AtomicLong
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.Implements
+import org.robolectric.annotation.Implementation
 import org.robolectric.shadows.ShadowNetwork
 import org.robolectric.shadows.ShadowNetworkInfo
 import org.robolectric.util.ReflectionHelpers
 
 @RunWith(RobolectricTestRunner::class)
-@Config(application = MeowApplication::class, sdk = [28], manifest = Config.NONE)
+@Config(application = MeowApplication::class, sdk = [28], manifest = Config.NONE,
+    shadows = [DefaultInterfaceReassertTest.BindingShadow::class])
 class DefaultInterfaceReassertTest {
+    private var originalRetryDelays: LongArray? = null
+    @Implements(VpnService::class)
+    class BindingShadow {
+        companion object {
+            @Volatile var accept = true
+            @Volatile var acceptFallback = false
+            @Volatile var lastExplicitNetwork: Network? = null
+            val attempts = AtomicInteger()
+        }
+
+        @Implementation
+        fun setUnderlyingNetworks(networks: Array<Network>?): Boolean {
+            attempts.incrementAndGet()
+            if (networks != null) lastExplicitNetwork = networks.firstOrNull()
+            return accept || (networks == null && acceptFallback)
+        }
+    }
+
     @After
     fun tearDown() {
         MeowDefaultNetworkMonitor.setListener(null)
         MeowDefaultNetworkMonitor.stop()
+        ReflectionHelpers.setStaticField(MeowVpnService::class.java, "currentService", null)
+        BindingShadow.accept = true
+        BindingShadow.acceptFallback = false
+        BindingShadow.lastExplicitNetwork = null
+        BindingShadow.attempts.set(0)
+        originalRetryDelays?.let { saved ->
+            val delays = ReflectionHelpers.getField<LongArray>(MeowDefaultNetworkMonitor, "interfaceRetryDelaysMillis")
+            saved.copyInto(delays)
+        }
+    }
+
+    @Test
+    fun `rejected Android binding is not reported ready despite successful core delivery`() {
+        installVpnOwner()
+        BindingShadow.accept = false
+        val updates = AtomicInteger()
+        installInterface { updates.incrementAndGet() }
+
+        assertTrue("libbox still needs the physical interface before TUN establishment", updates.get() > 0)
+        assertFalse("a failed Android binding must not report ready", MeowDefaultNetworkMonitor.currentInterfaceState().available)
+        assertFalse(MeowDefaultNetworkMonitor.reassertDefaultInterfaceAndWait("rejected", 300))
+    }
+
+    @Test
+    fun `failed forced binding clears previously ready interface`() {
+        installVpnOwner()
+        installInterface {}
+        assertTrue(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+        BindingShadow.accept = false
+
+        assertFalse(MeowDefaultNetworkMonitor.reassertDefaultInterfaceAndWait("binding_lost", 300))
+        assertFalse(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    private fun installVpnOwner() {
+        val service = Robolectric.buildService(MeowVpnService::class.java).get()
+        // Do not start JNI. This is the same native owner used by monitor binding.
+        ReflectionHelpers.setStaticField(MeowVpnService::class.java, "currentService", service)
+    }
+
+    @Test
+    fun `system managed fallback does not acknowledge rejected explicit binding`() {
+        installVpnOwner()
+        BindingShadow.accept = false
+        BindingShadow.acceptFallback = true
+        installInterface {}
+        assertFalse(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    @Test
+    fun `rejected binding is retried in background without an Activity`() {
+        installVpnOwner()
+        BindingShadow.accept = false
+        installInterface {}
+        BindingShadow.accept = true
+        drainPendingInterfaceJobs()
+
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+        while (!MeowDefaultNetworkMonitor.currentInterfaceState().available && System.nanoTime() < deadline) {
+            Thread.sleep(10)
+        }
+        assertTrue("native retries must recover without Flutter", MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    private fun drainPendingInterfaceJobs() {
+        val handler = ReflectionHelpers.getField<android.os.Handler>(MeowDefaultNetworkMonitor, "networkHandler")
+        shadowOf(handler.looper).idle()
+        val executor = ReflectionHelpers.getField<ExecutorService>(MeowDefaultNetworkMonitor, "notifyExecutor")
+        executor.submit {}.get(2, TimeUnit.SECONDS)
+    }
+
+    @Test
+    fun `stop cancels pending native retry even when listener has not detached yet`() {
+        installVpnOwner()
+        MeowDefaultNetworkMonitor.start()
+        BindingShadow.accept = false
+        installInterface {}
+        drainPendingInterfaceJobs()
+        MeowDefaultNetworkMonitor.stop()
+        val afterStop = BindingShadow.attempts.get()
+        Thread.sleep(400)
+        assertEquals(afterStop, BindingShadow.attempts.get())
+    }
+
+    @Test
+    fun `failed binding retries end instead of looping indefinitely`() {
+        val delays = ReflectionHelpers.getField<LongArray>(MeowDefaultNetworkMonitor, "interfaceRetryDelaysMillis")
+        originalRetryDelays = delays.clone()
+        delays.fill(50)
+        installVpnOwner()
+        BindingShadow.accept = false
+        installInterface {}
+        drainPendingInterfaceJobs()
+        val afterInitial = BindingShadow.attempts.get()
+        Thread.sleep(550)
+        val afterRetries = BindingShadow.attempts.get()
+        assertEquals("six retries, each with explicit binding and safe fallback", afterInitial + 12, afterRetries)
+        Thread.sleep(200)
+        assertEquals(afterRetries, BindingShadow.attempts.get())
+        assertFalse(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    @Test
+    fun `late link properties recover without another Android callback`() {
+        installVpnOwner()
+        installInterface(includeLinkProperties = false) {}
+        drainPendingInterfaceJobs()
+        assertFalse(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+        val network = ShadowNetwork.newInstance(101)
+        val physical = NetworkInterface.getNetworkInterfaces().toList().first { it.index >= 0 }
+        shadowOf(MeowApplication.connectivity).setLinkProperties(network, LinkProperties().apply { interfaceName = physical.name })
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+        while (!MeowDefaultNetworkMonitor.currentInterfaceState().available && System.nanoTime() < deadline) Thread.sleep(10)
+        assertTrue(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    @Test
+    fun `listener replacement cancels retries belonging to the old listener`() {
+        installVpnOwner()
+        BindingShadow.accept = false
+        val oldUpdates = AtomicInteger()
+        installInterface { oldUpdates.incrementAndGet() }
+        drainPendingInterfaceJobs()
+        BindingShadow.accept = true
+        val newUpdates = AtomicInteger()
+        installInterface { newUpdates.incrementAndGet() }
+        val oldUpdatesAfterReplacement = oldUpdates.get()
+        Thread.sleep(400)
+        drainPendingInterfaceJobs()
+        assertEquals(oldUpdatesAfterReplacement, oldUpdates.get())
+        assertTrue(newUpdates.get() > 0)
+        assertTrue(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    @Test
+    fun `pending retry resolves the new physical network instead of its captured network`() {
+        installVpnOwner()
+        BindingShadow.accept = false
+        installInterface {}
+        drainPendingInterfaceJobs()
+        val shadow = shadowOf(MeowApplication.connectivity)
+        shadow.clearAllNetworks()
+        val nextNetwork = ShadowNetwork.newInstance(202)
+        val info = ShadowNetworkInfo.newInstance(
+            NetworkInfo.DetailedState.CONNECTED, ConnectivityManager.TYPE_MOBILE, 0, true, true,
+        )
+        shadow.addNetwork(nextNetwork, info)
+        val capabilities = NetworkCapabilities()
+        shadowOf(capabilities).apply {
+            addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
+            addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+            addCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        }
+        shadow.setNetworkCapabilities(nextNetwork, capabilities)
+        val physical = NetworkInterface.getNetworkInterfaces().toList().first { it.index >= 0 }
+        shadow.setLinkProperties(nextNetwork, LinkProperties().apply { interfaceName = physical.name })
+        BindingShadow.accept = true
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+        while (!MeowDefaultNetworkMonitor.currentInterfaceState().available && System.nanoTime() < deadline) Thread.sleep(10)
+        assertTrue(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+        assertEquals(nextNetwork, BindingShadow.lastExplicitNetwork)
+    }
+
+    @Test
+    fun `post TUN rejection keeps native recovery alive until delayed binding succeeds`() {
+        installVpnOwner()
+        installInterface {}
+        BindingShadow.accept = false
+        BindingShadow.acceptFallback = true
+        assertFalse(MeowDefaultNetworkMonitor.reassertDefaultInterfaceAfterStart())
+        drainPendingInterfaceJobs()
+        Thread.sleep(500)
+        BindingShadow.accept = true
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3)
+        while (!MeowDefaultNetworkMonitor.currentInterfaceState().available && System.nanoTime() < deadline) Thread.sleep(10)
+        assertTrue("post-TUN binding rejection must not cancel background recovery", MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    @Test
+    fun `post TUN retry exhaustion stays not ready and does not loop`() {
+        val delays = ReflectionHelpers.getField<LongArray>(MeowDefaultNetworkMonitor, "interfaceRetryDelaysMillis")
+        originalRetryDelays = delays.clone()
+        delays.fill(50)
+        installVpnOwner()
+        installInterface {}
+        BindingShadow.accept = false
+        assertFalse(MeowDefaultNetworkMonitor.reassertDefaultInterfaceAfterStart())
+        drainPendingInterfaceJobs()
+        Thread.sleep(550)
+        val exhaustedAttempts = BindingShadow.attempts.get()
+        Thread.sleep(200)
+        assertEquals(exhaustedAttempts, BindingShadow.attempts.get())
+        assertFalse(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+    }
+
+    @Test
+    fun `user stop cancels post TUN binding recovery`() {
+        installVpnOwner()
+        MeowDefaultNetworkMonitor.start()
+        installInterface {}
+        BindingShadow.accept = false
+        assertFalse(MeowDefaultNetworkMonitor.reassertDefaultInterfaceAfterStart())
+        drainPendingInterfaceJobs()
+        MeowDefaultNetworkMonitor.stop()
+        val stoppedAttempts = BindingShadow.attempts.get()
+        BindingShadow.accept = true
+        Thread.sleep(400)
+        drainPendingInterfaceJobs()
+        assertEquals(stoppedAttempts, BindingShadow.attempts.get())
+        assertFalse(MeowDefaultNetworkMonitor.currentInterfaceState().available)
     }
 
     @Test
@@ -87,7 +324,7 @@ class DefaultInterfaceReassertTest {
         }
     }
 
-    private fun installInterface(onUpdate: () -> Unit) {
+    private fun installInterface(includeLinkProperties: Boolean = true, onUpdate: () -> Unit) {
         val connectivity = MeowApplication.connectivity
         val shadow = shadowOf(connectivity)
         shadow.clearAllNetworks()
@@ -106,7 +343,7 @@ class DefaultInterfaceReassertTest {
         }
         shadow.setNetworkCapabilities(network, capabilities)
         val physical = NetworkInterface.getNetworkInterfaces().toList().first { it.index >= 0 }
-        shadow.setLinkProperties(network, LinkProperties().apply { interfaceName = physical.name })
+        if (includeLinkProperties) shadow.setLinkProperties(network, LinkProperties().apply { interfaceName = physical.name })
         MeowDefaultNetworkMonitor.setListener(object : InterfaceUpdateListener {
             override fun updateNetworkPath(networkPath: String?) = Unit
             override fun updateDefaultInterface(name: String?, index: Int, expensive: Boolean, constrained: Boolean) {

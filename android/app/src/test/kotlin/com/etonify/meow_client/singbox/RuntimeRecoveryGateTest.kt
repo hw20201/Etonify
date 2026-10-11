@@ -6,6 +6,14 @@ import org.junit.Test
 
 class RuntimeRecoveryGateTest {
     @Test
+    fun `returning physical network is not suppressed by an earlier wake without a network`() {
+        val gate = RuntimeRecoveryGate(minimumIntervalMillis = 1_000L)
+        assertTrue(gate.tryAcquire(10_000L, 4L))
+        assertTrue(gate.tryAcquire(10_200L, 5L))
+        assertFalse(gate.tryAcquire(10_300L, 5L))
+        assertFalse(gate.tryAcquire(12_000L, 4L))
+    }
+    @Test
     fun `screen wake burst is coalesced`() {
         val gate = RuntimeRecoveryGate(minimumIntervalMillis = 1_000L)
 

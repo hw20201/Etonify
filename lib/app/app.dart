@@ -6101,6 +6101,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
           currentAutoConnectOnLaunch: _settings.autoConnectOnLaunch,
           onAutoConnectOnLaunchChanged: _setAutoConnectOnLaunch,
           showQuickSettingsTileAction: Platform.isAndroid,
+          showBatteryOptimizationSettings: Platform.isAndroid,
           onAddQuickSettingsTile: () =>
               unawaited(_requestAddQuickSettingsTile()),
           onSendHwidToProvidersChanged: (value) {

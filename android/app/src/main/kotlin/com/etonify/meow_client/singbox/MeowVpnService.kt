@@ -26,6 +26,8 @@ class MeowVpnService : VpnService() {
             return currentService?.protect(socket) == true
         }
 
+        fun requiresUnderlyingNetworkBinding(): Boolean = currentService != null
+
         fun setUnderlyingNetwork(network: Network?, reason: String): Boolean {
             val service = currentService
             if (service == null) {
@@ -50,7 +52,9 @@ class MeowVpnService : VpnService() {
                             "underlying_network_fallback_default reason=$reason " +
                                 "applied=$fallbackApplied",
                         )
-                        return@runCatching fallbackApplied
+                        // A fallback does not acknowledge libbox's explicit
+                        // physical interface. Retry the original binding.
+                        return@runCatching false
                     }
                     return@runCatching false
                 }

@@ -9,30 +9,31 @@ import java.util.concurrent.atomic.AtomicLong
 internal class RuntimeRecoveryGate(
     private val minimumIntervalMillis: Long,
 ) {
-    private val lastAcceptedAtMillis = AtomicLong(NO_TIMESTAMP)
+    private var lastAcceptedAtMillis = NO_TIMESTAMP
+    private var lastNetworkGeneration = 0L
 
     init {
         require(minimumIntervalMillis >= 0L)
     }
 
-    fun tryAcquire(nowMillis: Long): Boolean {
-        while (true) {
-            val previous = lastAcceptedAtMillis.get()
-            if (
-                previous != NO_TIMESTAMP &&
-                nowMillis >= previous &&
-                nowMillis - previous < minimumIntervalMillis
-            ) {
-                return false
-            }
-            if (lastAcceptedAtMillis.compareAndSet(previous, nowMillis)) {
-                return true
-            }
+    @Synchronized
+    fun tryAcquire(nowMillis: Long, networkGeneration: Long = 0L): Boolean {
+        if (lastAcceptedAtMillis != NO_TIMESTAMP) {
+            if (networkGeneration < lastNetworkGeneration) return false
+            if (networkGeneration == lastNetworkGeneration &&
+                nowMillis >= lastAcceptedAtMillis &&
+                nowMillis - lastAcceptedAtMillis < minimumIntervalMillis
+            ) return false
         }
+        lastAcceptedAtMillis = nowMillis
+        lastNetworkGeneration = networkGeneration
+        return true
     }
 
+    @Synchronized
     fun reset() {
-        lastAcceptedAtMillis.set(NO_TIMESTAMP)
+        lastAcceptedAtMillis = NO_TIMESTAMP
+        lastNetworkGeneration = 0L
     }
 
     private companion object {

@@ -1424,6 +1424,13 @@
   "routingBlockLeaksCompact": "Block STUN/WebRTC",
   "routingBlockLeaksSummary": "Reduce WebRTC traffic bypassing the proxy",
   "routingBypassLocalSummary": "Local addresses connect directly",
-  "routingAdBlockSummary": "Local domain filter"
+  "routingAdBlockSummary": "Local domain filter",
+  "batteryOptimizationTitle": "Battery optimization",
+  "batteryOptimizationExempt": "Unrestricted background access",
+  "batteryOptimizationRestricted": "Restricted background access",
+  "batteryOptimizationUnavailable": "Unavailable on this device",
+  "batteryOptimizationChecking": "Checking system settings…",
+  "batteryOptimizationDescription": "Allow background access if VPN stops when the screen is off. This may increase battery use; your device may have additional restrictions.",
+  "batteryOptimizationOpenFailed": "Could not open battery settings. Open them from Android settings."
 
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/features/settings/settings_notification_page.dart';
+import 'package:meow_client/features/settings/battery_optimization_tile.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/features/settings/subscription_background_tile.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
@@ -73,6 +74,7 @@ class SettingsGeneralPage extends StatelessWidget {
     this.onAutoConnectOnLaunchChanged,
     this.showQuickSettingsTileAction = false,
     this.onAddQuickSettingsTile,
+    this.showBatteryOptimizationSettings = false,
     required this.onLocaleChanged,
     required this.onThemePreferenceChanged,
     required this.onAccentColorChanged,
@@ -98,6 +100,7 @@ class SettingsGeneralPage extends StatelessWidget {
   final ValueChanged<bool>? onAutoConnectOnLaunchChanged;
   final bool showQuickSettingsTileAction;
   final VoidCallback? onAddQuickSettingsTile;
+  final bool showBatteryOptimizationSettings;
   final ValueChanged<String> onLocaleChanged;
   final ValueChanged<AppThemePreference> onThemePreferenceChanged;
   final ValueChanged<String> onAccentColorChanged;
@@ -267,6 +270,8 @@ class SettingsGeneralPage extends StatelessWidget {
                     value: currentAutoConnectOnLaunch,
                     onChanged: onAutoConnectOnLaunchChanged,
                   ),
+                  if (showBatteryOptimizationSettings)
+                    const BatteryOptimizationTile(),
                   if (showQuickSettingsTileAction)
                     ListTile(
                       key: const ValueKey('add-quick-settings-tile'),

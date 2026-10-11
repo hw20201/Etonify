@@ -424,7 +424,7 @@ class MeowBoxService(
         }
         scheduleNetworkHandoverProbe(source)
         val now = SystemClock.elapsedRealtime()
-        if (!recoveryGate.tryAcquire(now)) {
+        if (!recoveryGate.tryAcquire(now, SingboxController.currentNetworkGeneration)) {
             MeowDiagnostics.log(TAG, "runtime recovery coalesced source=$source")
             return
         }
@@ -719,6 +719,12 @@ class MeowBoxService(
             startOrReloadPrepared(token, networkWaitAttempt)
         } finally {
             runtimeStarting = false
+            if (startTokenCurrent(token) && ownsActiveRuntime()) {
+                // A retry can complete while startup still owns this thread.
+                // Publish the actual state after dropping runtimeStarting so
+                // that its notification is not left at Waiting for network.
+                onDefaultNetworkChanged(MeowDefaultNetworkMonitor.currentInterfaceState().available)
+            }
         }
     }
 
@@ -831,12 +837,12 @@ class MeowBoxService(
                     "tun_fd_ownership owner=libbox service=${service.javaClass.simpleName} " +
                     "startElapsedMs=$elapsedMs",
             )
-            val interfaceApplied = MeowDefaultNetworkMonitor.reassertDefaultInterfaceAndWait(
-                "after_start_or_reload_service",
-            )
+            val interfaceApplied = MeowDefaultNetworkMonitor.reassertDefaultInterfaceAfterStart()
             if (hasUsableInterface && !interfaceApplied) {
-                fail("Default network interface was not accepted by the core")
-                return
+                SingboxController.log(
+                    "warning",
+                    "network_interface_start_pending token=$token current=${MeowDefaultNetworkMonitor.describeCurrentState()}",
+                )
             }
             if (hasUsableInterface && interfaceApplied) {
                 showForeground("Connected")
