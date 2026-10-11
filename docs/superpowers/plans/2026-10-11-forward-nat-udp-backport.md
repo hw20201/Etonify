@@ -124,3 +124,64 @@
 всех задач. Альтернатива Subagent-driven: отдельные последовательные workers с
 review каждого task; выше расход контекста. Код не меняется до проверки плана
 пользователем и выбора способа исполнения.
+
+## Результат исполнения 2026-10-11
+
+Пункты 1–4 реализованы локально, но финальное ревью открыло три дефекта
+в закреплённой зависимости. Пункт 3 повторно открыт, пункт 5 остановлен
+на границе согласованного объёма (Task 3 step 6). Перенос не готов к доставке.
+
+Core base: `69425e4fbe5d3c67b692226dabc6f11ffe20072c`.
+Локальные коммиты:
+
+- `07288cf70`: backport `d2a4dc2`, точный sing-tun pin, DNS default regression.
+- `9c9f1c626`: доказанные TDD исправления владения пулом и Start/Close.
+- `d2f060e30`: UDP mapping/filtering, пакетные и fragment tests, overlay runner.
+- `0fe9bbb66`: DNS corpus и CI gates.
+
+Подтверждённые блокеры в sing-tun:
+
+1. Поздний ответ старого сервера после ResetNetwork попадает в новую сессию
+   другого клиента, если selector был переиспользован. Новый
+   `TestForwardNATRejectsLateReturnsIntoNewClientAfterReset` падает: вместо одной
+   доставки получены две, старый payload попал на `10.0.0.3`.
+2. Дубликаты фрагментов учитываются как новые байты. Для offsets
+   `0,16,16,48(final),32` запись удаляется раньше прихода нужного offset32.
+   `TestEtonifyForwardFragmentDuplicateDoesNotDiscardUniqueTail` воспроизводит FAIL.
+3. Повторный Close dispatcher повторно освобождает общий refcounted NAT.
+   `TestEtonifyForwardFragmentDispatcherDoubleCloseKeepsSharedNAT` воспроизводит
+   удаление allocator, которым ещё владеет другой dispatcher.
+
+Новые reproducer-тесты оставлены незакоммиченными; зависимость и её кеш не
+редактировались. Требуется отдельное согласование минимальных исправлений
+sing-tun и способа закрепления исправленной версии. Версия ядра остаётся `.2`,
+клиента `0.3.9+39`; submodule/AAR/provenance не доставлены и не обновлены.
+
+Выполненные проверки до новых reproducer:
+
+- `go test -race -count=10 ./common/forwardnat`: PASS.
+- `python -B release/verify_forward_nat.py --race`: PASS; после расширения
+  reproducer suite ожидаемый FAIL на двух новых случаях.
+- `python -B release/verify_forward_nat_test.py`: 2 PASS.
+- `python -B release/probe_forward_nat_baseline.py`: старый pin падает на
+  пакетном assertion IPv4 fragments, чувствительность проверки подтверждена.
+- `go test -race -count=1 ./adapter ./common/interrupt ./common/urltest ./daemon
+  ./experimental/libbox ./protocol/group ./route ./transport/device
+  ./transport/wireguard ./common/kernelports ./common/forwardnat ./protocol/tun`:
+  12 пакетов PASS до добавления нового reset-reproducer.
+- `go test -tags 'with_quic,with_utls' -run
+  'TestEtonify(AndroidConfigCorpus|NaiveConfigSchema)' ./experimental/libbox`: PASS.
+- Host compile-only consumers с шестью feature tags: PASS; runtime этих
+  протоколов этим не подтверждён.
+- `bash release/verify_etonify_baseline.sh`, `go mod verify`, `git diff --check`: PASS.
+- Фактический Windows pool reservation test в последнем запуске PASS;
+  ранее наблюдался skip с WSAENOBUFS, он не скрыт.
+- `go test -count=1 ./...`: FAIL только в восьми Windows административных
+  интеграционных тестах WinDivert/TLS-spoof с SCM `Access is denied`.
+  Это не чистый полный suite; тесты не изменены для подавления ошибок.
+
+Linux CI, Unix OS reservation, ARM/ARM64 AAR, бинарный API/provenance и
+ручная проверка на телефоне пока не выполнены. Ничего не пушилось и не собиралось
+для Android. Свежий reviewer: три Important, ноль Critical/Minor, список
+Declined to judge пуст. Прежние scoped shutdown, route chain и WireGuard
+lifecycle исправления сохранены по review текущего diff.
