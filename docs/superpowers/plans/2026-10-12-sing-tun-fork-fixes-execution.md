@@ -1,8 +1,9 @@
 # sing-tun fork repair: local execution record
 
 Date: 2026-10-12. Approved spec/plan implemented in the existing checkout.
-No corrected branch commits have been pushed; no Android core/AAR/APK build
-or remote workflow was started. Fork repository creation was authorized separately.
+The initial local handoff below preceded source publication. Publication was
+subsequently authorized as recorded in the final section. No local Android build
+or manual remote workflow dispatch is part of that publication request.
 
 ## Source identity and delivery boundary
 
@@ -11,7 +12,7 @@ or remote workflow was started. Fork repository creation was authorized separate
 - Final fork source: `3692459a3211ad692b83580cd4c95e1ff4e20080`.
 - Core implementation range: `0fe9bbb66cbe998d6ca22a53e3d3a807c3a148f7` through `2a6c7e2ad2561edc05668f5bd6378e06d4ddd122`.
 - Core source version: `v1.15.0-alpha.10-etonify.3`.
-- Client remains `0.3.9+39`. Its committed core gitlink remains delivered
+- Client remains `0.3.9+39`. At the local handoff its core gitlink was delivered
   `69425e4fbe5d3c67b692226dabc6f11ffe20072c`, matching unchanged bundled AAR.
 - Existing AAR SHA256: `3815aa8b11bf9669aff19b55a6ef32a97a2b5bd3feb477d7c46a919524e2df9a`.
 
@@ -95,3 +96,16 @@ client core gitlink plus verified AAR/provenance through the artifact workflow.
 Run SHA256, API, ABI, source/core/fork checks. Do not start release APK implicitly.
 Phone acceptance: UDP/calls/game, repeated start/stop, Wi-Fi/LTE, sleep/wake,
 quick-settings tile and both URLTest modes.
+
+## Authorized source publication
+
+The user subsequently requested publishing all core/client changes without waiting
+for builds, with further checking handled by them. Publish the corrected fork branch
+first, core `etonify-dev` second, then client `master` with its core gitlink advanced
+to `2a6c7e2ad2561edc05668f5bd6378e06d4ddd122`.
+
+The bundled AAR still records `.2`/`69425e4` until the existing automatic sync job
+successfully rebuilds and commits matching artifacts. The client binary verifier
+will correctly reject that intermediate mismatch; do not waive or disable it.
+Push-triggered workflows may run automatically. No extra dispatch, monitoring,
+APK build, or assertion of remote CI/device success is authorized by this step.
