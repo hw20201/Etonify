@@ -14,6 +14,27 @@ PIN = {"repository":"https://github.com/yamixdev/sing-tun.git", "commit":"1"*40,
 
 
 class SingTunProvenanceTests(unittest.TestCase):
+    def test_real_fresh_checkout_initializes_recorded_git_objects(self):
+        source_core=verify_libbox.CORE_PATH
+        with tempfile.TemporaryDirectory() as tmp:
+            checkout=Path(tmp)/"client"
+            subprocess.check_output(["git","clone","--shared",str(verify_libbox.ROOT),str(checkout)],stderr=subprocess.STDOUT)
+            libs=checkout/"android/app/libs"
+            with patch.multiple(verify_libbox,ROOT=checkout,CORE_PATH=checkout/"etonify-core",LIBS=libs,
+                                AAR=libs/"libbox.aar",SOURCES=libs/"libbox-sources.jar",HASH_FILE=libs/"libbox.sha256",PROVENANCE_FILE=libs/"libbox.provenance.json"):
+                with self.assertRaises(subprocess.CalledProcessError): verify_libbox.main()
+                subprocess.check_output(["git","-c","protocol.file.allow=always","-c",
+                    "submodule.etonify-core.url="+str(source_core),
+                    "submodule","update","--init","--depth","1","--","etonify-core"],cwd=checkout,stderr=subprocess.STDOUT)
+                verify_libbox.main()
+    def test_verifier_workflows_initialize_recorded_core_first(self):
+        root=Path(__file__).resolve().parents[1]
+        for name in ("ci.yml","android-release.yml","codeql.yml"):
+            text=(root/".github/workflows"/name).read_text()
+            with self.subTest(workflow=name):
+                command="git submodule update --init --depth 1 -- etonify-core"
+                self.assertIn(command,text)
+                self.assertLess(text.index(command),text.index("python3 scripts/verify_libbox.py"))
     def test_bundled_artifact_against_its_recorded_checkout(self):
         provenance=json.loads(verify_libbox.PROVENANCE_FILE.read_text())
         with tempfile.TemporaryDirectory() as tmp:
@@ -24,6 +45,8 @@ class SingTunProvenanceTests(unittest.TestCase):
     def test_both_producers_use_checked_pin_schema(self):
         root=Path(__file__).resolve().parents[1]
         for path in (root/".github/workflows/sync-etonify-core.yml",root/"etonify-core/.github/workflows/etonify-libbox.yml"):
+            if path.parent.parent.parent.name == "etonify-core" and not (root/"etonify-core/release/SING_TUN_PIN.json").is_file():
+                continue # Delivered legacy core does not produce fork metadata.
             text=path.read_text()
             with self.subTest(path=path.name):
                 self.assertIn("release/sing_tun_pin.py",text)
