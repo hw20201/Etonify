@@ -73,8 +73,11 @@ Module path внутри fork остаётся `github.com/sagernet/sing-tun`; �
    переиспользуется; после истечения он возвращается в allocator. Исчерпание
    обрабатывается существующим отказом/расширением диапазона, не обходом защиты.
    Живые mappings сохраняют reference ownership и заданные mapping/filtering
-   режимы. TCP и ICMP не получают UDP-карантин. Последний Close освобождает
-   kernel reservations, закрытые return paths не принимают пакеты.
+   режимы. TCP и ICMP не получают UDP-карантин. Закрытые return paths не принимают
+   пакеты. Teardown последнего владельца однократно освобождает kernel
+   reservations; кратковременная логическая защита от старых пакетов не должна
+   удерживать закрытые OS handles. Создание нового allocator для того же ещё
+   живого Port не должно обходить карантин: проверяется и этот lifecycle-сценарий.
 
 Карантин даёт ограниченное окно защиты, а не доказательство распознавания
 произвольно поздней UDP-датаграммы: в UDP нет идентификатора поколения сети.
@@ -104,7 +107,8 @@ API hash, ARM/ARM64 ABI и SHA256 бинарника проверяются пр
 Сначала RED для каждого дефекта, затем минимальный fix и GREEN. Три текущих
 reproducer сохраняются; добавить shared-owner concurrent Close, IPv4/IPv6
 duplicate/out-of-order/overlap/expiry/capacity, UDP quarantine expiry,
-reservation release, repeated reset, reuse после TTL и exhaustion.
+reservation release, repeated reset, пересоздание allocator на том же Port,
+reuse после TTL и exhaustion.
 
 Гонять tests самого fork (отдельный Go module), packet/lifecycle/race suites
 ядра, tagged Android corpus и host-consumer compile gates. `go test ./...`
