@@ -65,6 +65,33 @@ def tracked_gitlink_commit() -> str:
     return match.group(1)
 
 
+def expected_sing_tun_pin(core_path: Path, commit: str) -> dict | None:
+    # Read the recorded core commit, never the working manifest or data supplied
+    # by the artifact. Child checkout is unnecessary: Git owns both identities.
+    git("cat-file", "-e", f"{commit}^{{commit}}", cwd=core_path)
+    entries = git("ls-tree", commit, "--", "release/SING_TUN_PIN.json", "third_party/sing-tun", cwd=core_path)
+    if not entries:
+        return None
+    link = re.search(r"^160000 commit ([0-9a-f]{40})\tthird_party/sing-tun$", entries, re.MULTILINE)
+    if link is None or "\trelease/SING_TUN_PIN.json" not in entries:
+        fail("committed core sing-tun pin is incomplete")
+    pin = json.loads(git("show", f"{commit}:release/SING_TUN_PIN.json", cwd=core_path))
+    if (not isinstance(pin, dict) or pin.get("commit") != link.group(1)
+            or pin.get("repository") != "https://github.com/yamixdev/sing-tun.git"
+            or pin.get("upstream_commit") != "5c2edb183cc92eb190d41c04dedfa5519ca3e78c"
+            or pin.get("module_version") != "v0.9.7-0.20261009022811-5c2edb183cc9"):
+        fail("committed core sing-tun manifest does not match its gitlink or fork baseline")
+    return pin
+
+
+def verify_sing_tun_provenance(provenance: dict, expected_pin: dict | None) -> None:
+    if expected_pin is None:
+        return # Legacy core had no nested fork contract.
+    for key in ("repository", "commit", "upstream_commit", "module_version"):
+        if provenance.get("sing_tun_" + key) != expected_pin.get(key):
+            fail(f"libbox sing-tun provenance is missing or mismatches {key}")
+
+
 def normalized_android_api(archive: zipfile.ZipFile) -> bytes:
     signatures: list[str] = []
     for entry_name in LIBBOX_ANDROID_API_ENTRIES:
@@ -132,6 +159,8 @@ def main() -> None:
             "libbox provenance source_commit does not match the etonify-core "
             f"gitlink: {source_commit} != {gitlink_commit}"
         )
+
+    verify_sing_tun_provenance(provenance, expected_sing_tun_pin(CORE_PATH, source_commit))
 
     if (CORE_PATH / ".git").exists():
         checkout_commit = git("rev-parse", "HEAD", cwd=CORE_PATH).lower()

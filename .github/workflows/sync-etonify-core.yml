@@ -39,7 +39,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          submodules: recursive
+      - name: Initialize pinned core and its NAT fork only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git submodule update --init -- etonify-core
+          if [ -f etonify-core/release/SING_TUN_PIN.json ]; then
+            git -C etonify-core submodule update --init -- third_party/sing-tun
+          fi
 
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -102,7 +109,18 @@ jobs:
 
       - name: Test core source
         working-directory: etonify-core
-        run: go test ./...
+        run: go test -count=1 -exec sudo ./...
+
+      - name: Verify nested fork source and regressions
+        working-directory: etonify-core
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f release/SING_TUN_PIN.json ]; then
+            python3 -B release/sing_tun_pin.py --strict
+            python3 -B release/verify_forward_nat.py --race --strict
+            (cd third_party/sing-tun && go test -race -count=1 -run '^TestEtonify' .)
+          fi
 
       - name: Build libbox and sources
         working-directory: etonify-core
@@ -155,6 +173,7 @@ jobs:
           python3 - <<'PY'
           import json
           import os
+          import subprocess
           from pathlib import Path
 
           provenance = {
@@ -172,6 +191,17 @@ jobs:
               "android_abis": os.environ["LIBBOX_ANDROID_ABIS"].split(","),
               "build_tags": os.environ["LIBBOX_BUILD_TAGS"],
           }
+          if Path("etonify-core/release/SING_TUN_PIN.json").is_file():
+              pin = json.loads(subprocess.check_output(
+                  ["python3", "-B", "release/sing_tun_pin.py", "--strict"],
+                  cwd="etonify-core", text=True,
+              ))
+              provenance.update({
+                  "sing_tun_repository": pin["repository"],
+                  "sing_tun_commit": pin["commit"],
+                  "sing_tun_upstream_commit": pin["upstream_commit"],
+                  "sing_tun_module_version": pin["module_version"],
+              })
           Path("android/app/libs/libbox.provenance.json").write_text(
               json.dumps(provenance, ensure_ascii=False, indent=2) + "\n",
               encoding="utf-8",
