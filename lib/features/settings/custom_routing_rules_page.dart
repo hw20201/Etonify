@@ -3,6 +3,7 @@ import 'package:meow_client/core/widgets/app_notice.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
+import 'package:meow_client/theme/app_theme.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 
 class CustomRoutingRulesPage extends StatefulWidget {
@@ -365,6 +366,9 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final existing = widget.initialRule != null;
+    final theme = Theme.of(context);
+    final surfaceTheme = theme.extension<AppSurfaceTheme>();
+    final menuRadius = BorderRadius.circular(surfaceTheme?.mediumRadius ?? 22);
     return AlertDialog(
       title: Text(
         existing
@@ -379,6 +383,9 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
             children: [
               DropdownButtonFormField<CustomRouteRuleType>(
                 initialValue: _type,
+                elevation: 2,
+                dropdownColor: theme.colorScheme.surfaceContainerLow,
+                borderRadius: menuRadius,
                 decoration: InputDecoration(
                   labelText: l10n.customRoutingRuleType,
                 ),
@@ -418,6 +425,9 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
               const SizedBox(height: 12),
               DropdownButtonFormField<CustomRouteAction>(
                 initialValue: _action,
+                elevation: 2,
+                dropdownColor: theme.colorScheme.surfaceContainerLow,
+                borderRadius: menuRadius,
                 decoration: InputDecoration(
                   labelText: l10n.customRoutingRuleTarget,
                 ),

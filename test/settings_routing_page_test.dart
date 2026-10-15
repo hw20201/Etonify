@@ -16,6 +16,7 @@ import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/features/settings/custom_routing_rules_page.dart';
 import 'package:meow_client/features/settings/settings_routing_page.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
+import 'package:meow_client/theme/app_theme.dart';
 
 void main() {
   testWidgets('custom rules editor adds and routes a domain directly', (
@@ -27,6 +28,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('zh'),
+        theme: buildAppTheme(Brightness.dark),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: CustomRoutingRulesPage(
@@ -38,6 +40,26 @@ void main() {
 
     await tester.tap(find.text('添加规则'));
     await tester.pumpAndSettle();
+    final appTheme = buildAppTheme(Brightness.dark);
+    final typeDropdown = tester.widget<DropdownButton<CustomRouteRuleType>>(
+      find.byType(DropdownButton<CustomRouteRuleType>),
+    );
+    final actionDropdown = tester.widget<DropdownButton<CustomRouteAction>>(
+      find.byType(DropdownButton<CustomRouteAction>),
+    );
+    final expectedRadius = BorderRadius.circular(
+      appTheme.extension<AppSurfaceTheme>()!.mediumRadius,
+    );
+    expect(typeDropdown.borderRadius, expectedRadius);
+    expect(actionDropdown.borderRadius, expectedRadius);
+    expect(
+      typeDropdown.dropdownColor,
+      appTheme.colorScheme.surfaceContainerLow,
+    );
+    expect(
+      actionDropdown.dropdownColor,
+      appTheme.colorScheme.surfaceContainerLow,
+    );
     await tester.enterText(find.byType(TextFormField), 'example.com');
     await tester.tap(find.byType(DropdownButtonFormField<CustomRouteAction>));
     await tester.pumpAndSettle();
