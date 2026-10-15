@@ -1,0 +1,1628 @@
+{
+  "coreConfigActive": "活跃",
+  "coreConfigUntrackedDescription": "核心正在运行。本次应用会话没有记录其配置的启动情况。",
+  "experimentalNetworkSection": "网络",
+  "experimentalSelectionSection": "服务器选择",
+  "experimentalMemorySection": "内存",
+  "subscriptionCustomInterval": "自定义间隔",
+  "subscriptionIntervalValue": "间隔",
+  "subscriptionIntervalHours": "小时",
+  "subscriptionIntervalDays": "天",
+  "subscriptionIntervalError": "请输入 1 小时到 365 天之间的整数。",
+  "subscriptionShareGroup": "分享分组",
+  "subscriptionShareFailed": "无法分享服务器或分组。所需的代理可能不可用。刷新配置后重试。",
+  "subscriptionGroupAutomatic": "自动选择",
+  "subscriptionGroupSelector": "服务器分组",
+  "subscriptionExportJson": "导出 JSON",
+  "subscriptionAllServers": "所有服务器",
+  "subscriptionAdvancedSettings": "高级设置",
+  "subscriptionSearchServers": "按名称、协议或地址搜索",
+  "subscriptionClearSearch": "清除搜索",
+  "subscriptionNoServersFound": "未找到服务器",
+  "subscriptionServersLoadFailed": "无法加载服务器列表，请重试。",
+  "subscriptionExportFailed": "无法导出配置。",
+  "subscriptionServersChanged": "该服务器已从配置中移除。请重新打开列表。",
+  "subscriptionRefreshInterval": "刷新间隔",
+  "subscriptionMoveUp": "上移",
+  "subscriptionLocalFile": "已导入文件",
+  "subscriptionCopy": "复制",
+  "@@locale": "zh",
+  "subscriptionErrorOffline": "无网络连接。请连接 Wi-Fi 或移动数据后重试。",
+  "subscriptionBackgroundTitle": "后台更新订阅",
+  "subscriptionBackgroundDescription": "仅限已启用自动更新的订阅。更改将在下次打开应用时生效。",
+  "autoConnectOnLaunchTitle": "启动时连接",
+  "autoConnectOnLaunchDescription": "打开应用时，使用上次选择的服务器启动 VPN。",
+  "quickSettingsTileTitle": "在快捷设置中添加 VPN 磁贴",
+  "quickSettingsTileDescription": "无需打开应用即可连接或断开。",
+  "quickSettingsTileManualHint": "编辑快捷设置，将 Etonify 磁贴拖到合适位置。",
+  "quickSettingsTileAlreadyAdded": "Etonify 磁贴已添加。",
+  "quickSettingsTileAddFailed": "无法添加磁贴，请从快捷设置编辑模式手动添加。",
+  "subscriptionReportTitle": "订阅更新",
+  "subscriptionReportEmpty": "暂无自动更新记录。",
+  "subscriptionReportDetails": "详情",
+  "subscriptionReportSuccess": "已更新",
+  "subscriptionReportBackground": "在后台下载",
+  "subscriptionReportSummary": "已更新配置：{success}。错误：{failed}。",
+  "@subscriptionReportSummary": {
+    "placeholders": {
+      "success": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "subscriptionBackgroundSaveError": "无法安排后台更新。请重试。",
+  "coreSettingsNatIndependent": "不依赖目标地址",
+  "coreSettingsNatAddress": "按地址",
+  "coreSettingsNatAddressPort": "按地址和端口",
+  "coreSettingsChooseServer": "选择服务器",
+  "coreSettingsMuxConnections": "最大连接数",
+  "coreSettingsMuxMinStreams": "新建连接前的流数量",
+  "coreSettingsTitle": "核心设置",
+  "coreSettingsNoticeTitle": "更改这些设置之前",
+  "coreSettingsNotice": "这些参数通常无需修改。不当的数值可能导致连接中断，或增加耗电与流量消耗。请一次只修改一个参数，点击右上角的重置按钮可恢复默认值。",
+  "coreSettingsContinue": "继续",
+  "coreSettingsDefault": "默认",
+  "coreSettingsOff": "关闭",
+  "coreSettingsOn": "开",
+  "coreSettingsManual": "手动",
+  "coreSettingsAuto": "自动",
+  "coreSettingsApply": "应用",
+  "coreSettingsApplying": "正在检查并应用……",
+  "coreSettingsFailed": "无法应用设置，已保留之前的设置。请查看日志，或等待当前连接操作完成。",
+  "coreSettingsSaved": "核心设置已应用",
+  "coreSettingsReset": "重置核心设置",
+  "coreSettingsResetBody": "仅重置此部分？订阅、DNS、路由及其他设置不会改变。VPN 可能会重新连接。",
+  "coreSettingsDiscard": "放弃更改？",
+  "coreSettingsDiscardBody": "更改尚未应用。",
+  "coreSettingsDiscardAction": "放弃",
+  "coreSettingsNetwork": "网络",
+  "coreSettingsStrategy": "网络策略",
+  "coreSettingsStrategyHelp": "默认保留核心行为。Hybrid 并行尝试可用网络，不会叠加速度，可能消耗蜂窝数据。Fallback 在延迟后尝试备用网络。提供商显式指定的网络或接口设置优先。网络可用性取决于 Android。",
+  "coreSettingsPrimaryNetwork": "首选网络",
+  "coreSettingsFallbackNetwork": "备用网络",
+  "coreSettingsNetworkHelp": "自动表示由核心选择。选择网络不会打开 Wi-Fi 或移动数据。请勿将首选和备用角色设为同一个显式网络。",
+  "coreSettingsCellular": "移动网络",
+  "coreSettingsFallbackDelay": "回退延迟，毫秒",
+  "coreSettingsFallbackDelayHelp": "尝试备用网络前等待的时间。设为 0 则使用核心默认值。",
+  "coreSettingsConnections": "连接",
+  "coreSettingsConnectTimeout": "连接超时，秒",
+  "coreSettingsConnectTimeoutHelp": "代理套接字连接的最长耗时，不含 URLTest 超时。0 表示保留订阅或核心的默认值。手动设置的值会覆盖适用代理的拨号设置；中转链路中的节点使用其传输层所属方的设置。",
+  "coreSettingsKeepAliveHelp": "TCP 保活会检查空闲的 TCP 连接。它不能提速，也不会影响 QUIC。默认保留服务商的设置。较短的间隔可能会增加耗电。",
+  "coreSettingsKeepAlivePeriod": "检查前的空闲时间（秒）",
+  "coreSettingsKeepAliveInterval": "检测间隔（秒）",
+  "coreSettingsUdpFragment": "UDP 分片",
+  "coreSettingsUdpFragmentHelp": "允许或禁止出站 UDP 套接字的 IP 分片。这不是 TLS 分片。默认保留订阅或核心的设置。分片的数据包可能被网络丢弃。",
+  "coreSettingsNat": "UDP / NAT",
+  "coreSettingsNatInactive": "仅在启用 VPN 入站时可用。",
+  "coreSettingsMapping": "UDP 映射",
+  "coreSettingsMappingHelp": "控制 UDP 映射是在不同目标之间共享，还是按目标地址和端口隔离。默认由核心决定。更严格的模式可能会影响通话和游戏。",
+  "coreSettingsFiltering": "UDP 过滤",
+  "coreSettingsFilteringHelp": "控制哪些远端可以通过已有的 UDP 映射发送数据包：任意地址、已联系过的地址，或已联系过的地址和端口。这不能替代路由或防泄漏保护。",
+  "coreSettingsNatMax": "UDP 会话数上限",
+  "coreSettingsNatMaxHelp": "0 表示使用核心的自动限制。过高的限制会占用更多内存，过低的限制可能中断繁忙的 UDP 流量。除非有特定原因，否则请保持自动。",
+  "coreSettingsUdpTimeout": "UDP 空闲超时，秒",
+  "coreSettingsUdpTimeoutHelp": "在指定空闲时长后清除 UDP 会话。0 表示使用核心默认值。过短的超时可能在数据包间隙中断通话或游戏。",
+  "coreSettingsAdvanced": "高级",
+  "coreSettingsTlsTimeout": "TLS 握手超时，秒",
+  "coreSettingsTlsTimeoutHelp": "受支持的 TCP 代理上允许的 TLS 握手时间。不影响证书校验或 QUIC 握手。0 表示保留订阅或核心设置。",
+  "coreSettingsMux": "多路复用",
+  "coreSettingsMuxHelp": "设置仅应用于当前订阅中的一台服务器。「自动」会保留显式的 sing-box 多路复用设置，否则保持关闭。「自动」不会检测服务器支持情况。Xray Mux 与 XHTTP xmux 是独立机制。分组内的成员保留其提供商设置。",
+  "coreSettingsMuxServer": "服务器",
+  "coreSettingsMuxNoServer": "当前订阅中没有可用的单个服务器",
+  "coreSettingsMuxMode": "模式",
+  "coreSettingsMuxInheritedOn": "已启用 · 由订阅设置",
+  "coreSettingsMuxInheritedOff": "关闭 · 由订阅设置",
+  "coreSettingsMuxNotSet": "关闭 · 未配置",
+  "coreSettingsMuxOverrideTitle": "覆盖服务器设置？",
+  "coreSettingsMuxOverrideBody": "服务器必须支持 sing-box 多路复用。不兼容的协议或填充设置可能导致无法连接。此本地覆盖仅替换该服务器的订阅多路复用设置。「自动」将恢复原始设置。",
+  "coreSettingsMuxProtocol": "多路复用协议",
+  "coreSettingsMuxStreams": "每连接流数",
+  "coreSettingsMuxStreamsHelp": "每个连接在打开新连接之前的最大流数。使用 max_streams，不含冲突的 max_connections 与 min_streams 设置。数值越大不一定越快。",
+  "coreSettingsMuxPaddingHelp": "为多路复用流量添加填充。需要服务器支持；它不是通用的绕过手段。",
+  "coreSettingsInputRange": "请输入显示范围内的整数。",
+  "coreSettingsSameNetwork": "请选择不同的首选和备用网络，或选择自动。",
+  "subscriptionErrorHwid": "无法获取有效的 HWID。自定义 ID 必须包含 10 到 64 个拉丁字母、数字、= 或 - 字符。",
+  "subscriptionErrorHwidRequired": "提供商因 HWID 拒绝了请求。请确认该订阅允许发送 HWID。若已启用，请联系提供商。",
+  "subscriptionErrorDeviceLimitReached": "该订阅已达到设备数量上限。请在服务商的账号或机器人中删除旧设备，或联系服务商。",
+  "sendHwidToProvidersTitle": "向服务商发送 HWID",
+  "sendHwidToProvidersDescription": "启用后，获取所有订阅时将发送设备 ID、型号和系统版本。禁用后，仍以各订阅的单独权限为准。",
+  "hwidDefaultEnabledNoticeTitle": "HWID 发送",
+  "hwidDefaultEnabledNoticeMessage": "默认启用 HWID 发送。许多服务商需要设备 ID 才能发放和运行订阅。\n\n你可以随时关闭：设置 -> 通用。",
+  "hwidDefaultEnabledNoticeAction": "知道了",
+  "autoCheckServersTitle": "自动检测所有服务器",
+  "autoCheckServersDescription": "在连接、网络切换和选择代理时检查完整列表。即使关闭此项，仍会检查所选服务器。",
+  "autoCheckDisabledNoticeTitle": "自动服务器检查",
+  "autoCheckDisabledNoticeMessage": "自动全列表检测已关闭。连接或切换网络后会检测所选服务器；选择自动分组时仅检测其成员一次，全局自动检测仍保持关闭。「最快」模式会在选择延迟最低的服务器之前，检测全列表中缺失或过期的延迟结果。可点击闪电图标手动检测列表。",
+  "autoCheckDisabledNoticeAction": "知道了",
+  "proxiesProgressWorking": "可用 {working} / {total}",
+  "proxiesProgressTested": "已测试 {tested} / {total}",
+  "proxiesProgressSkipped": "已排除：{count}",
+  "@proxiesProgressSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "proxiesProgressSkippedExplanation": "这些服务器不在当前核心的检测队列中，不计为检测失败。不支持或无效的配置可能已被排除，详情见启动日志。",
+  "proxiesCheckPaused": "检查已暂停",
+  "@proxiesProgressTested": {
+    "placeholders": {
+      "tested": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "proxiesTotal": "共 {total}",
+  "@proxiesTotal": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@proxiesProgressWorking": {
+    "placeholders": {
+      "working": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "profiles": "配置",
+  "close": "关闭",
+  "homeTab": "首页",
+  "proxiesTab": "代理",
+  "proxiesTitle": "代理",
+  "proxySwitching": "切换中",
+  "proxyUnavailable": "不可用",
+  "proxyLatencyNoResult": "无结果",
+  "proxyLatencyNoResultDescription": "此服务器暂无延迟测试结果。",
+  "proxySelectorTitle": "选择器",
+  "proxyLowestName": "最低",
+  "proxyAutomaticSelectionLabel": "自动选择",
+  "proxyChainLabel": "链式",
+  "proxyChainAddTitle": "添加代理链",
+  "proxyChainAddTile": "添加代理链",
+  "proxyChainChangeFirstHop": "更换首个代理",
+  "proxyChainRenameAction": "重命名",
+  "proxyChainRenameTitle": "重命名代理链",
+  "proxyChainRemoveAction": "删除代理链",
+  "proxyChainNameLabel": "名称",
+  "proxyChainFirstHopLabel": "第一跳代理",
+  "proxyChainExitLabel": "出口代理",
+  "proxyChainNothingFound": "未找到",
+  "proxyChainSaveAction": "保存",
+  "shareProxyTitle": "分享",
+  "shareProxyLinkLabel": "分享链接",
+  "shareSingboxOutboundLabel": "sing-box 出站",
+  "copiedToClipboard": "{label} 已复制",
+  "@copiedToClipboard": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "unavailableForThisType": "此类型不可用",
+  "sort": "排序",
+  "sortByDefault": "订阅源顺序",
+  "sortByLatency": "按延迟",
+  "sortByWorking": "仅可用",
+  "sortByName": "按名称",
+  "sortByCountry": "按国家/地区",
+  "settingsTitle": "设置",
+  "generalSectionTitle": "通用",
+  "inboundTitle": "入站",
+  "dnsTitle": "DNS",
+  "whitelistTitle": "白名单",
+  "whitelistSubtitle": "预留路由工具",
+  "experimentalTitle": "实验性功能",
+  "securityTitle": "安全",
+  "securitySubtitle": "TLS 证书与连接验证",
+  "securityTlsSectionTitle": "TLS 证书",
+  "securityUntrustedProxyCertificatesTitle": "允许不受信任的代理证书",
+  "securityUntrustedProxyCertificatesSubtitle": "连接到使用自签名、过期或其他不受信任证书的代理服务器。这会削弱对连接劫持的防护。",
+  "securityUntrustedSubscriptionCertificatesTitle": "允许不受信任的订阅证书",
+  "securityUntrustedSubscriptionCertificatesSubtitle": "即使网站证书无法验证，也更新 HTTPS 订阅。订阅链接和内容可能被拦截或替换。",
+  "securityConfirmProxyTitle": "允许不受信任的代理证书？",
+  "securityConfirmProxyMessage": "将为所有 TLS 代理连接禁用证书验证。仅在信任该配置时启用。",
+  "securityConfirmSubscriptionTitle": "允许不受信任的订阅证书？",
+  "securityConfirmSubscriptionMessage": "更新 HTTPS 订阅期间将禁用证书校验。订阅 URL 和内容可能被拦截或替换。",
+  "securityAllowAction": "允许",
+  "experimentalSubtitle": "多路径、Fast Open 与连接切换行为",
+  "logsTitle": "日志",
+  "logsSubtitle": "生成的 sing-box 配置和应用事件",
+  "urlTestTitle": "服务器检测",
+  "urlTestNotReadyMessage": "连接仍在准备中，请几秒后再检查。",
+  "urlTestSubtitle": "延迟检测与自动选择服务器",
+  "vpnInTitle": "VPN 接入",
+  "proxyInTitle": "代理入口",
+  "dnsDirectTitle": "直连",
+  "dnsProxyTitle": "经由代理",
+  "aboutSectionTitle": "关于",
+  "aboutSectionSubtitle": "版本、贡献者、帮助与诊断。",
+  "aboutHeroSubtitle": "一款为 Android 打造的 VPN 客户端：快速、易懂，日常使用稳定可靠。",
+  "aboutContributorsTitle": "贡献者",
+  "aboutContactLabel": "联系开发者",
+  "aboutCoreSourceLabel": "核心源代码",
+  "aboutDocumentationTitle": "帮助",
+  "aboutDocumentationSubtitle": "设置、功能与故障排查。",
+  "documentationPageTitle": "帮助",
+  "documentationPageSubtitle": "Etonify 设置与使用的简明说明。",
+  "documentationGroupGettingStarted": "快速入门",
+  "documentationGroupConnection": "连接",
+  "documentationGroupRouting": "路由与 DNS",
+  "documentationGroupMaintenance": "维护",
+  "documentationGroupHelp": "诊断",
+  "documentationGroupDocuments": "文档",
+  "documentationQuickStartTitle": "快速上手",
+  "documentationQuickStartBody": "1. 添加订阅或单个服务器。\n2. 运行服务器检测。\n3. 选择服务器或 Lowest。\n4. 点击连接并允许创建 VPN 连接。\n5. 若无法连接，请换一台服务器并打开日志查看。",
+  "documentationWhatTitle": "关于 Etonify",
+  "documentationWhatBody": "Etonify 支持 Android 8.0 及更高版本。它是 sing-box 客户端，不是 VPN 服务。请添加服务商提供的订阅或服务器。设置、订阅和日志都保存在本机。",
+  "documentationModesTitle": "VPN 与本地代理",
+  "documentationModesBody": "VPN TUN 通过 Android 系统 VPN 转发应用流量。\n\n本地 HTTP/SOCKS 代理仅在手动配置了其地址的应用中生效。VPN 和本地代理可以同时运行。如需局域网内其他设备使用，请启用局域网访问。",
+  "documentationProtocolsTitle": "格式与协议",
+  "documentationProtocolsBody": "支持导入链接、二维码以及 sing-box、Xray 或 Happ 配置。\n\n支持的协议包括 VLESS、VMess、Trojan、Shadowsocks、ShadowsocksR、Hysteria、Hysteria2、TUIC、AnyTLS、Naive、HTTP 和 SOCKS。导入仅确认格式正确，不保证服务器可用。",
+  "documentationChainsTitle": "代理链",
+  "documentationChainsBody": "代理链将流量经由首个代理和出口代理转发，两台服务器都必须可用。延迟通常更高。代理链不提供自动故障转移。",
+  "documentationSubscriptionsTitle": "订阅与配置",
+  "documentationSubscriptionsBody": "配置文件保存订阅来源、服务器和上次的选择。可从剪贴板、文件、二维码导入数据，也可以手动添加。自动刷新会按计划更新订阅。若更新失败，之前的数据仍可使用。",
+  "documentationChecksTitle": "服务器检测",
+  "documentationChecksBody": "URLTest 通过服务器发送 HTTP 请求，不是 ICMP ping。结果取决于服务器、TLS、测试网站和网络。\n\n短横线表示暂无结果，或网络变化后结果已清除。红色警告图标表示检测失败。最低延迟模式会选择延迟最低的可用服务器。",
+  "documentationBackgroundTitle": "后台运行与通知",
+  "documentationBackgroundBody": "VPN 运行时，安卓会显示一条包含服务器、延迟、流量和停止操作的通知。\n\n关闭界面不会停止 VPN。强制停止应用会禁用服务，直到再次打开 Etonify。部分设备需要授予后台活动和自启动权限。",
+  "documentationRoutingTitle": "分应用隧道与 TUN 协议栈",
+  "documentationRoutingBody": "分流在 VPN TUN 模式下工作。「走 VPN」将所选应用送入隧道，「VPN 之外」使其保持直连。\n\nsing-tun 使用核心自带的网络协议栈，速度更高、资源占用更低。System 使用 Android 网络协议栈。除非设备出现兼容性问题，否则请保持使用 sing-tun。",
+  "documentationTrafficRulesTitle": "流量规则",
+  "documentationTrafficRulesBody": "预设为域名和 IP 地址选择直连或代理路由。一次只能启用一个预设。\n\n分应用代理先选择哪些应用走 VPN，流量规则再为这些连接选择路由。",
+  "documentationDnsTitle": "DNS",
+  "documentationDnsBody": "Etonify 支持设备 DNS、UDP、TCP、DoT 和 DoH。直连使用常规连接，经代理使用所选服务器。\n\nFakeIP 为实验性选项，可能不兼容部分应用。",
+  "documentationRuleFilesTitle": "Geo 资源文件",
+  "documentationRuleFilesBody": "流量预设使用本地 .srs 文件，可离线工作。新版本仅在下载成功后才会替换旧版本。\n\n广告拦截使用单独的 AdGuard 过滤器。请在路由设置中更新文件和过滤器。",
+  "documentationSecurityTitle": "TLS 安全",
+  "documentationSecurityBody": "默认情况下，Etonify 会验证服务器与 HTTPS 订阅的 TLS 证书。可以分别为服务器和订阅关闭验证。仅对可信来源这样做，否则密钥和流量可能被截获。",
+  "documentationUpdatesTitle": "下载与更新",
+  "documentationUpdatesBody": "订阅、地理资源、广告拦截过滤器和客户端更新会优先通过已连接的 VPN 下载。失败时，Etonify 会尝试使用 Wi-Fi 或移动数据。如果有其他 VPN 处于活动状态，则应用其规则。\n\n下载有时间和大小限制。APK 文件在安装前会经过校验。",
+  "documentationBackupTitle": "导入、导出与备份",
+  "documentationBackupBody": "设置导出不包含订阅或密钥。订阅导出包含配置和服务器。\n\n请用密码保护备份。未加密文件会以明文保存密钥。忘记密码将无法找回。",
+  "documentationExperimentalTitle": "实验性选项",
+  "documentationExperimentalBody": "FakeIP、TLS 分片、TCP Fast Open、TCP MultiPath 和多路复用会改变网络行为，正常连接不需要它们。\n\n请一次只修改一个选项，如果连接变差请恢复默认值。",
+  "documentationDiagnosticsTitle": "日志与资源",
+  "documentationDiagnosticsBody": "「资源与诊断」显示 VPN 状态、版本和进程内存。PSS、RSS、Private Dirty、Swap、heap、code 和 graphics 不能相加。\n\n出错后请立即导出日志，分享前请检查文件中是否包含隐私数据。",
+  "documentationLimitsTitle": "重要限制",
+  "documentationLimitsBody": "Etonify 仅支持 Android，不内置 VPN 服务器。可用性取决于服务器、订阅、DNS、运营商和设备。\n\nURLTest 只检测一个地址，不能保证访问所有网站。大型订阅和全量服务器检测会暂时增加内存、CPU、电池和流量的消耗。",
+  "telegramChannelLabel": "Telegram 频道",
+  "legalTermsTitle": "使用条款",
+  "legalPrivacyTitle": "隐私政策",
+  "legalTermsSummary": "合理使用的规则与项目免责声明。",
+  "legalPrivacySummary": "Etonify 在本地存储什么，以及不收集什么。",
+  "legalGateTitle": "使用 Etonify 之前",
+  "legalGateSubtitle": "自版本 {version} 起，请阅读并接受服务条款与隐私政策以继续使用。",
+  "@legalGateSubtitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "legalAcceptAction": "接受并继续",
+  "legalAcceptHint": "请打开两份文档以继续。",
+  "legalDocumentReadAction": "我已阅读",
+  "legalContactAction": "提问",
+  "legalImportBlockedMessage": "请先接受使用条款与隐私政策，再导入订阅。",
+  "legalTermsBody": "# Etonify 使用条款\n\n## 应用功能\n\nEtonify 是一款安卓 VPN 客户端。**它不出售也不提供 VPN 服务器：**用户自行添加第三方服务商的订阅、配置和服务器。\n\n## 用户责任\n\n请根据适用法律和服务规则使用 Etonify。请勿将其用于攻击、欺诈、恶意软件、骚扰或其他非法活动。\n\n- 您对自己添加的配置和访问密钥负责。\n- 第三方服务商自行决定其服务条款。\n- MeowTeam 不控制订阅内容或第三方服务器的流量。\n\n## 运行与更新\n\nEtonify 按 **现状** 提供。我们会持续提升可靠性和安全性，但无法保证每台服务器、每条路由、每个 DNS 解析器、每家运营商或修改过的安卓固件都能正常工作。更新仅在用户操作并经安卓系统确认后安装。\n\n## 反馈\n\n问题、错误报告和功能建议可以直接发送给开发者：**https://t.me/etonify?direct**。\n\n继续使用即表示您已阅读本条款，并愿意为使用本应用承担责任。",
+  "legalPrivacyBody": "# Etonify 隐私政策\n\n## 摘要\n\nEtonify **无广告、无分析 SDK、无隐藏追踪**。MeowTeam 不出售用户数据，也不会自动获取您的 VPN 密钥。\n\n## 存储在设备上的数据\n\n订阅、配置、所选服务器、设置、诊断日志和已下载的规则文件均存储在本地。备份和导出可能包含访问密钥，请妥善保管。\n\n## 网络请求\n\n- 导入和刷新订阅时会访问您提供的地址，该服务器可以看到常规请求信息，包括 IP 地址。\n- 客户端与路由规则更新检查会访问 GitHub 及界面中注明的来源。\n- HWID 仅在您启用的配置中发送给订阅服务。\n\n## Android 权限\n\n- **VPN service** 用于创建系统 VPN 隧道。\n- **QUERY_ALL_PACKAGES** 仅用于在分应用代理中显示已安装应用，应用列表不会发送给 MeowTeam。\n- **相机**仅用于扫描二维码。\n- **通知**用于显示 VPN 服务状态。\n- **APK 安装**仅用于安装您确认的更新，Android 会另行显示系统确认。\n\n## 日志与消息\n\n日志保存在本地，直到您自行导出或发送。公开发送前请检查导出文件的内容。通过 Telegram 自愿发送的信息遵循 Telegram 的规则。\n\n隐私问题可直接发送给开发者：**https://t.me/etonify?direct**。",
+  "coreVersionLabel": "核心版本",
+  "debugMenuTitle": "调试",
+  "debugMenuSubtitle": "调试与服务操作的隐藏区域。",
+  "debugNetworkHeartbeatTitle": "网络心跳",
+  "debugNetworkHeartbeatSubtitle": "若 Android 遗漏回调，则重新确认默认网络。当前间隔：{seconds} 秒。下次启动 VPN 时生效。",
+  "@debugNetworkHeartbeatSubtitle": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "debugWakeLockTitle": "部分唤醒锁",
+  "debugWakeLockSubtitle": "在 VPN 运行时保持 CPU 唤醒。默认关闭，因为在激进的固件上可能导致手机发热。",
+  "debugRecordSnapshot": "记录性能快照",
+  "debugSnapshotDone": "性能快照已添加到日志",
+  "debugRuntimeMeasurementTitle": "后台运行测量",
+  "debugRuntimeMeasurementSubtitle": "每 5 秒测量 CPU、内存、核心任务、连接和路由流量。仅在启动后运行，不改变 VPN 路由。",
+  "debugRuntimeMeasurementDuration": "时长：{duration}",
+  "@debugRuntimeMeasurementDuration": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "debugRuntimeMeasurementProgress": "运行中：{elapsed} / {duration}",
+  "@debugRuntimeMeasurementProgress": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "debugRuntimeMeasurementStart": "开始测量",
+  "debugRuntimeMeasurementStop": "停止测量",
+  "debugRuntimeMeasurementSave": "保存报告",
+  "debugRuntimeMeasurementIdle": "就绪，可开始测量",
+  "debugRuntimeMeasurementCompleted": "测量完成",
+  "debugRuntimeMeasurementStopped": "测量已停止",
+  "debugRuntimeMeasurementCollecting": "正在收集数据…",
+  "debugRuntimeMeasurementHealthy": "未检测到异常的资源增长。",
+  "debugRuntimeMeasurementHighCpu": "路由流量较低但 CPU 占用高，可能是原生层或核心的后台工作，而非正常的传输负载。",
+  "debugRuntimeMeasurementGoroutineGrowth": "测量期间核心任务数增加。",
+  "debugRuntimeMeasurementMemoryGrowth": "测量期间进程内存显著增长。",
+  "debugRuntimeMeasurementConnectionChurn": "流量较低时，核心存在大量连接。",
+  "debugRuntimeMeasurementUnavailable": "暂无足够数据进行评估。",
+  "debugRuntimeMeasurementSaved": "测量报告已就绪，可以保存",
+  "teamDeveloperDdosxdRole": "核心、网络与自定义协议",
+  "teamDeveloperYamixdevRole": "Android 客户端、界面、核心与发布",
+  "teamDeveloperVerificationInfo": "Etonify 贡献者。",
+  "languageSettingTitle": "语言",
+  "themeSettingTitle": "主题",
+  "accentColorTitle": "主题色",
+  "appearanceTitle": "外观",
+  "languageSystem": "跟随系统",
+  "languageEnglish": "English",
+  "languageRussian": "俄语",
+  "languageChinese": "中文",
+  "themeSystem": "跟随系统",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+  "themeAmoled": "AMOLED",
+  "diagnosticsTitle": "资源与诊断",
+  "diagnosticsSubtitle": "内存、核心状态与诊断。",
+  "aboutResourcesTitle": "资源",
+  "aboutResourcesSubtitle": "按需获取 Android 与核心快照。CPU 按一秒测量。",
+  "aboutResourcesPssTitle": "进程内存",
+  "aboutResourcesPssSubtitle": "PSS 是包含共享页面分摊的主要内存估算。RSS 统计所有常驻页面，Private Dirty 统计仅归属本进程的已修改页面，Swap PSS 是其按比例分摊的交换分区份额。请勿将这些数值相加。",
+  "aboutResourcePss": "总 PSS",
+  "aboutResourceRss": "总 RSS",
+  "aboutResourceSwapPss": "Swap PSS",
+  "aboutResourcePrivateDirty": "私有脏页",
+  "aboutResourceNativePss": "原生 PSS",
+  "aboutResourceDalvikPss": "Android VM PSS",
+  "aboutResourceOtherPss": "其他 PSS",
+  "aboutResourceGraphicsPss": "图形 PSS",
+  "aboutResourceCodePss": "代码 PSS",
+  "aboutResourceStackPss": "栈 PSS",
+  "aboutResourcesRuntimeTitle": "客户端与核心",
+  "aboutResourceNativeHeap": "原生堆",
+  "aboutResourceJavaHeap": "Java 堆",
+  "aboutResourceCoreMemory": "核心上报的进程 RSS",
+  "aboutResourceFlutterImageCache": "Flutter 图片缓存",
+  "aboutResourceCoreGoroutines": "核心协程",
+  "aboutResourceCoreConnections": "核心连接（入站 / 出站）",
+  "aboutResourcesSystemTitle": "系统",
+  "aboutResourceProcessCpu": "进程 CPU，全部核心",
+  "aboutResourceSystemMemory": "系统空闲 RAM",
+  "aboutResourceBatteryTemp": "电池温度",
+  "updatesTitle": "更新",
+  "updatesSubtitle": "检查新版本并安装。",
+  "updatesChecking": "正在检查更新…",
+  "updatesCheckAction": "立即检查",
+  "updatesChannelMenuAction": "更新渠道",
+  "updatesChannelTitle": "更新渠道",
+  "updatesChannelStable": "稳定版",
+  "updatesChannelStableSubtitle": "适合日常使用的稳定版本。",
+  "updatesChannelBeta": "Beta",
+  "updatesChannelBetaSubtitle": "测试以 GitHub 预发布形式发布的 alpha、beta 和 RC 版本。",
+  "updatesChannelBetaWarning": "测试版可能包含错误。当稳定版新于已安装版本时，可返回稳定通道。",
+  "updatesPrereleaseVersionTooltip": "测试版",
+  "updatesRetryAction": "重试",
+  "updatesUnsupportedAndroidTitle": "不支持更新",
+  "updatesUnsupportedAndroidSubtitle": "版本 {version} 需要 Android SDK {minSdk} 或更高。此设备可继续使用最新兼容版本。",
+  "@updatesUnsupportedAndroidSubtitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "minSdk": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesDownloadAction": "下载更新",
+  "updatesInstallAction": "安装 APK",
+  "updatesDownloadWarning": "请保持 Etonify 打开，直到下载完成。",
+  "updatesOpeningInstaller": "正在打开系统安装器…",
+  "updatesInstallPermissionHint": "请允许为 Etonify 安装 APK，然后再次点击“安装 APK”。",
+  "updatesInstallPermissionTitle": "需要权限",
+  "updatesInstallPermissionMessage": "请先允许 Etonify 安装未知应用，它才能打开已下载的 APK 安装包。没有此权限，你只能手动下载文件。",
+  "updatesInstallPermissionOpen": "打开设置",
+  "updatesInstallPermissionGranted": "已启用 APK 安装权限。",
+  "updatesInstallModeTitle": "更新安装",
+  "updatesInstallModeAsk": "每次都询问",
+  "updatesInstallModeAskSubtitle": "下载前 Etonify 会询问手动下载还是自动安装。",
+  "updatesInstallModeManual": "手动",
+  "updatesInstallModeManualSubtitle": "客户端下载 APK 后会显示安装按钮。",
+  "updatesInstallModeAuto": "自动",
+  "updatesInstallModeAutoSubtitle": "客户端下载 APK 后打开安卓安装器。",
+  "updatesInstallMethodTitle": "如何安装此更新？",
+  "updatesInstallMethodManualTitle": "手动下载",
+  "updatesInstallMethodManualSubtitle": "APK 已保存到更新缓存中，稍后可以手动安装。",
+  "updatesInstallMethodAutoTitle": "下载并安装",
+  "updatesInstallMethodAutoSubtitle": "下载完成后，Etonify 将打开 Android 系统安装器。",
+  "updatesInstallMethodRemember": "记住此选择",
+  "updatesApkVerificationTitle": "APK 校验",
+  "updatesApkVerificationVerified": "SHA-256 一致",
+  "updatesApkVerificationUnavailable": "此版本未提供 SHA-256",
+  "updatesApkVerificationFailed": "SHA-256 不匹配",
+  "updatesDownloadedFileMissing": "更新文件丢失，请重新下载 APK。",
+  "updatesDeleteCachedApkAction": "删除安装包 APK",
+  "updatesDeleteCachedApkTitle": "删除安装包 APK？",
+  "updatesDeleteCachedApkMessage": "这将删除应用缓存中已下载的 {version} 更新 APK 以及旧的临时 Etonify APK 文件。",
+  "@updatesDeleteCachedApkMessage": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "updatesDeleteCachedApkDone": "更新缓存已清理。已删除文件：{count}。",
+  "@updatesDeleteCachedApkDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesUpToDateTitle": "Etonify 已是最新版本",
+  "updatesUpToDateSubtitle": "已安装版本：{version}",
+  "@updatesUpToDateSubtitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesCurrentVersionNewerTitle": "已安装版本更新",
+  "updatesCurrentVersionNewerSubtitle": "已安装：{currentVersion}。所选通道：{channelVersion}。无需更新。",
+  "@updatesCurrentVersionNewerSubtitle": {
+    "placeholders": {
+      "currentVersion": {
+        "type": "String"
+      },
+      "channelVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesNoChannelReleaseTitle": "此通道暂无版本",
+  "updatesNoBetaReleaseSubtitle": "GitHub 上尚未发布 Etonify 预发布版本。",
+  "updatesNoStableReleaseSubtitle": "GitHub 上尚未发布 Etonify 正式版。",
+  "updatesAvailableTitle": "有可用更新",
+  "updatesAvailableSubtitle": "{version} · {size}",
+  "updatesAvailableSnack": "有可用的客户端更新",
+  "updatesAvailableSnackVersion": "客户端更新 {version} 可用",
+  "updatesOpenAction": "打开",
+  "@updatesAvailableSubtitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesDownloadingTitle": "正在下载更新",
+  "updatesStageCleaning": "正在删除旧文件…",
+  "updatesStageVerifying": "正在验证 APK 与签名…",
+  "updatesDownloadedTitle": "更新已下载",
+  "updatesDownloadedSubtitle": "已保存到应用更新缓存：{fileName}",
+  "@updatesDownloadedSubtitle": {
+    "placeholders": {
+      "fileName": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesErrorTitle": "无法检查更新",
+  "updatesErrorSubtitle": "如果此网络屏蔽了 GitHub，Etonify 将在明天重试。",
+  "updatesCurrentVersion": "当前版本",
+  "updatesLatestVersion": "最新版本",
+  "updatesAsset": "APK",
+  "updatesLastChecked": "上次检查：{time}",
+  "@updatesLastChecked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesReleaseNotesTitle": "更新内容",
+  "updatesNoReleaseNotes": "此版本没有更新说明。",
+  "updatesProgressBytes": "{downloaded} / {total}",
+  "@updatesProgressBytes": {
+    "placeholders": {
+      "downloaded": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesProgressSpeedEta": "{speed}/秒 · 还剩 {eta}",
+  "@updatesProgressSpeedEta": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      },
+      "eta": {
+        "type": "String"
+      }
+    }
+  },
+  "updatesEtaSeconds": "{seconds} 秒",
+  "@updatesEtaSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesEtaMinutes": "{minutes}分{seconds}秒",
+  "@updatesEtaMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "updatesUnknownSize": "大小未知",
+  "appVersionLabel": "应用版本",
+  "currentProfileLabel": "当前配置",
+  "selectedProxyLabel": "所选代理",
+  "onboardingStatusLabel": "引导",
+  "onboardingSeen": "已完成",
+  "showOnboardingAgain": "再次显示引导页",
+  "settingsFootnote": "这些设置仅保存在本设备（Hive 数据库）中。",
+  "connected": "已连接",
+  "tapToConnect": "点击连接",
+  "resolvingIp": "正在解析 IP…",
+  "millisecondsUnit": " 毫秒",
+  "refreshLatency": "刷新延迟",
+  "checkingLatency": "正在检测延迟",
+  "checkingLatencyShort": "检测中……",
+  "openTrafficDashboard": "打开流量看板",
+  "refreshActiveSubscription": "刷新当前订阅",
+  "refreshActiveSubscriptionUnavailable": "手动导入的订阅无法刷新",
+  "activeSubscriptionRefreshComplete": "{name} 已更新",
+  "@activeSubscriptionRefreshComplete": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "trafficDashboardTitle": "流量监控",
+  "trafficDashboardSubtitle": "实时速度、会话流量与连接信息",
+  "trafficDashboardDownload": "下载",
+  "trafficDashboardUpload": "上传",
+  "trafficDashboardSessionTraffic": "会话流量",
+  "trafficDashboardConnectedFor": "已连接时长",
+  "trafficDashboardGraphTitle": "网速",
+  "trafficDashboardGraphMax": "峰值 {speed}",
+  "@trafficDashboardGraphMax": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "trafficDashboardNoSamples": "等待流量数据",
+  "trafficDashboardConnectionState": "连接",
+  "trafficDashboardCurrentProfile": "配置",
+  "trafficDashboardActiveProxy": "代理",
+  "trafficDashboardServerIp": "服务器 IP",
+  "trafficDashboardPublicIp": "你的 IP",
+  "trafficDashboardPublicIpHint": "当前连接的公网地址",
+  "trafficDashboardPublicIpRefresh": "刷新你的 IP",
+  "trafficDashboardPublicIpError": "无法刷新您的 IP，请重试。",
+  "trafficDashboardPublicIpCooldown": "每 4 秒可刷新一次",
+  "trafficDashboardDownloadTotal": "已下载",
+  "trafficDashboardUploadTotal": "已上传",
+  "trafficDashboardStateConnected": "已连接",
+  "trafficDashboardStateConnecting": "连接中",
+  "trafficDashboardStateDisconnected": "已断开",
+  "trafficDashboardUptimeHours": "{hours} 小时 {minutes} 分钟",
+  "@trafficDashboardUptimeHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "trafficDashboardUptimeMinutes": "{minutes} 分 {seconds} 秒",
+  "@trafficDashboardUptimeMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "trafficDashboardUptimeSeconds": "{seconds} 秒",
+  "@trafficDashboardUptimeSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "notAvailableShort": "无",
+  "daysLeft": "剩余 {days} 天",
+  "@daysLeft": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "daysLeftUnlimited": "剩余 ∞ 天",
+  "unlimitedTraffic": "无限",
+  "unlimitedSymbol": "∞",
+  "welcomeGreeting": "你好",
+  "welcomeTitlePrefix": "欢迎使用",
+  "welcomeSubtitle": "快速的 Android VPN 客户端",
+  "welcomeTapHint": "点击任意位置继续",
+  "hapticTitle": "振动",
+  "hapticSubtitle": "重要操作时轻微振动",
+  "statusNotificationTitle": "通知状态",
+  "statusNotificationSubtitle": "VPN 激活期间显示所选服务器、速度与延迟。",
+  "notificationSettingsTitle": "VPN 通知",
+  "notificationSettingsSubtitle": "服务器、流量、延迟与刷新频率。",
+  "notificationTrafficDisplayTitle": "通知显示内容",
+  "notificationTrafficDisplaySubtitle": "当前速度、总传输量，或两者。",
+  "notificationTrafficDisplaySpeed": "当前速度",
+  "notificationTrafficDisplayTotal": "累计传输",
+  "notificationTrafficDisplayBoth": "速度与总量",
+  "notificationTrafficTotalLabel": "总流量",
+  "notificationTrafficRefreshTitle": "流量刷新",
+  "notificationTrafficRefreshSubtitle": "通知中数据的更新频率。",
+  "notificationTrafficRefreshSeconds": "{seconds} 秒",
+  "@notificationTrafficRefreshSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationConnected": "VPN 已连接",
+  "notificationPingChecking": "...",
+  "notificationPingUnavailable": "延迟不可用",
+  "notificationRefreshPingAction": "刷新延迟",
+  "notificationStopAction": "停止",
+  "hideServerIpTitle": "隐藏服务器 IP",
+  "hideServerIpSubtitle": "隐藏 IP 地址的最后两个字节段",
+  "memoryLimitTitle": "核心内存软限制",
+  "memoryLimitEnabledSubtitle": "对 sing-box Go 部分管理内存的可选自适应上限。数值立即生效，不限制整个应用。",
+  "memoryLimitDisabledSubtitle": "已禁用。sing-box 的 Go 部分将在无 Etonify 内存预算的情况下管理内存，可能会占用更多内存。重启应用后生效。",
+  "memoryLimitDisableWarningTitle": "关闭核心软限制？",
+  "memoryLimitDisableWarningMessage": "关闭软限制后，sing-box 的 Go 部分可能更久地保留未使用的内存。这不会改变 Flutter 或 Android 的内存限制，也不会影响系统对进程的回收。更改将在重启 Etonify 后生效。",
+  "memoryLimitDisableConfirm": "禁用",
+  "enableInboundTitle": "已启用",
+  "vpnInDescription": "VPN TUN 是安卓系统 VPN 通道，用于手机流量。应用看到的是一个安卓 VPN，路由规则决定哪些流量走代理、哪些直连。",
+  "vpnInboundEnabledSubtitle": "创建 VPN TUN 入站并经其转发流量",
+  "inboundNoneEnabled": "启动前请先启用 VPN TUN 或代理入站。",
+  "mtuTitle": "MTU",
+  "mtuSubtitle": "TUN 接口数据包大小",
+  "mtuInputRange": "请输入 1280 到 9000 之间的数值。",
+  "mtuInvalidValue": "请输入 1280 到 9000 之间的值。",
+  "strictRouteTitle": "防止 VPN 被绕过",
+  "strictRouteSubtitle": "强制流量经过 VPN，降低流量绕过隧道泄漏的风险",
+  "tunImplementationTitle": "TUN 网络栈",
+  "tunImplementationSubtitle": "控制客户端在 VPN 内处理 TCP 与 UDP 流量的方式",
+  "tunImplementationNative": "sing-tun（推荐）",
+  "tunImplementationNativeSubtitle": "处理 VPN 流量的内置网络协议栈。",
+  "tunImplementationSystem": "系统（Android）",
+  "tunImplementationSystemSubtitle": "TCP 与 UDP 走 Android 系统网络栈，兼容性取决于设备与固件。",
+  "vpnEnableIpv6Title": "IPv6 支持",
+  "vpnEnableIpv6Subtitle": "经由 TUN 路由 IPv6。如果您的运营商或代理不支持 IPv6，请关闭。",
+  "proxyInDescription": "代理入口/混合模式是供手动配置的应用或其他设备使用的本地 HTTP/SOCKS 入口，不是 Android 系统 VPN。",
+  "proxyInboundEnabledSubtitle": "为应用和设备启动本地混合入站",
+  "allowLanConnectionsTitle": "允许局域网连接",
+  "allowLanConnectionsSubtitle": "启用后监听 0.0.0.0，否则仅监听 127.0.0.1",
+  "portTitle": "端口",
+  "proxyPortSubtitle": "本地混合入站端口",
+  "connectionModeTitle": "连接模式",
+  "connectionModeSubtitle": "VPN 覆盖整部手机。本地代理仅供手动配置了其地址的应用和设备使用。",
+  "connectionModeVpn": "VPN",
+  "connectionModeVpnSubtitle": "面向手机全部流量的系统级 Android VPN",
+  "connectionModeProxy": "代理",
+  "connectionModeProxySubtitle": "不使用系统 VPN 的本地 HTTP/SOCKS",
+  "connectionModeActiveStatus": "已激活：{mode}",
+  "@connectionModeActiveStatus": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionModeVpnStatusName": "VPN TUN",
+  "connectionModeProxyStatusName": "代理",
+  "advancedTunTitle": "高级 TUN 设置",
+  "advancedTunSubtitle": "MTU、严格路由与网络栈实现",
+  "localProxyTitle": "本地代理",
+  "localProxySubtitle": "供手动配置的应用使用的额外 HTTP/SOCKS 入口",
+  "localProxySettingsSubtitle": "地址、端口和访问凭据",
+  "lanProxySecurityTitle": "访问受保护",
+  "lanProxySecuritySubtitle": "局域网设备需要提供用户名和密码。身份验证可防止未授权使用，但本身不会加密本地网络。",
+  "proxyUsernameTitle": "用户名",
+  "proxyUsernameSubtitle": "1–64 个字符，不含空格或冒号",
+  "proxyPasswordTitle": "密码",
+  "regenerateProxyPasswordTitle": "修改密码",
+  "copyProxyCredentialsTitle": "复制连接信息",
+  "proxyCredentialsCopied": "代理连接信息已复制",
+  "proxyEndpointTitle": "地址",
+  "proxyLanAddressHint": "手机 IP",
+  "dnsUsePresetTitle": "使用预设",
+  "dnsResolverTitle": "解析器",
+  "dnsDirectPresetSubtitle": "推荐：udp://1.1.1.1",
+  "dnsDirectResolverSubtitle": "不走代理的直连请求所用 DNS",
+  "dnsProxyPresetSubtitle": "推荐：https://dns.cloudflare.com/dns-query",
+  "dnsProxyResolverSubtitle": "经代理发出的请求的 DNS",
+  "dnsResolverTypeTitle": "解析器类型",
+  "dnsPresetDevice": "设备网络",
+  "dnsPresetCustom": "自定义",
+  "dnsPresetDeviceSubtitle": "使用当前安卓网络的 DNS。",
+  "dnsPresetCustomSubtitle": "输入 IP/主机名（默认 UDP），或使用 udp://、tcp://、tls://、https://。",
+  "dnsPresetUdpSubtitle": "普通 UDP DNS。速度快，但不加密。",
+  "dnsPresetTcpSubtitle": "普通 TCP DNS。部分网络下更稳定，但未加密。",
+  "dnsPresetTlsSubtitle": "DNS over TLS。853 端口上的加密 DNS。",
+  "dnsPresetHttpsSubtitle": "DNS over HTTPS。经 HTTPS 加密的 DNS，通常经代理效果最佳。",
+  "dnsProtectionTitle": "防护",
+  "dnsSecureOnlyTitle": "仅加密 DNS",
+  "dnsSecureOnlySubtitle": "仅允许 DoH 和 DoT。不使用明文 UDP、TCP 和设备 DNS。",
+  "dnsDirectThroughProxyTitle": "直连 DNS（经代理）",
+  "dnsDirectThroughProxySubtitle": "为直连路由的 DNS 提供保护，同时网站流量保持直连。",
+  "urlTestUrlTitle": "测试地址",
+  "urlTestUrlSubtitle": "若订阅已定义该值，则使用订阅的值",
+  "urlTestIntervalTitle": "间隔，秒。",
+  "urlTestIntervalCompactTitle": "检查间隔",
+  "urlTestIntervalSubtitle": "自动选择时代理的检测频率",
+  "urlTestTimeoutTitle": "超时（秒）",
+  "urlTestTimeoutCompactTitle": "测试超时",
+  "urlTestTimeoutSubtitle": "单个代理测试超时前等待的时长",
+  "urlTestConcurrencyTitle": "测试并发数",
+  "urlTestConcurrencySubtitle": "URLTest 同时检测的代理数量",
+  "urlTestSingleRetestTitle": "快速重试延迟，秒。",
+  "urlTestSingleRetestCompactTitle": "快速重试",
+  "urlTestSingleRetestSubtitle": "代理失败后，多久进行一次快速复测",
+  "locationLookupTitle": "位置",
+  "locationLookupSubtitle": "经代理自身查询 IP 与国家/地区",
+  "locationLookupLimitTitle": "检测最优代理",
+  "locationLookupLimitSubtitle": "URLTest 之后，应用会为指定数量的最快出站解析外部 IP 和国家/地区",
+  "locationLookupTimeoutTitle": "请求超时",
+  "locationLookupTimeoutSubtitle": "单个服务器等待外部 IP 和国家信息的时长",
+  "locationLookupConcurrencyTitle": "并行请求数",
+  "locationLookupConcurrencySubtitle": "可同时运行的位置查询数量",
+  "settingsSecondsShort": "{seconds}秒",
+  "@settingsSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "serverRequestTitle": "服务器请求",
+  "sendHwidTitle": "发送 HWID",
+  "sendHwidSubtitle": "部分 Happ 订阅需要",
+  "sendHwidGlobalEnabledSubtitle": "由于已启用全局服务商权限，HWID 会被发送。在此处关闭不会覆盖全局设置。",
+  "useCustomHwidTitle": "设置自定义 HWID",
+  "useCustomHwidSubtitle": "使用此 HWID，而非本设备的 HWID",
+  "customUserAgentTitle": "自定义 User-Agent",
+  "customUserAgentSubtitle": "覆盖此订阅的默认 Etonify User Agent",
+  "customHwidTitle": "自定义 HWID",
+  "customHwidSubtitle": "留空以使用设备 HWID",
+  "customRequestHeadersTitle": "自定义请求头",
+  "customRequestHeadersSubtitle": "每行一个请求头，格式为 Header: value",
+  "hwidTitle": "HWID",
+  "hwidSubtitle": "部分订阅服务商使用的设备标识符",
+  "hwidValueTitle": "你的 HWID",
+  "coreStartFailedTitle": "核心启动失败",
+  "coreStartFailedMessage": "sing-box 启动失败。\n\n{message}",
+  "@coreStartFailedMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "vpnStopFailed": "VPN 未完全停止。请打开日志后重试。",
+  "clearLogsTitle": "清空日志",
+  "logsFilterTitle": "筛选",
+  "logsFilterAll": "全部",
+  "singBoxLogLevelTitle": "sing-box 日志级别",
+  "logLevelTrace": "Trace",
+  "logLevelDebug": "调试",
+  "logLevelInfo": "信息",
+  "logLevelWarning": "警告",
+  "logLevelError": "错误",
+  "noLogsTitle": "暂无日志",
+  "continueLabel": "开始使用",
+  "subscriptionsTab": "订阅",
+  "subscriptionsTitle": "订阅",
+  "settingsProfilesChecksTitle": "订阅与检测",
+  "settingsProfilesChecksSubtitle": "服务器检测 · HWID · 配置选项",
+  "addSubscription": "添加订阅",
+  "addSubscriptionQuickTitle": "添加配置",
+  "addSubscriptionQuickSubtitle": "选择导入订阅的方式。",
+  "addSubscriptionFromClipboard": "剪贴板",
+  "addSubscriptionManual": "手动",
+  "addSubscriptionReadingClipboard": "正在读取剪贴板…",
+  "addSubscriptionReadingFile": "正在读取文件…",
+  "addSubscriptionImporting": "正在导入订阅…",
+  "addSubscriptionSaving": "正在保存配置…",
+  "addSubscriptionDone": "订阅已添加",
+  "clipboardEmpty": "剪贴板为空",
+  "scanQrCode": "扫描二维码",
+  "showQrCode": "显示二维码",
+  "subscriptionQrTitle": "订阅二维码",
+  "subscriptionQrHint": "在另一台设备上扫描此二维码以导入订阅。",
+  "subscriptionQrUnsupported": "此订阅暂不支持以二维码分享。",
+  "invalidQrSubscription": "二维码不包含受支持的订阅链接。",
+  "subscriptionUrl": "订阅 URL",
+  "editSubscriptionUrlAction": "编辑 URL",
+  "saveAction": "保存",
+  "subscriptionUrlEditHint": "一个配置只能从一个 URL 更新。若旧导入把多个链接合并在了一起，请保留需要的链接，其余来源另建配置添加。保存后请刷新订阅。",
+  "subscriptionUrlSingleSourceRequired": "只保留一个 URL，其他来源请添加为单独的配置。",
+  "subscriptionUrlOrContent": "URL 或内容",
+  "subscriptionUrlOrContentHint": "粘贴 URL、vless:// 链接、链接列表或配置",
+  "importFromFile": "从文件导入",
+  "invalidSubscriptionFile": "读取订阅文件失败",
+  "backupUseSettingsImport": "这是 Etonify 备份文件。请从「设置 → 导入」导入。",
+  "subscriptionName": "名称（可选）",
+  "add": "添加",
+  "cancel": "取消",
+  "delete": "删除",
+  "refresh": "刷新",
+  "reparseProxies": "重新解析代理",
+  "subscriptionLocalImportBadge": "本地导入",
+  "refreshAll": "全部刷新",
+  "refreshSubscriptions": "刷新订阅",
+  "subscriptionSortTitle": "订阅排序",
+  "subscriptionSortManual": "当前顺序",
+  "subscriptionSortByName": "按名称",
+  "subscriptionSortByUpdated": "按最后更新",
+  "subscriptionSortByServers": "按代理数量",
+  "subscriptionActionsTitle": "订阅操作",
+  "subscriptionCopyUrl": "复制 URL 到剪贴板",
+  "subscriptionShowUrlQr": "显示 URL 二维码",
+  "subscriptionUrlCopied": "订阅链接已复制",
+  "subscriptionImportHelpTitle": "如何添加订阅",
+  "subscriptionImportHelpBody": "从您的服务商处复制订阅链接并点击「剪贴板」，或扫描二维码。如果链接无法识别，请打开「手动」并粘贴 URL、vless:// 链接、密钥列表或 sing-box/Xray 配置。对于 Happ 订阅，如果服务商要求，请在手动导入中启用 User Agent 或 HWID。",
+  "subscriptionsRefreshAllComplete": "已更新 {updated} 个订阅，{failed} 个失败",
+  "subscriptionsRefreshAllProgress": "正在更新 {completed} / {total}",
+  "@subscriptionsRefreshAllProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@subscriptionsRefreshAllComplete": {
+    "placeholders": {
+      "updated": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteSubscription": "删除订阅？",
+  "deleteSubscriptionConfirm": "这将删除该订阅中的所有代理。",
+  "subscriptionDetailsTitle": "订阅",
+  "subscriptionMovedTitle": "订阅已迁移",
+  "ignoreAction": "忽略",
+  "updateUrlAction": "更新 URL",
+  "autoUpdateTitle": "自动更新",
+  "disableAutoUpdateTitle": "禁用自动更新",
+  "disabledLabel": "已禁用",
+  "refreshesEvery": "刷新间隔：{interval}",
+  "@refreshesEvery": {
+    "placeholders": {
+      "interval": {
+        "type": "String"
+      }
+    }
+  },
+  "usageTitle": "用量",
+  "spentTraffic": "已用 {usage}",
+  "@spentTraffic": {
+    "placeholders": {
+      "usage": {
+        "type": "String"
+      }
+    }
+  },
+  "untilDate": "有效期至 {date}",
+  "@untilDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "infoTitle": "信息",
+  "supportUrlLabel": "支持",
+  "websiteLabel": "网站",
+  "newUrlTitle": "新建 URL",
+  "movedSubscriptionMessage": "服务器报告该订阅已迁移到新的 URL。",
+  "movedSubscriptionPrompt": "服务器报告了新的订阅 URL。现在更新还是保留当前 URL？",
+  "noSubscriptions": "暂无订阅",
+  "noProxies": "没有代理",
+  "noSubscriptionsHint": "点击 + 添加订阅 URL",
+  "outboundsCount": "{count} 个代理",
+  "@outboundsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subscriptionServersCount": "{count} 个代理",
+  "@subscriptionServersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "subscriptionReparseRecommended": "需要重新解析",
+  "subscriptionProxyTypeLabel": "代理",
+  "moreProxies": "…还有 {count} 个代理",
+  "@moreProxies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lastUpdatedDateTime": "更新于 {date} {time}",
+  "@lastUpdatedDateTime": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "trafficUsage": "{used} / {total}",
+  "@trafficUsage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "expired": "已过期",
+  "loading": "加载中…",
+  "error": "错误",
+  "invalidUrl": "请输入有效的 URL",
+  "fetchFailed": "获取订阅失败",
+  "subscriptionSavedWithFetchWarning": "订阅已保存，但服务器无响应。您可以稍后更改 HWID 或请求头再刷新。",
+  "subscriptionSavedWithFetchWarningReason": "订阅已保存，但没有服务器。原因：{reason} 请检查链接、HWID 或请求头，然后刷新订阅。",
+  "@subscriptionSavedWithFetchWarningReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionErrorInvalidUrl": "订阅链接无效。请重新复制，并确保以 http:// 或 https:// 开头。",
+  "subscriptionErrorHttpsRequired": "请使用 HTTPS 地址加载此订阅。明文 HTTP 仅允许本地回环地址。",
+  "subscriptionErrorUnsafeRedirect": "订阅服务器试图从 HTTPS 重定向到不安全的 HTTP，Etonify 已拦截此次重定向。",
+  "subscriptionErrorRedirect": "订阅链接重定向不正确或次数过多。请向提供商索取直接链接。",
+  "subscriptionErrorHttp400": "服务器拒绝了请求（HTTP 400）。请检查链接及其参数。",
+  "subscriptionErrorHttp401": "授权失败（HTTP 401）。令牌、登录名或 HWID 可能无效。",
+  "subscriptionErrorHttp402": "需要付款（HTTP 402）。请续订订阅或联系提供商。",
+  "subscriptionErrorHttp403": "访问被拒绝（HTTP 403）。订阅可能已过期、被封禁，或需要正确的 HWID。",
+  "subscriptionErrorHttp404": "未找到订阅（HTTP 404）。链接可能已被删除或复制有误。",
+  "subscriptionErrorHttp408": "订阅服务器超时（HTTP 408），请稍后重试。",
+  "subscriptionErrorHttp410": "订阅已过期或被删除（HTTP 410），请向提供方索取新链接。",
+  "subscriptionErrorHttp429": "请求过于频繁（HTTP 429）。请稍后再试。",
+  "subscriptionErrorHttp500": "订阅服务器发生内部错误（HTTP 500），这是服务商侧的问题。",
+  "subscriptionErrorHttp502": "订阅网关不可用（HTTP 502）。服务商当前无法连接到其上游服务器。",
+  "subscriptionErrorHttp503": "订阅服务暂时不可用（HTTP 503），可能正在维护。",
+  "subscriptionErrorHttp504": "服务商的上游服务器未及时响应（HTTP 504），请稍后再试。",
+  "subscriptionErrorHttpStatus": "订阅服务器返回了 HTTP {status}。请检查服务商状态或索取新链接。",
+  "@subscriptionErrorHttpStatus": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "subscriptionErrorDns": "找不到订阅主机。请检查域名、DNS 和网络连接。",
+  "subscriptionErrorConnection": "无法连接到订阅服务器，请检查网络连接或稍后重试。",
+  "subscriptionErrorTls": "与订阅服务器的安全连接失败。其 TLS 证书可能无效或已过期。",
+  "subscriptionErrorEmptyResponse": "订阅服务器返回了空响应。链接可能已过期，或服务商出现了问题。",
+  "subscriptionErrorHtmlResponse": "服务器返回的是网页而非订阅内容。该链接可能打开了登录页或错误页。",
+  "subscriptionErrorResponseTooLarge": "订阅响应过大，已被拦截以保护应用。",
+  "subscriptionErrorNoUsableProxies": "订阅中未找到受支持的代理服务器。订阅可能为空、已过期，或使用了不受支持的格式。",
+  "wireGuardUnsupportedMessage": "自 0.3.1 版本起，Etonify 因协议稳定性问题不再支持 WireGuard。请使用其他协议的服务器。",
+  "wireGuardServersSkippedMessage": "已跳过 WireGuard 服务器。自 0.3.1 版本起，Etonify 因协议稳定性问题不再支持 WireGuard。",
+  "subscriptionErrorInvalidContent": "服务器返回的内容不是有效的订阅，请确认链接直接指向订阅文件。",
+  "subscriptionErrorHappInvalid": "无法解密 Happ 链接，或其中包含无效的订阅 URL。请复制新链接后重试。",
+  "subscriptionErrorUnknown": "无法处理该订阅。请检查链接，并打开诊断页面查看技术原因。",
+  "sourceLabel": "来源",
+  "importedFromFileLabel": "从文件导入：{name}",
+  "@importedFromFileLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deepLinkImportTitle": "导入订阅",
+  "deepLinkImportMessage": "确定要导入此订阅吗？",
+  "deepLinkImportNameLabel": "名称",
+  "deepLinkImportAction": "导入",
+  "deepLinkImportSourceLabel": "来源链接",
+  "deepLinkImportResolvedUrlLabel": "解析后的订阅 URL",
+  "deepLinkImportHappBadge": "Happ 订阅",
+  "deepLinkImportHappNotice": "部分 Happ 订阅需要 HWID。Etonify 仅在您确认后才会发送。",
+  "deepLinkImportHappSendHwidAction": "发送 HWID 并导入",
+  "deepLinkImportHappWithoutHwidAction": "不使用 HWID 导入",
+  "deepLinkImportHappCancelAction": "不导入",
+  "deepLinkImportUserAgentLabel": "User-Agent",
+  "deepLinkImportHwidLabel": "HWID",
+  "deepLinkImportHwidValue": "将在确认后发送",
+  "deepLinkImportSuccess": "订阅「{name}」已导入",
+  "@deepLinkImportSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deepLinkImportAlreadyExists": "订阅“{name}”已添加",
+  "@deepLinkImportAlreadyExists": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "happCryptoLinkImportedLabel": "从 Happ 链接导入",
+  "happCryptoLinkTitle": "Happ 链接",
+  "happCryptUnsupportedTitle": "Happ crypt5",
+  "happCryptUnsupportedMessage": "暂不支持此类 Happ 链接。",
+  "happImportTitle": "Happ 订阅",
+  "happImportMessage": "该 Happ 订阅可能需要 HWID。您可以现在发送，或尝试不带 HWID 导入。",
+  "subscriptionOperationSlowWarning": "订阅服务器响应比平时慢。如果持续出现，请检查链接或网络。",
+  "subscriptionOperationTimeout": "订阅服务器未及时响应。请检查链接或网络后重试。",
+  "continueAction": "继续",
+  "routingTitle": "路由",
+  "routingSubtitle": "流量路由规则",
+  "bypassLocalNetworkTitle": "绕过本地网络",
+  "bypassLocalNetworkSubtitle": "私有与局域网地址直接路由",
+  "russiaRoutesTitle": "智能路由",
+  "russiaRoutesRunetFreedomBadge": "runetfreedom",
+  "russiaRoutesDomainListBadge": "domain-list-community",
+  "russiaRoutesSubtitle": "俄罗斯服务直连，被屏蔽的资源走 VPN。",
+  "russiaRoutesInstallAction": "下载规则",
+  "russiaRoutesReinstallAction": "更新",
+  "russiaRoutesUpdateAction": "立即检查",
+  "russiaRoutesUpdateAvailable": "有新的规则版本可用：{version}",
+  "@russiaRoutesUpdateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "russiaRoutesLatest": "已安装最新版本的规则。",
+  "russiaRoutesEnableTitle": "启用智能路由",
+  "russiaRoutesEnabledSubtitle": "将预置规则应用于 VPN 连接。",
+  "russiaRoutesMissingSubtitle": "内置数据库可离线使用，启用后自动接入。",
+  "russiaRoutesPreparingStatus": "正在更新规则…",
+  "russiaRoutesPreparingHint": "正在下载最新数据库、校验 SRS 文件并安全替换本地规则。",
+  "russiaRoutesStageChecking": "正在检查规则版本…",
+  "russiaRoutesStageDownloading": "正在下载规则压缩包…",
+  "russiaRoutesStageVerifying": "正在验证压缩包完整性……",
+  "russiaRoutesStageExtracting": "正在解压 SRS 文件…",
+  "russiaRoutesStageCategories": "正在更新服务列表…",
+  "russiaRoutesStageCompiling": "正在编译本地规则…",
+  "russiaRoutesStageActivating": "正在安全替换规则…",
+  "russiaRoutesStageComplete": "规则已更新",
+  "russiaRoutesDownloadProgress": "已下载 {completed} / 共 {total}。",
+  "@russiaRoutesDownloadProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "russiaRoutesItemsProgress": "已处理列表：{completed} / {total}。",
+  "@russiaRoutesItemsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "russiaRoutesItemsProcessed": "已处理的列表：{completed}。",
+  "@russiaRoutesItemsProcessed": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "russiaRoutesMissingStatus": "规则尚未安装",
+  "russiaRoutesMissingHint": "先接入内置数据库，然后在后台检查并下载最新版本。",
+  "russiaRoutesReadyHint": "规则存储在本地。新版本每天启动时至多检查一次。",
+  "@russiaRoutesReadyStatus": {
+    "placeholders": {
+      "versionTag": {
+        "type": "String"
+      }
+    }
+  },
+  "russiaRoutesReadyStatus": "就绪 · {versionTag}",
+  "russiaRoutesLiveSource": "runetfreedom",
+  "russiaRoutesBundledSource": "内置数据库",
+  "@russiaRoutesSourceMeta": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "verifiedAt": {
+        "type": "String"
+      },
+      "fileCount": {
+        "type": "int"
+      }
+    }
+  },
+  "russiaRoutesSourceMeta": "来源：{source} · {verifiedAt} · 文件数：{fileCount}",
+  "@russiaRoutesMeta": {
+    "placeholders": {
+      "installedAt": {
+        "type": "String"
+      },
+      "domainListUpdatedAt": {
+        "type": "String"
+      },
+      "categoryCount": {
+        "type": "int"
+      },
+      "domainCount": {
+        "type": "int"
+      }
+    }
+  },
+  "russiaRoutesMeta": "runetfreedom：{installedAt} · domain-list-community：{domainListUpdatedAt} · 分类：{categoryCount} · 域名：{domainCount}",
+  "adBlockTitle": "广告拦截",
+  "adBlockSubtitle": "客户端将自行下载本地规则集并接入路由。",
+  "adBlockDownloadAction": "下载",
+  "adBlockDownloadAndEnableAction": "下载并启用",
+  "adBlockUpdateAction": "更新",
+  "adBlockEnableTitle": "启用本地拦截",
+  "adBlockEnabledSubtitle": "使用已下载的本地规则集进行 DNS 与路由拦截。",
+  "adBlockMissingSubtitle": "请先下载过滤器包才能使用。",
+  "adBlockDownloadingStatus": "正在下载并构建本地过滤器…",
+  "adBlockDeletingStatus": "正在删除过滤器…",
+  "adBlockStageConnecting": "正在连接 AdGuard…",
+  "adBlockStageDownloading": "正在下载过滤器列表…",
+  "adBlockStageCompiling": "正在构建本地规则集…",
+  "adBlockStageActivating": "正在安全替换规则集…",
+  "adBlockStageComplete": "过滤器已更新",
+  "adBlockPreparingHint": "正在准备下载……",
+  "@adBlockDownloadedProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "String"
+      }
+    }
+  },
+  "adBlockDownloadedProgress": "已下载 {completed}",
+  "@adBlockDownloadProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "adBlockDownloadProgress": "{completed} / {total}",
+  "@adBlockDownloadProgressEta": {
+    "placeholders": {
+      "completed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "adBlockDownloadProgressEta": "已完成 {completed}/{total}，还剩约 {seconds} 秒",
+  "adBlockMissingStatus": "过滤器尚未下载",
+  "adBlockMissingHint": "下载 AdGuard 过滤器以启用拦截。过滤器将保存在此设备上。",
+  "@adBlockReadyStatus": {
+    "placeholders": {
+      "blockedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "adBlockReadyStatus": "过滤器已就绪，域名数：{blockedCount}",
+  "@adBlockMeta": {
+    "placeholders": {
+      "updatedAt": {
+        "type": "String"
+      },
+      "allowedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "adBlockMeta": "更新时间：{updatedAt} · 例外：{allowedCount}",
+  "splitRoutingTitle": "分应用路由",
+  "splitRoutingSubtitle": "选择哪些应用走 VPN，哪些直连。",
+  "splitRoutingUnavailableTitle": "暂时不可用",
+  "splitRoutingUnavailableMessage": "分应用代理目前无法正常工作，我们正在修复，请关注更新。",
+  "splitRoutingTunOnly": "仅在 VPN 模式下可用。本地代理模式无法管理应用。",
+  "splitRoutingModeTitle": "模式",
+  "splitRoutingModeDisabled": "关闭",
+  "splitRoutingModeDisabledSubtitle": "未使用分流",
+  "splitRoutingModeProxySelected": "走 VPN",
+  "splitRoutingModeProxySelectedSubtitle": "仅所选应用使用 VPN",
+  "splitRoutingModeBypassSelected": "VPN 之外",
+  "splitRoutingModeBypassSelectedSubtitle": "所选应用直连",
+  "splitRoutingLockdownWarning": "开启 Android 的「始终开启 VPN」并勾选「阻止未通过 VPN 的连接」后，被设为不走 VPN 的应用可能会无法联网。",
+  "splitRoutingAppsTitle": "应用",
+  "splitRoutingAppVisibilityNotice": "Android 仅为选择应用而向 Etonify 提供已安装应用列表，该列表仅保留在本设备上。",
+  "splitRoutingPackagesTitle": "包名",
+  "splitRoutingPackagesHint": "com.termux\norg.mozilla.firefox",
+  "splitRoutingPackagesHelper": "包名，例如 org.telegram.messenger",
+  "splitRoutingPickAppsAction": "选择应用",
+  "splitRoutingPickAppsTitle": "选择应用",
+  "splitRoutingSearchHint": "按应用或包名搜索",
+  "splitRoutingAndroidOnly": "应用选择器仅在安卓上可用",
+  "splitRoutingLoadAppsFailed": "加载已安装应用失败",
+  "splitRoutingSelectedCount": "已选 {count} 个",
+  "splitRoutingNoAppsTitle": "尚未选择应用",
+  "splitRoutingNoAppsSubtitle": "为此模式选择应用",
+  "splitRoutingManualEditorTitle": "手动包名列表",
+  "splitRoutingManualEditorSubtitle": "手动输入包名",
+  "@refreshIntervalDaysShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "refreshIntervalDaysShort": "{count} 天",
+  "@refreshIntervalHoursShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "refreshIntervalHoursShort": "{count} 小时",
+  "@refreshIntervalMinutesShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "refreshIntervalMinutesShort": "{count} 分钟",
+  "happCrypt5Supported": "可用",
+  "happCrypt5Unsupported": "不可用",
+  "happCrypt5Checking": "正在检查 Happ crypt5…",
+  "happCrypt5SupportedDescription": "此版本支持打开 Happ crypt5 链接。",
+  "happCrypt5UnsupportedDescription": "此版本不包含 Happ crypt5 文件，普通订阅仍可正常使用。",
+  "subscriptionLikelyRequiresHwidTitle": "可能需要 HWID",
+  "subscriptionLikelyRequiresHwidWarning": "此订阅可能需要 HWID。服务器仅返回了一个名称含 app/HWID 的出站。请打开订阅设置并启用 HWID 发送。",
+  "subscriptionLikelyRequiresHwidMessage": "服务器仅返回了一个出站，且其名称像是与应用或 HWID 相关的占位符。\n\n这通常意味着订阅要求在请求中携带设备 HWID。\n\n是否现在启用 HWID 发送并重新更新订阅？",
+  "subscriptionLikelyRequiresHwidAction": "启用 HWID",
+  "subscriptionHwidEnabledAndUpdated": "已启用 HWID 发送，订阅已更新。",
+  "noValidOutboundsTitle": "没有可用节点",
+  "noValidOutboundsWarning": "此订阅中没有可用的出站，均已在校验时被过滤。请检查或更新订阅。",
+  "noValidOutboundsMessage": "该订阅已没有可用的出站。\n\n所有节点在启动前的校验中均被过滤，因此客户端不会以空代理集合启动 sing-box。\n\n请检查订阅、刷新后重试，或导入有效的订阅。",
+  "noValidOutboundsAfterDropInvalidWarning": "剔除无效节点后，所选订阅中已没有可用的出站。请检查该订阅，它可能有问题。",
+  "noValidOutboundsAfterDropInvalidMessage": "启动时所选订阅中剩余的节点均被判定为无效并丢弃。\n\n客户端已在将损坏的配置交给 sing-box 之前停止。\n\n请检查订阅内容并更新或替换。",
+  "@splitRoutingSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "experimentalTcpFastOpenTitle": "TCP Fast Open",
+  "experimentalTcpFastOpenSubtitle": "可能缩短 TCP 握手时间，但支持情况取决于网络与服务器。",
+  "experimentalTcpMultiPathTitle": "TCP 多路径",
+  "experimentalTcpMultiPathSubtitle": "尝试多条网络路径。可能有助于网络切换，但可能导致手机发热或运行不稳定。",
+  "experimentalInterruptConnectionsTitle": "切换节点时中断活动连接",
+  "experimentalInterruptConnectionsSubtitle": "更快应用代理变更，但旧的应用连接可能被中断。",
+  "experimentalUrlTestStrictToleranceTitle": "URLTest 1 毫秒容差",
+  "experimentalUrlTestStrictToleranceSubtitle": "更严格地选择最低延迟的代理，但可能会更频繁地切换服务器。",
+  "experimentalFakeIpTitle": "改写 DNS 应答（FakeIP）",
+  "experimentalFakeIpSubtitle": "加速 VPN TUN 内的域名处理。部分应用可能不兼容。",
+  "experimentalFakeIpUnavailableSubtitle": "仅在开启 VPN TUN 且关闭分应用路由时可用。",
+  "tlsFragmentationTitle": "TLS 分片",
+  "tlsFragmentationSubtitle": "对代理出站进行 TLS 握手分片。有助于对抗 DPI，但可能减慢连接建立速度。",
+  "tlsFragmentationModeDisabled": "已禁用",
+  "tlsFragmentationModeDisabledSubtitle": "不更改服务器 TLS 设置。",
+  "tlsFragmentationModeRecord": "TLS 记录分片",
+  "tlsFragmentationModeRecordSubtitle": "更温和的模式，建议优先尝试。",
+  "tlsFragmentationModeFragment": "TLS 分片",
+  "tlsFragmentationModeFragmentSubtitle": "更激进的模式，备用延迟为 300 毫秒。",
+  "blockLeaksTitle": "修复部分泄漏",
+  "blockLeaksSubtitle": "仅拦截可能绕过代理的 STUN/WebRTC 流量",
+  "addSubscriptionCaption": "通过链接或文件添加订阅",
+  "pasteSubscriptionLink": "粘贴订阅链接",
+  "orManually": "或手动",
+  "pasteAction": "粘贴",
+  "cancelAction": "取消",
+  "settingsMenuImport": "导入",
+  "settingsMenuExport": "导出",
+  "settingsResetAction": "重置设置",
+  "settingsResetTitle": "重置设置？",
+  "settingsResetMessage": "所有客户端设置将恢复为默认值。订阅和已选服务器将保留。",
+  "settingsResetSuccess": "设置已恢复默认",
+  "backupExportSettings": "导出设置",
+  "backupExportProfileEncrypted": "带密码导出订阅",
+  "backupExportProfilePlain": "不加密导出订阅",
+  "backupPlainWarningTitle": "文件将包含 VPN 密钥",
+  "backupPlainWarningMessage": "明文导出文件可被任何获取该文件的人读取。除非您完全信任存储与传输途径，否则请使用加密导出。",
+  "backupPlainImportTitle": "明文配置文件",
+  "backupPlainImportMessage": "此文件包含未加密的订阅和 VPN 密钥。仅在信任来源时导入。",
+  "backupPasswordCreateTitle": "创建导出密码",
+  "backupPasswordEnterTitle": "输入配置密码",
+  "backupPasswordHint": "密码",
+  "backupSaved": "备份文件已保存",
+  "backupImported": "导入完成",
+  "backupUnsupportedVersion": "此客户端版本不支持该备份格式。",
+  "backupNewerVersionTitle": "来自更新客户端的备份",
+  "@backupNewerVersionMessage": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNewerVersionMessage": "此文件由 Etonify {version} 创建。部分设置可能无法正确应用。继续吗？",
+  "splitRoutingEmptyWhitelist": "启动 VPN 前请至少选择一个应用，或关闭分应用代理。",
+  "splitRoutingUnknownAppLabel": "未找到应用",
+  "splitRoutingLoadingAppLabel": "正在查找应用…",
+  "connectionStagePreparing": "正在准备 VPN",
+  "connectionStageConfiguring": "正在构建配置",
+  "connectionStageStarting": "正在启动核心",
+  "connectionStageStopping": "正在停止 VPN",
+  "connectionStageRecovering": "正在恢复",
+  "connectionStageSelectingProxy": "正在选择服务器",
+  "vpnStartTimedOut": "VPN 未在 15 秒内启动，已停止启动。",
+  "vpnStartFailed": "VPN 启动失败。",
+  "trafficRulesTitle": "流量规则",
+  "trafficRulesSettingsTitle": "流量规则",
+  "trafficRulesSettingsSubtitle": "为域名与 IP 路由选择一条已验证的规则。",
+  "trafficRulesCurrentLabel": "当前规则",
+  "trafficRulesNone": "未选择",
+  "trafficRulesUsePresetTitle": "使用流量规则",
+  "trafficRulesUsePresetSubtitle": "为域名与 IP 路由选择现成预设。",
+  "trafficRulesUsePresetAction": "使用预设",
+  "trafficRulesDisablePreset": "禁用预设",
+  "trafficRulesQuickSelection": "快速选择",
+  "trafficRulesDeveloperSection": "开发者规则",
+  "trafficRulesDeveloperSubtitle": "经验证的预设，附详细说明。",
+  "trafficRulesVerified": "已验证",
+  "trafficRulesVerifiedInfo": "经 MeowTeam 验证。由官方开发者创建。",
+  "trafficRulesOnlyOne": "为避免冲突，一次只能启用一条流量规则。",
+  "trafficRulesAvailableOffline": "准备完成后，该规则无需联网即可使用。",
+  "trafficRulesDataReady": "规则数据已就绪",
+  "trafficRulesDataMissing": "规则数据尚未准备好",
+  "trafficRulesUpdateData": "更新规则数据",
+  "trafficRulesDeleteData": "删除规则数据",
+  "trafficRulesRussianTitle": ".RU 不走 VPN",
+  "trafficRulesRussianSubtitle": "俄罗斯服务和本地地址绕过 VPN。",
+  "trafficRulesRussianSummary": "俄罗斯服务直连，其他流量走 VPN。",
+  "trafficRulesAiTitle": "AI 服务走 VPN",
+  "trafficRulesAiSubtitle": "常用 AI 服务走 VPN，其余流量直连。",
+  "trafficRulesAiSummary": "AI 服务走 VPN，其他流量直连。",
+  "trafficRulesSocialTitle": "社交网络走 VPN",
+  "trafficRulesSocialSubtitle": "常用社交网络和即时通讯走 VPN，其余流量直连。",
+  "trafficRulesSocialSummary": "社交网络和即时通讯走 VPN，其他流量直连。",
+  "trafficRulesDetails": "规则详情",
+  "trafficRulesDescription": "描述",
+  "trafficRulesAuthor": "作者",
+  "trafficRulesRoutingDomains": "域名路由",
+  "trafficRulesSettings": "设置",
+  "trafficRulesRuDnsTitle": ".RU 域名 DNS 不走 VPN",
+  "trafficRulesRuDnsSubtitle": "仅用于该规则直连的俄罗斯域名。默认：udp://77.88.8.8。",
+  "trafficRulesDefaultRoute": "其他所有",
+  "trafficRulesDirect": "直连",
+  "trafficRulesVpn": "经 VPN",
+  "trafficRulesIncludes": "包含",
+  "trafficRulesLocalNetwork": "本地网络始终直连",
+  "trafficRulesChoose": "选择规则",
+  "trafficRulesChosen": "已选择",
+  "trafficRulesDisabled": "已禁用",
+  "trafficRulesPreparing": "正在准备规则数据…",
+  "trafficRulesApplying": "正在应用规则…",
+  "logsJumpToLatest": "跳到最新日志",
+  "proxyOpenGroup": "打开分组：{name}",
+  "proxyGroupNoAvailableServersMessage": "该分组中没有可用服务器，请尝试其他分组或重新检测。",
+  "@proxyOpenGroup": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "trafficRulesPrepareFailed": "无法准备规则数据。请检查连接后重试。",
+  "remoteDownloadConnectTimeout": "5 秒内未能连接到服务器。请检查网络或已启用的 VPN 后重试。",
+  "remoteDownloadResponseTimeout": "服务器 5 秒内未开始响应。请检查网络或当前 VPN 后重试。",
+  "remoteDownloadRetryWithoutVpn": "尝试不走 VPN",
+  "remoteDownloadRetryWithoutVpnHint": "VPN 路由无响应。正经由 Wi-Fi 或移动数据重试。",
+  "remoteDownloadIdleTimeout": "服务器 7 秒未发送数据，下载已停止，请重试。",
+  "routingRuleFilesTitle": "规则文件",
+  "routingRuleFilesSettingsTitle": "规则文件",
+  "routingRuleFilesSettingsReady": "{count} 个文件已就绪",
+  "@routingRuleFilesSettingsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routingRuleFilesSettingsPreparing": "打开此页面时将准备内置文件",
+  "routingRuleFilesReadyTitle": "规则文件已就绪",
+  "routingRuleFilesReadySubtitle": "SRS 文件保存在本机，可离线使用。",
+  "routingRuleFilesPreparingTitle": "正在准备内置文件",
+  "routingRuleFilesPreparingSubtitle": "正在为流量规则准备本地 SRS 文件。",
+  "routingRuleFilesSourceTitle": "来源",
+  "routingRuleFilesVersionTitle": "版本",
+  "routingRuleFilesCountTitle": "文件",
+  "routingRuleFilesTotalSizeTitle": "总大小",
+  "routingRuleFilesScopeTitle": "当前优先：俄罗斯",
+  "routingRuleFilesScopeSubtitle": "当前规则集主要覆盖俄罗斯的网络和服务。未来更新会增加更多地区。",
+  "routingRuleFilesOpenSourceFailed": "无法打开来源页面，请重试。",
+  "routingRuleFilesSourceMeta": "来源：{source} · 版本：{version} · 文件：{count}",
+  "@routingRuleFilesSourceMeta": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "version": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routingRuleFilesUpdateAction": "更新文件",
+  "routingRuleFilesUpdatingAction": "正在更新文件……",
+  "routingRuleFilesEta": "大约还剩 {duration}",
+  "@routingRuleFilesEta": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "routingRuleFilesSecondsShort": "{seconds} 秒",
+  "@routingRuleFilesSecondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "routingRuleFilesMinutesShort": "{minutes} 分钟",
+  "@routingRuleFilesMinutesShort": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "routingRuleFilesListTitle": "规则文件",
+  "routingRuleFilesEmptyTitle": "文件尚未就绪",
+  "routingRuleFilesEmptySubtitle": "请重新打开此页面或点击“更新文件”。",
+  "trafficRulesRuleCount": "{count} 个分类",
+  "@trafficRulesRuleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coreIntegrationTitle": "核心与配置",
+  "coreIntegrationSubtitle": "显示内置核心和上次应用配置的实际状态，而不仅是应用界面上的开关。",
+  "coreApiLabel": "核心 API",
+  "coreCompatibilityLabel": "兼容性",
+  "coreCompatible": "兼容",
+  "coreIncompatible": "不兼容",
+  "coreConfigStateLabel": "配置状态",
+  "coreConfigApplied": "已应用",
+  "coreConfigValidated": "已验证",
+  "coreConfigFailed": "失败",
+  "coreConfigSuperseded": "已被取代",
+  "coreConfigNotApplied": "尚未应用",
+  "coreConfigPending": "正在应用…",
+  "coreRuntimeStateLabel": "VPN 状态",
+  "coreRuntimeRunning": "运行中",
+  "coreRuntimeStopped": "已停止",
+  "coreRuntimeGenerationLabel": "运行时生成",
+  "coreConfigSchemaLabel": "配置架构",
+  "coreLastChangeLabel": "上次应用",
+  "splitRoutingApply": "应用",
+  "splitRoutingEnabled": "应用路由",
+  "splitRoutingSystemApps": "系统应用",
+  "splitRoutingOnlySelected": "仅选中项",
+  "splitRoutingResetTitle": "应用路由已重置",
+  "splitRoutingResetFailed": "无法完成重置。自动连接仍处于暂停状态，请尝试再次点击连接。",
+  "splitRoutingResetMessage": "界面已重新设计。此前的选择已清空，分应用路由已禁用。请为每种模式分别选择应用。VPN 已停止，以避免在未经您确认的情况下更改应用路由。",
+  "splitRoutingResetPageMessage": "界面已重新设计，之前的选择已被重置一次。请分别配置每种模式，新的选择将被保留。",
+  "splitRoutingConfigure": "配置",
+  "splitRoutingLater": "稍后",
+  "splitRoutingRulesHint": "进入 VPN 的应用仍遵循流量规则。直连规则可以绕过所选代理。",
+  "splitRoutingLimit": "每种模式最多选择 128 个应用。",
+  "splitRoutingUnsavedTitle": "有未保存的更改",
+  "splitRoutingUnsavedMessage": "离开前请应用更改或将其舍弃。",
+  "splitRoutingDiscard": "放弃",
+  "splitRoutingApplyFailed": "无法应用或保存设置。请检查网络后重试。",
+  "routingBlockLeaksCompact": "阻止 STUN/WebRTC",
+  "routingBlockLeaksSummary": "减少通过 WebRTC 绕过代理的流量",
+  "routingBypassLocalSummary": "本地地址直接连接",
+  "routingAdBlockSummary": "本地域名过滤",
+  "batteryOptimizationTitle": "电池优化",
+  "batteryOptimizationExempt": "后台无限制访问",
+  "batteryOptimizationRestricted": "后台访问受限",
+  "batteryOptimizationUnavailable": "此设备不支持",
+  "batteryOptimizationChecking": "正在检查系统设置…",
+  "batteryOptimizationDescription": "如果熄屏后 VPN 断开，请允许后台运行。这可能会增加耗电；你的设备可能还有其他限制。",
+  "batteryOptimizationOpenFailed": "无法打开电池设置。请从安卓设置中打开。"
+}
