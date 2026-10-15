@@ -7,6 +7,8 @@ import 'package:gap/gap.dart';
 import 'package:meow_client/features/home/home_active_proxy.dart';
 import 'package:meow_client/features/home/home_connection_button.dart';
 import 'package:meow_client/features/home/home_presentation.dart';
+import 'package:meow_client/features/home/public_ip_controller.dart';
+import 'package:meow_client/features/home/public_ip_peek.dart';
 import 'package:meow_client/features/home/home_subscription_card.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/models/app_view_models.dart';
@@ -38,6 +40,7 @@ class HomePage extends StatelessWidget {
   AppProfileSummary? get activeProfile => state.activeProfile;
   AppProxySummary? get activeProxy => state.activeProxy;
   ProxyRuntimeVisualStore? get runtimeStates => state.runtimeStates;
+  PublicIpController? get publicIpController => state.publicIpController;
   bool get hideServerIp => state.hideServerIp;
   bool get hapticEnabled => state.hapticEnabled;
   double get speedBytesPerSecond => state.speedBytesPerSecond;
@@ -251,6 +254,15 @@ class HomePage extends StatelessWidget {
             ),
             const Gap(8),
             _buildActiveProxyDelayIndicator(proxy),
+            if (connected && publicIpController != null) ...[
+              const Gap(4),
+              PublicIpPeek(
+                controller: publicIpController!,
+                connected: connected,
+                hideIp: hideServerIp,
+                hapticEnabled: hapticEnabled,
+              ),
+            ],
           ],
         ),
       ),
@@ -287,12 +299,8 @@ class HomePage extends StatelessWidget {
       return ActiveProxyFooter(
         connected: connected,
         proxy: proxy,
-        hideIp: hideServerIp,
-        hapticEnabled: hapticEnabled,
         speedBytesPerSecond: speedBytesPerSecond,
         trafficBytes: trafficBytes,
-        unknownText: '—',
-        onRefreshIp: onRefreshActiveProxyIp,
       );
     }
     return ValueListenableBuilder<TrafficUiSnapshot>(
@@ -301,12 +309,8 @@ class HomePage extends StatelessWidget {
         return ActiveProxyFooter(
           connected: connected,
           proxy: proxy,
-          hideIp: hideServerIp,
-          hapticEnabled: hapticEnabled,
           speedBytesPerSecond: traffic.speedBytesPerSecond,
           trafficBytes: traffic.trafficBytes,
-          unknownText: '—',
-          onRefreshIp: onRefreshActiveProxyIp,
         );
       },
     );

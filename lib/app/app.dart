@@ -9235,6 +9235,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
         uplinkTotalBytes: _appTrafficMonitor.uplinkTotalBytes,
         downlinkTotalBytes: _appTrafficMonitor.downlinkTotalBytes,
         trafficListenable: _appTrafficMonitor.trafficUiSnapshotNotifier,
+        publicIpController: _publicIpController,
         activeProfileRefreshing: _activeProfileRefreshInFlight,
         showActiveProfileRefreshAction: activeSubscription != null,
         brandName: 'Etonify',

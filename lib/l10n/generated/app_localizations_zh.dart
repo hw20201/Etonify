@@ -1447,6 +1447,93 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trafficDashboardPublicIpCooldown => '每 4 秒可刷新一次';
 
   @override
+  String get homeOutboundIpTitle => '出站 IP';
+
+  @override
+  String get homeOutboundIpHint => '依赖第三方 API，仅供参考';
+
+  @override
+  String get homeOutboundIpExpand => '查看出站 IP 详情';
+
+  @override
+  String get homeOutboundIpCollapse => '收起出站 IP 详情';
+
+  @override
+  String get homeOutboundIpLoading => '正在查询出站 IP…';
+
+  @override
+  String get homeOutboundIpUnavailable => '暂无出站 IP';
+
+  @override
+  String get homeOutboundIpBasicSection => '基础信息';
+
+  @override
+  String get homeOutboundIpAddress => 'IP 地址';
+
+  @override
+  String get homeOutboundIpRiskScore => '风险评分';
+
+  @override
+  String get homeOutboundIpNetworkType => '类型';
+
+  @override
+  String get homeOutboundIpRiskFlags => '命中标记';
+
+  @override
+  String get homeOutboundIpNetworkSection => '网络';
+
+  @override
+  String get homeOutboundIpOrganization => '组织';
+
+  @override
+  String get homeOutboundIpAsn => 'ASN';
+
+  @override
+  String get homeOutboundIpIsp => '网络运营商';
+
+  @override
+  String get homeOutboundIpSource => '采用来源';
+
+  @override
+  String get homeOutboundIpRiskNone => '无';
+
+  @override
+  String get homeOutboundIpTypeRegular => '普通';
+
+  @override
+  String get homeOutboundIpTypeMobile => '移动网络';
+
+  @override
+  String get homeOutboundIpTypeVpn => 'VPN 出口';
+
+  @override
+  String get homeOutboundIpTypeTor => 'Tor 出口';
+
+  @override
+  String get homeOutboundIpTypeProxy => '代理';
+
+  @override
+  String get homeOutboundIpTypeDatacenter => '机房';
+
+  @override
+  String get homeOutboundIpFlagVpn => 'VPN';
+
+  @override
+  String get homeOutboundIpFlagProxy => '代理';
+
+  @override
+  String get homeOutboundIpFlagTor => 'Tor';
+
+  @override
+  String get homeOutboundIpFlagDatacenter => '机房';
+
+  @override
+  String get homeOutboundIpSourceIpQuery => 'ipquery.io';
+
+  @override
+  String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
   String get trafficDashboardDownloadTotal => '已下载';
 
   @override

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:meow_client/features/home/public_ip_controller.dart';
 import 'package:meow_client/models/app_view_models.dart';
 import 'package:meow_client/models/proxy_runtime_visual_state.dart';
 
@@ -19,6 +20,7 @@ class HomeViewState {
     required this.versionLabel,
     this.prereleaseVersion = false,
     this.runtimeStates,
+    this.publicIpController,
     this.trafficListenable,
     this.activeProfileRefreshing = false,
     this.showActiveProfileRefreshAction = false,
@@ -31,6 +33,7 @@ class HomeViewState {
   final AppProfileSummary? activeProfile;
   final AppProxySummary? activeProxy;
   final ProxyRuntimeVisualStore? runtimeStates;
+  final PublicIpController? publicIpController;
   final bool hideServerIp;
   final bool hapticEnabled;
   final double speedBytesPerSecond;

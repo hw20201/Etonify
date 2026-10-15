@@ -1704,11 +1704,8 @@ void main() {
             child: ActiveProxyFooter(
               connected: false,
               proxy: proxy,
-              hideIp: false,
-              hapticEnabled: false,
               speedBytesPerSecond: 44 * 1024,
               trafficBytes: 96.2 * 1024 * 1024,
-              unknownText: '?',
             ),
           ),
         ),
@@ -1717,54 +1714,18 @@ void main() {
 
     expect(find.text('Poland'), findsOneWidget);
     expect(find.text('57.128.200.35'), findsNothing);
-    expect(find.text('—'), findsOneWidget);
     expect(find.text('0.00 B/s'), findsOneWidget);
     expect(find.text('0.00 B'), findsOneWidget);
   });
 
-  testWidgets('active proxy footer tap refreshes active IP', (tester) async {
-    final proxy = _proxy(
-      'proxy-1',
-      'Poland',
-      latency: 42,
-    ).copyWith(ip: '57.128.200.35');
-    var refreshCount = 0;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: Scaffold(
-          body: Center(
-            child: ActiveProxyFooter(
-              connected: true,
-              proxy: proxy,
-              hideIp: false,
-              hapticEnabled: false,
-              speedBytesPerSecond: 0,
-              trafficBytes: 0,
-              unknownText: '?',
-              onRefreshIp: () => refreshCount++,
-            ),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('57.128.200.35'));
-    await tester.pump();
-
-    expect(refreshCount, 1);
-  });
-
-  testWidgets('active proxy footer keeps cached IP visible while refreshing', (
+  testWidgets('active proxy footer keeps server IP off the node row', (
     tester,
   ) async {
     final proxy = _proxy(
       'proxy-1',
       'Poland',
       latency: 42,
-    ).copyWith(ip: '57.128.200.35', ipChecking: true);
+    ).copyWith(ip: '57.128.200.35');
 
     await tester.pumpWidget(
       MaterialApp(
@@ -1775,21 +1736,48 @@ void main() {
             child: ActiveProxyFooter(
               connected: true,
               proxy: proxy,
-              hideIp: false,
-              hapticEnabled: false,
               speedBytesPerSecond: 0,
               trafficBytes: 0,
-              unknownText: '?',
-              onRefreshIp: () {},
             ),
           ),
         ),
       ),
     );
 
-    expect(find.byKey(const ValueKey('ip-refresh-checking')), findsNothing);
-    expect(find.text('57.128.200.35'), findsOneWidget);
+    expect(find.text('Poland'), findsOneWidget);
+    expect(find.text('57.128.200.35'), findsNothing);
   });
+
+  testWidgets(
+    'active proxy footer hides server IP while its lookup refreshes',
+    (tester) async {
+      final proxy = _proxy(
+        'proxy-1',
+        'Poland',
+        latency: 42,
+      ).copyWith(ip: '57.128.200.35', ipChecking: true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: Scaffold(
+            body: Center(
+              child: ActiveProxyFooter(
+                connected: true,
+                proxy: proxy,
+                speedBytesPerSecond: 0,
+                trafficBytes: 0,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('ip-refresh-checking')), findsNothing);
+      expect(find.text('57.128.200.35'), findsNothing);
+    },
+  );
 
   testWidgets('active proxy delay shows progress instead of a stale value', (
     tester,

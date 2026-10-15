@@ -1514,6 +1514,93 @@ class AppLocalizationsEn extends AppLocalizations {
       'Refresh available every 4 seconds';
 
   @override
+  String get homeOutboundIpTitle => 'Outbound IP';
+
+  @override
+  String get homeOutboundIpHint => 'Third-party lookup; for reference only';
+
+  @override
+  String get homeOutboundIpExpand => 'Show outbound IP details';
+
+  @override
+  String get homeOutboundIpCollapse => 'Close outbound IP details';
+
+  @override
+  String get homeOutboundIpLoading => 'Looking up outbound IP…';
+
+  @override
+  String get homeOutboundIpUnavailable => 'Outbound IP unavailable';
+
+  @override
+  String get homeOutboundIpBasicSection => 'Basics';
+
+  @override
+  String get homeOutboundIpAddress => 'IP address';
+
+  @override
+  String get homeOutboundIpRiskScore => 'Risk score';
+
+  @override
+  String get homeOutboundIpNetworkType => 'Network type';
+
+  @override
+  String get homeOutboundIpRiskFlags => 'Detection flags';
+
+  @override
+  String get homeOutboundIpNetworkSection => 'Network';
+
+  @override
+  String get homeOutboundIpOrganization => 'Organization';
+
+  @override
+  String get homeOutboundIpAsn => 'ASN';
+
+  @override
+  String get homeOutboundIpIsp => 'Provider';
+
+  @override
+  String get homeOutboundIpSource => 'Source';
+
+  @override
+  String get homeOutboundIpRiskNone => 'None';
+
+  @override
+  String get homeOutboundIpTypeRegular => 'Regular';
+
+  @override
+  String get homeOutboundIpTypeMobile => 'Mobile network';
+
+  @override
+  String get homeOutboundIpTypeVpn => 'VPN exit';
+
+  @override
+  String get homeOutboundIpTypeTor => 'Tor exit';
+
+  @override
+  String get homeOutboundIpTypeProxy => 'Proxy';
+
+  @override
+  String get homeOutboundIpTypeDatacenter => 'Datacenter';
+
+  @override
+  String get homeOutboundIpFlagVpn => 'VPN';
+
+  @override
+  String get homeOutboundIpFlagProxy => 'Proxy';
+
+  @override
+  String get homeOutboundIpFlagTor => 'Tor';
+
+  @override
+  String get homeOutboundIpFlagDatacenter => 'Datacenter';
+
+  @override
+  String get homeOutboundIpSourceIpQuery => 'ipquery.io';
+
+  @override
+  String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
   String get trafficDashboardDownloadTotal => 'Downloaded';
 
   @override
