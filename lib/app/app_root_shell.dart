@@ -62,6 +62,9 @@ class AppRootShell extends StatelessWidget {
             if (locale?.languageCode.toLowerCase() == 'ru') {
               return const Locale('ru');
             }
+            if (locale?.languageCode.toLowerCase() == 'zh') {
+              return const Locale('zh');
+            }
             return const Locale('en');
           },
           builder: (context, child) {
