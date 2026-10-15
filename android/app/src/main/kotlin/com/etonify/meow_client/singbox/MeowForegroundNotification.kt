@@ -168,12 +168,12 @@ internal class MeowForegroundNotification(
         val trafficRefreshSeconds: Int = DEFAULT_TRAFFIC_REFRESH_SECONDS,
         val title: String = "",
         val latencyMillis: Long? = null,
-        val connectedText: String = "VPN подключён",
+        val connectedText: String = "VPN connected",
         val checkingText: String = "...",
-        val unavailableText: String = "Пинг недоступен",
-        val totalLabel: String = "Всего трафика",
-        val refreshLabel: String = "Проверить пинг",
-        val stopLabel: String = "Остановить",
+        val unavailableText: String = "Latency unavailable",
+        val totalLabel: String = "Total traffic",
+        val refreshLabel: String = "Refresh latency",
+        val stopLabel: String = "Stop",
         val urlTestRequest: UrlTestRequest? = null,
     ) {
         companion object {
@@ -192,12 +192,12 @@ internal class MeowForegroundNotification(
                         ?.coerceIn(1, 10) ?: DEFAULT_TRAFFIC_REFRESH_SECONDS,
                     title = text("title", ""),
                     latencyMillis = (arguments["latencyMillis"] as? Number)?.toLong()?.takeIf { it >= 0L },
-                    connectedText = text("connectedText", "VPN подключён"),
+                    connectedText = text("connectedText", "VPN connected"),
                     checkingText = text("checkingText", "..."),
-                    unavailableText = text("unavailableText", "Пинг недоступен"),
-                    totalLabel = text("totalLabel", "Всего трафика"),
-                    refreshLabel = text("refreshLabel", "Проверить пинг"),
-                    stopLabel = text("stopLabel", "Остановить"),
+                    unavailableText = text("unavailableText", "Latency unavailable"),
+                    totalLabel = text("totalLabel", "Total traffic"),
+                    refreshLabel = text("refreshLabel", "Refresh latency"),
+                    stopLabel = text("stopLabel", "Stop"),
                     urlTestRequest = UrlTestRequest.fromArguments(arguments),
                 )
             }
@@ -562,12 +562,12 @@ internal class MeowForegroundNotification(
             } else {
                 null
             },
-            connectedText = text(PREF_CONNECTED_TEXT, "VPN подключён"),
+            connectedText = text(PREF_CONNECTED_TEXT, "VPN connected"),
             checkingText = text(PREF_CHECKING_TEXT, "..."),
-            unavailableText = text(PREF_UNAVAILABLE_TEXT, "Пинг недоступен"),
-            totalLabel = text(PREF_TOTAL_LABEL, "Всего трафика"),
-            refreshLabel = text(PREF_REFRESH_LABEL, "Проверить пинг"),
-            stopLabel = text(PREF_STOP_LABEL, "Остановить"),
+            unavailableText = text(PREF_UNAVAILABLE_TEXT, "Latency unavailable"),
+            totalLabel = text(PREF_TOTAL_LABEL, "Total traffic"),
+            refreshLabel = text(PREF_REFRESH_LABEL, "Refresh latency"),
+            stopLabel = text(PREF_STOP_LABEL, "Stop"),
             urlTestRequest = request,
         )
     }
@@ -867,11 +867,11 @@ internal class MeowForegroundNotification(
     private fun ensureChannel() {
         val channel = NotificationChannel(
             if (service is MeowProbeService) PROBE_CHANNEL_ID else CHANNEL_ID,
-            if (service is MeowProbeService) "Etonify: проверка серверов" else "Etonify VPN",
+            if (service is MeowProbeService) "Etonify: server check" else "Etonify VPN",
             NotificationManager.IMPORTANCE_LOW,
         ).apply {
             description = if (service is MeowProbeService) {
-                "Проверка доступности прокси-серверов"
+                "Checking proxy server availability"
             } else {
                 "VPN connection status"
             }
@@ -979,7 +979,7 @@ internal class MeowForegroundNotification(
         val totals = "↓ ${formatBytes(downlinkTotal)}  ↑ ${formatBytes(uplinkTotal)}"
         val latency = when {
             latencyChecking -> presentation.checkingText
-            presentation.latencyMillis != null -> "${presentation.latencyMillis} мс"
+            presentation.latencyMillis != null -> "${presentation.latencyMillis} ms"
             else -> presentation.unavailableText
         }
         return notificationDetailedContent(
@@ -992,11 +992,11 @@ internal class MeowForegroundNotification(
     }
 
     private fun lifecycleStatusText(status: String): String = when (status) {
-        "Starting" -> "Подключение…"
-        "Restarting" -> "Перезапуск…"
-        "Reloading" -> "Применение настроек…"
-        "Waiting for network" -> "Ожидание сети…"
-        "Stopping" -> "Отключение…"
+        "Starting" -> "Connecting…"
+        "Restarting" -> "Restarting…"
+        "Reloading" -> "Applying settings…"
+        "Waiting for network" -> "Waiting for network…"
+        "Stopping" -> "Disconnecting…"
         else -> status
     }
 
@@ -1016,8 +1016,8 @@ internal class MeowForegroundNotification(
     }
 
     private fun formatBytes(bytes: Long): String {
-        if (bytes <= 0L) return "0 Б"
-        val units = arrayOf("Б", "КБ", "МБ", "ГБ", "ТБ")
+        if (bytes <= 0L) return "0 B"
+        val units = arrayOf("B", "KB", "MB", "GB", "TB")
         var value = bytes.toDouble()
         var index = 0
         while (value >= 1024.0 && index < units.lastIndex) {
@@ -1033,7 +1033,7 @@ internal class MeowForegroundNotification(
     }
 
     private fun formatRate(bytesPerSecond: Long): String =
-        "${formatBytes(max(0L, bytesPerSecond))}/с"
+        "${formatBytes(max(0L, bytesPerSecond))}/s"
 }
 
 /**
