@@ -7,6 +7,11 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing v* tag to sign and create or update as a draft; leave blank for an artifact-only build.
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -21,7 +26,9 @@ env:
 
 jobs:
   build-arm64-apk:
-    if: github.event_name != 'push' || github.ref == 'refs/heads/master'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
+      (github.event_name == 'workflow_dispatch' && inputs.release_tag == '')
     name: Build arm64 APK artifact
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -83,7 +90,9 @@ jobs:
           retention-days: 14
 
   draft-tag-release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: >-
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master' && inputs.release_tag != '')
     name: Build signed tag APK and create draft Release
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -93,15 +102,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
 
       - name: Validate version tag
         shell: bash
+        env:
+          RELEASE_TAG_INPUT: ${{ inputs.release_tag }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          if ! [[ "$version" =~ ^[0-9]+(\.[0-9]+){1,3}([._-][0-9A-Za-z]+)*$ ]]; then
-            echo "::error title=Invalid version tag::Use v1.2.3 (received ${GITHUB_REF_NAME})"
+          release_tag="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            release_tag="${RELEASE_TAG_INPUT}"
+          fi
+          version="${release_tag#v}"
+          if ! [[ "$release_tag" =~ ^v[0-9]+(\.[0-9]+){1,3}([._-][0-9A-Za-z]+)*$ ]]; then
+            echo "::error title=Invalid version tag::Use an existing tag such as v0.3.9."
             exit 1
           fi
+          echo "RELEASE_TAG=${release_tag}" >> "$GITHUB_ENV"
           echo "RELEASE_VERSION=${version}" >> "$GITHUB_ENV"
 
       - name: Validate Android signing secrets
@@ -189,16 +207,17 @@ jobs:
         run: |
           set -euo pipefail
           notes_file="build/release-notes.md"
+          source_sha="$(git rev-parse HEAD)"
           cat > "$notes_file" <<EOF
-          Signed Android arm64 APK built from ${GITHUB_SHA}.
+          Signed Android arm64 APK built from ${source_sha}.
           This Release is a draft and has not been published.
           EOF
-          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
-            gh release edit "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file "$notes_file" --draft
-            gh release upload "${GITHUB_REF_NAME}" build/release-apk/*.apk --clobber
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release edit "${RELEASE_TAG}" --title "${RELEASE_TAG}" --notes-file "$notes_file" --draft
+            gh release upload "${RELEASE_TAG}" build/release-apk/*.apk --clobber
           else
-            gh release create "${GITHUB_REF_NAME}" build/release-apk/*.apk \
+            gh release create "${RELEASE_TAG}" build/release-apk/*.apk \
               --draft \
-              --title "${GITHUB_REF_NAME}" \
+              --title "${RELEASE_TAG}" \
               --notes-file "$notes_file"
           fi

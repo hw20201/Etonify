@@ -3,7 +3,7 @@
 This repository contains two useful workflows:
 
 - `CI`: runs Flutter dependency restore, localization generation, optional Pigeon generation, analyzer, and tests.
-- `Android Release APK`: builds signed Android APKs for `universal`, `arm64-v8a`, `armeabi-v7a`, and `x86_64`, uploads them as workflow artifacts, and creates or updates a draft GitHub Release.
+- `Etonify · Android arm64 builds`: builds an arm64 artifact on `master`; a `v*` tag builds a signed arm64 APK and creates or updates a draft GitHub Release. A manual run can do the same for an existing tag by supplying `release_tag`.
 
 ## Required Repository Secrets
 
@@ -47,38 +47,20 @@ Paste the clipboard value into `ANDROID_KEYSTORE_BASE64`.
 
 Use the keystore password as `ANDROID_KEYSTORE_PASSWORD`, the alias as `ANDROID_KEY_ALIAS`, and the key password as `ANDROID_KEY_PASSWORD`.
 
-## Build Signed APKs
+## Build or Test a Signed APK
 
-Manual build:
-
-1. Open `Actions`.
-2. Select `Android Release APK`.
-3. Click `Run workflow`.
-4. Use `build_name` as `0.1.0` or `v0.1.0`; both are normalized.
-5. Download APKs from the workflow artifact or from the created draft release.
-
-Release tag build:
+Push a version tag such as `v0.3.9` to build a signed arm64 APK and create or update a **draft** Release:
 
 ```powershell
-git tag 0.1.0
-git push origin 0.1.0
+git tag v0.3.9
+git push origin v0.3.9
 ```
 
-The workflow normalizes release metadata like this:
+To test an existing tag without moving it:
 
-```text
-input:         0.1.0 or v0.1.0
-release tag:  0.1.0
-release title: v0.1.0
-```
+1. Open `Actions` and select `Etonify · Android arm64 builds`.
+2. Click `Run workflow` on `master`.
+3. Enter the existing tag, including the `v` prefix (for example, `v0.3.9`) in `release_tag`.
+4. The signed job checks out that tag, builds the arm64 APK, and creates or updates the draft Release. It does not publish the Release.
 
-The updater inside Etonify expects these release asset names:
-
-```text
-etonify-v0.1.0-universal.apk
-etonify-v0.1.0-arm64-v8a.apk
-etonify-v0.1.0-armeabi-v7a.apk
-etonify-v0.1.0-x86_64.apk
-```
-
-The app first looks for the APK matching the current device ABI, then falls back to `universal`.
+Leave `release_tag` blank to run only the arm64 artifact build. Tag Release assets use names like `etonify-v0.3.9-arm64-v8a.apk`.

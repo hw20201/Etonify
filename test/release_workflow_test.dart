@@ -13,6 +13,7 @@ void main() {
     expect(workflow, contains('tags:'));
     expect(workflow, contains('- "v*"'));
     expect(workflow, contains('workflow_dispatch'));
+    expect(workflow, contains('release_tag:'));
     expect(workflow, contains('name: Build arm64 APK artifact'));
     expect(workflow, contains('MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "true"'));
     expect(workflow, contains(r'etonify-arm64-v8a-${GITHUB_SHA::7}.apk'));
@@ -21,6 +22,10 @@ void main() {
 
     expect(workflow, contains('draft-tag-release:'));
     expect(workflow, contains("startsWith(github.ref, 'refs/tags/v')"));
+    expect(workflow, contains("inputs.release_tag == ''"));
+    expect(workflow, contains("inputs.release_tag != ''"));
+    expect(workflow, contains(r'ref: ${{ inputs.release_tag || github.ref }}'));
+    expect(workflow, contains(r'RELEASE_TAG_INPUT: ${{ inputs.release_tag }}'));
     expect(workflow, contains('MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"'));
     expect(workflow, contains('secrets.ANDROID_KEYSTORE_BASE64'));
     expect(workflow, contains('secrets.ANDROID_KEYSTORE_PASSWORD'));
@@ -29,6 +34,7 @@ void main() {
     expect(workflow, isNot(contains('ANDROID_RELEASE_')));
     expect(workflow, contains('storeFile=app/etonify-release.jks'));
     expect(workflow, contains('gh release create'));
+    expect(workflow, contains(r'gh release create "${RELEASE_TAG}"'));
     expect(workflow, contains('gh release upload'));
     expect(workflow, contains('--draft'));
     expect(
