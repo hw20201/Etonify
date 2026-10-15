@@ -40,30 +40,12 @@ void main() {
 
     await tester.tap(find.text('添加规则'));
     await tester.pumpAndSettle();
-    final appTheme = buildAppTheme(Brightness.dark);
-    final typeDropdown = tester.widget<DropdownButton<CustomRouteRuleType>>(
-      find.byType(DropdownButton<CustomRouteRuleType>),
-    );
-    final actionDropdown = tester.widget<DropdownButton<CustomRouteAction>>(
-      find.byType(DropdownButton<CustomRouteAction>),
-    );
-    final expectedRadius = BorderRadius.circular(
-      appTheme.extension<AppSurfaceTheme>()!.mediumRadius,
-    );
-    expect(typeDropdown.borderRadius, expectedRadius);
-    expect(actionDropdown.borderRadius, expectedRadius);
-    expect(
-      typeDropdown.dropdownColor,
-      appTheme.colorScheme.surfaceContainerLow,
-    );
-    expect(
-      actionDropdown.dropdownColor,
-      appTheme.colorScheme.surfaceContainerLow,
-    );
     await tester.enterText(find.byType(TextFormField), 'example.com');
-    await tester.tap(find.byType(DropdownButtonFormField<CustomRouteAction>));
+    // The selectors expand inline instead of opening a popup menu.
+    await tester.tap(find.text('走代理'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('直连').last);
+    expect(find.text('直连'), findsOneWidget);
+    await tester.tap(find.text('直连'));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, '保存'));
     await tester.pumpAndSettle();
