@@ -137,7 +137,6 @@ class SubscriptionInfo {
     this.download,
     this.total,
     this.expire,
-    this.happCryptoLink,
     this.supportUrl,
     this.webPageUrl,
     this.newUrl,
@@ -156,7 +155,6 @@ class SubscriptionInfo {
   final int? download; // bytes
   final int? total; // bytes
   final int? expire; // unix timestamp seconds
-  final String? happCryptoLink;
   final String? supportUrl;
   final String? webPageUrl;
   final String? newUrl;
@@ -190,7 +188,6 @@ class SubscriptionInfo {
     if (download != null) 'download': download,
     if (total != null) 'total': total,
     if (expire != null) 'expire': expire,
-    if (happCryptoLink != null) 'happ_crypto_link': happCryptoLink,
     if (supportUrl != null) 'support_url': supportUrl,
     if (webPageUrl != null) 'web_page_url': webPageUrl,
     if (newUrl != null) 'new_url': newUrl,
@@ -213,7 +210,6 @@ class SubscriptionInfo {
       download: map['download'] as int?,
       total: map['total'] as int?,
       expire: map['expire'] as int?,
-      happCryptoLink: map['happ_crypto_link'] as String?,
       supportUrl: map['support_url'] as String?,
       webPageUrl: map['web_page_url'] as String?,
       newUrl: map['new_url'] as String?,
@@ -236,7 +232,6 @@ class SubscriptionInfo {
     int? download,
     int? total,
     int? expire,
-    String? happCryptoLink,
     String? supportUrl,
     String? webPageUrl,
     String? newUrl,
@@ -255,7 +250,6 @@ class SubscriptionInfo {
       download: download ?? this.download,
       total: total ?? this.total,
       expire: expire ?? this.expire,
-      happCryptoLink: happCryptoLink ?? this.happCryptoLink,
       supportUrl: supportUrl ?? this.supportUrl,
       webPageUrl: webPageUrl ?? this.webPageUrl,
       newUrl: newUrl ?? this.newUrl,

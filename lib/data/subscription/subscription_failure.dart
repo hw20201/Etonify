@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:meow_client/data/subscription/happ_crypto_link.dart';
-
 enum SubscriptionFailureKind {
   invalidHwid,
   invalidUrl,
@@ -23,8 +21,6 @@ enum SubscriptionFailureKind {
   noUsableProxies,
   wireGuardUnsupported,
   invalidContent,
-  happUnsupported,
-  happInvalid,
   unknown,
 }
 
@@ -129,12 +125,6 @@ SubscriptionFailure classifySubscriptionFailure(Object error) {
       SubscriptionContentFailureKind.invalidContent =>
         SubscriptionFailureKind.invalidContent,
     });
-  }
-  if (error is UnsupportedHappCryptoLinkException) {
-    return const SubscriptionFailure(SubscriptionFailureKind.happUnsupported);
-  }
-  if (error is HappCryptoLinkException) {
-    return const SubscriptionFailure(SubscriptionFailureKind.happInvalid);
   }
   if (error is TimeoutException) {
     return const SubscriptionFailure(SubscriptionFailureKind.timeout);

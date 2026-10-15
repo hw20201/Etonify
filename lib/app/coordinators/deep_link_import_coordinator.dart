@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:meow_client/app/deep_link_import.dart';
 import 'package:meow_client/app/widgets/deep_link_import_sheet.dart';
-import 'package:meow_client/data/subscription/happ_crypto_link.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/data/subscription/subscription_store.dart';
 import 'package:meow_client/features/subscriptions/subscription_error_message.dart';
@@ -187,15 +186,11 @@ class DeepLinkImportCoordinator {
     final targetUrls = <String>{
       _normalizeUrl(preview.resolvedUrl),
       _normalizeUrl(request.url),
-      if (preview.requestInfo?.happCryptoLink != null)
-        _normalizeUrl(preview.requestInfo!.happCryptoLink),
     }..remove('');
 
     for (final sub in existingList) {
       final subUrls = <String>{
         _normalizeUrl(sub.url),
-        if (sub.info?.happCryptoLink != null)
-          _normalizeUrl(sub.info!.happCryptoLink),
       }..remove('');
 
       if (targetUrls.any(subUrls.contains)) {
@@ -238,7 +233,7 @@ class DeepLinkImportCoordinator {
     final l10n = AppLocalizations.of(context);
     final copy = DeepLinkImportCopy.fromContext(context);
 
-    if (!HappCryptoLinkDecoder.isSupportedSubscriptionUrl(request.url)) {
+    if (!SubscriptionFetcher.isSupportedSubscriptionUrl(request.url)) {
       host.showSnackBar(l10n.invalidUrl);
       return;
     }
@@ -261,16 +256,10 @@ class DeepLinkImportCoordinator {
 
       final hwidSharingEnabled = SubscriptionFetcher.sendHwidToProviders;
       if (hwidSharingEnabled) {
-        final requestInfo = preview.isHapp
-            ? (preview.requestInfo?.copyWith(requireHwid: true) ??
-                  HappCryptoLinkDecoder.happRequestInfo())
-            : preview.requestInfo;
-
         final createdResult = await host.runSubscriptionOperationWithWarning(
           _addSubscriptionFromUrl(
             url: preview.resolvedUrl,
             customName: request.name,
-            requestInfo: requestInfo,
           ),
           slowMessage: l10n.subscriptionOperationSlowWarning,
           timeoutMessage: l10n.subscriptionOperationTimeout,
@@ -297,7 +286,6 @@ class DeepLinkImportCoordinator {
           preview: preview,
           copy: copy,
           l10n: l10n,
-          hwidSharingEnabled: false,
         ),
       );
       if (decision == null) {
@@ -306,22 +294,10 @@ class DeepLinkImportCoordinator {
       if (!context.mounted) {
         return;
       }
-      final requestInfo = switch (decision) {
-        DeepLinkImportDecision.sendHwid =>
-          preview.requestInfo?.copyWith(requireHwid: true) ??
-              HappCryptoLinkDecoder.happRequestInfo(),
-        DeepLinkImportDecision.importWithoutHwid =>
-          preview.requestInfo?.copyWith(requireHwid: false),
-        DeepLinkImportDecision.import => preview.requestInfo?.copyWith(
-          requireHwid: false,
-        ),
-      };
-
       final createdResult = await host.runSubscriptionOperationWithWarning(
         _addSubscriptionFromUrl(
           url: preview.resolvedUrl,
           customName: request.name,
-          requestInfo: requestInfo,
         ),
         slowMessage: l10n.subscriptionOperationSlowWarning,
         timeoutMessage: l10n.subscriptionOperationTimeout,

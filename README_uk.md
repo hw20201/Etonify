@@ -137,10 +137,10 @@ dart run pigeon --input pigeons/singbox_api.dart
 python scripts/verify_libbox.py
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --target-platform android-arm64 --split-per-abi
 ```
 
-Для релізної збірки налаштуйте підпис у `android/key.properties`. Офіційні збірки можуть відновлювати закриті ресурси для зашифрованих підписок Happ; прочитайте [вимоги до закритих ресурсів](.github/private/README.md), якщо хочете перевірити цю сумісність локально.
+Для релізної збірки налаштуйте підпис у `android/key.properties`. У цьому форку видалено підтримку зашифрованих підписок Happ і приватні ресурси сумісності; звичайні HTTP(S)-підписки та стандартні протоколи залишаються доступними.
 
 </details>
 

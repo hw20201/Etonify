@@ -18,7 +18,6 @@ ANDROID_KEYSTORE_BASE64
 ANDROID_KEYSTORE_PASSWORD
 ANDROID_KEY_ALIAS
 ANDROID_KEY_PASSWORD
-HAPP_CRYPTO_ASSETS_PASSPHRASE
 ```
 
 ## Create a Release Keystore
@@ -47,45 +46,6 @@ On Windows:
 Paste the clipboard value into `ANDROID_KEYSTORE_BASE64`.
 
 Use the keystore password as `ANDROID_KEYSTORE_PASSWORD`, the alias as `ANDROID_KEY_ALIAS`, and the key password as `ANDROID_KEY_PASSWORD`.
-
-## Add Private Happ Crypto Assets
-
-GitHub Actions secrets are limited to 48 KB, so the public repository does not store raw `assets/happ_crypto` and does not store a large base64 zip secret.
-
-Instead, official release builds decrypt an encrypted archive committed to the repository:
-
-```text
-.github/private/happ_crypto_assets.zip.gpg
-```
-
-Only the decryption passphrase is stored as the `HAPP_CRYPTO_ASSETS_PASSPHRASE` repository secret.
-
-Create a zip archive from your local private assets:
-
-```powershell
-$zip = Join-Path $PWD.Path "happ_crypto_assets.zip"
-Compress-Archive -Path ".\assets\happ_crypto\*" -DestinationPath $zip -Force
-```
-
-Encrypt the zip with GPG:
-
-```powershell
-New-Item -ItemType Directory -Force .github\private | Out-Null
-gpg --symmetric --cipher-algo AES256 --output .github\private\happ_crypto_assets.zip.gpg $zip
-```
-
-Use the same passphrase you typed into GPG as `HAPP_CRYPTO_ASSETS_PASSPHRASE`.
-
-The release workflow validates that these files are present after restore:
-
-```text
-selectors.json
-expanded_rsa_keys.json
-crypt51_rsa_keys.json
-native_rsa_keys.json
-```
-
-These assets are still included in official APKs. APK obfuscation makes casual reverse engineering harder, but it does not make bundled assets secret.
 
 ## Build Signed APKs
 

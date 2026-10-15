@@ -136,7 +136,11 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
       return;
     }
     final name = _nameController.text.trim();
-    if (HappCryptoLinkDecoder.isSupportedSubscriptionUrl(input)) {
+    if (input.toLowerCase().startsWith('happ://')) {
+      _setError(AppLocalizations.of(context).invalidUrl);
+      return;
+    }
+    if (SubscriptionFetcher.isSupportedSubscriptionUrl(input)) {
       unawaited(
         _submitResult(
           _AddResult.url(
@@ -186,8 +190,12 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
       _setError(l10n.clipboardEmpty);
       return;
     }
+    if (text.toLowerCase().startsWith('happ://')) {
+      _setError(l10n.invalidUrl);
+      return;
+    }
     final name = _nameController.text.trim();
-    if (HappCryptoLinkDecoder.isSupportedSubscriptionUrl(text)) {
+    if (SubscriptionFetcher.isSupportedSubscriptionUrl(text)) {
       await _submitResult(
         _AddResult.url(text, name, autoRefreshMinutes: _autoRefreshMinutes),
         keepCurrentStage: true,
@@ -209,7 +217,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
       MaterialPageRoute(builder: (_) => const _SubscriptionQrScannerPage()),
     );
     if (!mounted || scannedUrl == null || scannedUrl.isEmpty) return;
-    if (!HappCryptoLinkDecoder.isSupportedSubscriptionUrl(scannedUrl)) {
+    if (!SubscriptionFetcher.isSupportedSubscriptionUrl(scannedUrl)) {
       _setError(AppLocalizations.of(context).invalidQrSubscription);
       return;
     }

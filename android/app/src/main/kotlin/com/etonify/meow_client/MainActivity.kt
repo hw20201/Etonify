@@ -25,9 +25,6 @@ import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
-// Legacy Happ native crypt5 path is intentionally disabled. Crypt5/5.1 is now
-// decrypted in Dart from extracted selector/key tables.
-// import com.etonify.meow_client.happcrypto.Crypto5IsolatedService
 import com.etonify.meow_client.singbox.MeowBoxService
 import com.etonify.meow_client.singbox.MeowDefaultNetworkMonitor
 import com.etonify.meow_client.singbox.MeowDiagnostics
@@ -812,35 +809,6 @@ class MainActivity : FlutterFragmentActivity() {
                 "name" to name,
             )
 
-        if (scheme == "happ") {
-            val host = uri.host?.lowercase().orEmpty()
-            val path = uri.path.orEmpty().trim('/').lowercase()
-            if (
-                host == "routing" ||
-                path == "routing" ||
-                path.startsWith("routing/")
-            ) {
-                return null
-            }
-            val importUrl = uri.getQueryParameter("url")?.trim().orEmpty()
-            val name = uri.getQueryParameter("name")?.trim().orEmpty()
-            val sourceType = when {
-                host == "add" || path == "add" || path.startsWith("add/") -> "happAdd"
-                host == "crypt" || host == "crypt2" || host == "crypt3" ||
-                    host == "crypt4" || host == "crypt5" ||
-                    path == "crypt" || path == "crypt2" || path == "crypt3" ||
-                    path == "crypt4" || path == "crypt5" ||
-                    path.startsWith("crypt/") || path.startsWith("crypt2/") ||
-                    path.startsWith("crypt3/") || path.startsWith("crypt4/") ||
-                    path.startsWith("crypt5/") -> "happCrypto"
-                else -> "happAdd"
-            }
-            return importPayload(
-                sourceType,
-                if (importUrl.isNotBlank()) importUrl else uri.toString(),
-                name,
-            )
-        }
         if (scheme == "sing-box") {
             val host = uri.host?.lowercase().orEmpty()
             val path = uri.path.orEmpty().trim('/').lowercase()
@@ -1319,34 +1287,6 @@ class MainActivity : FlutterFragmentActivity() {
         }.onFailure { error ->
             Log.w(TAG, "failed to write quick tile label", error)
         }
-    }
-
-    private fun getHappCrypt5Support(): Map<String, Any> {
-        val requiredAssets = listOf(
-            "assets/happ_crypto/selectors.json",
-            "assets/happ_crypto/expanded_rsa_keys.json",
-            "assets/happ_crypto/crypt51_rsa_keys.json",
-            "assets/happ_crypto/native_rsa_keys.json",
-        )
-        val missingAssets = requiredAssets.filterNot { assetPath ->
-            runCatching {
-                assets.open("flutter_assets/$assetPath").use { input ->
-                    input.read() != -1
-                }
-            }.getOrDefault(false)
-        }
-        val supported = missingAssets.isEmpty()
-        return linkedMapOf(
-            "supported" to supported,
-            "detail" to if (supported) {
-                "Happ crypt5 compatibility assets are bundled."
-            } else {
-                "Happ crypt5 compatibility assets are unavailable in this build."
-            },
-            "abi" to Build.SUPPORTED_ABIS.firstOrNull().orEmpty(),
-            "abis" to Build.SUPPORTED_ABIS.toList(),
-            "missingAssets" to missingAssets,
-        )
     }
 
     private fun buildPerformanceSnapshot(): Map<String, Any?> {
@@ -2190,10 +2130,6 @@ class MainActivity : FlutterFragmentActivity() {
 
                 override fun getRuntimeMeasurementReport(callback: (Result<String>) -> Unit) {
                     callback(Result.success(RuntimeMeasurement.report()))
-                }
-
-                override fun getHappCrypt5Support(callback: (Result<Map<String?, Any?>>) -> Unit) {
-                    callback(Result.success(pigeonMap(getHappCrypt5Support())))
                 }
 
                 override fun getInstalledApps(callback: (Result<List<InstalledAppMessage?>>) -> Unit) {

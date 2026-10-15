@@ -744,7 +744,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get documentationProtocolsBody =>
-      'Можно импортировать ссылки, QR-коды и конфигурации sing-box, Xray и Happ.\n\nПоддерживаются VLESS, VMess, Trojan, Shadowsocks, ShadowsocksR, Hysteria, Hysteria2, TUIC, AnyTLS, Naive, HTTP и SOCKS. Импорт подтверждает формат, но не доступность сервера.';
+      'Можно импортировать ссылки, QR-коды и конфигурации sing-box и Xray.\\n\\nПоддерживаются VLESS, VMess, Trojan, Shadowsocks, ShadowsocksR, Hysteria, Hysteria2, TUIC, AnyTLS, Naive, HTTP и SOCKS. Импорт подтверждает формат, но не доступность сервера.';
 
   @override
   String get documentationChainsTitle => 'Цепочки прокси';
@@ -1020,6 +1020,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get languageRussian => 'Русский';
+
+  @override
+  String get languageChinese => 'Китайский';
 
   @override
   String get themeSystem => 'Системная';
@@ -1976,7 +1979,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sendHwidTitle => 'Отправлять HWID';
 
   @override
-  String get sendHwidSubtitle => 'Нужно некоторым Happ-подпискам';
+  String get sendHwidSubtitle => 'Нужно некоторым провайдерам подписок';
 
   @override
   String get sendHwidGlobalEnabledSubtitle =>
@@ -2225,7 +2228,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get subscriptionImportHelpBody =>
-      'Скопируйте ссылку подписки у провайдера и выберите «Буфер обмена» либо отсканируйте QR-код. Если ссылка не распознаётся, выберите «Вручную» и вставьте URL, ссылку vless://, список ключей или конфигурацию sing-box/Xray. Для Happ-подписок при необходимости укажите User-Agent или HWID.';
+      'Скопируйте ссылку подписки у провайдера и выберите «Буфер обмена» либо отсканируйте QR-код. Если ссылка не распознаётся, выберите «Вручную» и вставьте URL, ссылку vless://, список ключей или конфигурацию sing-box/Xray. Если провайдер требует User-Agent или HWID, укажите их при ручном импорте.';
 
   @override
   String subscriptionsRefreshAllComplete(int updated, int failed) {
@@ -2477,10 +2480,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Ответ сервера не является корректной подпиской. Проверьте, что ссылка ведёт прямо на файл подписки.';
 
   @override
-  String get subscriptionErrorHappInvalid =>
-      'Не удалось расшифровать ссылку Happ или найти внутри неё корректный URL подписки. Скопируйте свежую ссылку и повторите попытку.';
-
-  @override
   String get subscriptionErrorUnknown =>
       'Не удалось обработать подписку. Проверьте ссылку и откройте диагностику — там сохранена техническая причина.';
 
@@ -2512,23 +2511,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deepLinkImportResolvedUrlLabel => 'Расшифрованный URL подписки';
 
   @override
-  String get deepLinkImportHappBadge => 'Подписка Happ';
-
-  @override
-  String get deepLinkImportHappNotice =>
-      'Некоторым Happ-подпискам нужен HWID. Etonify отправит его только после вашего подтверждения.';
-
-  @override
-  String get deepLinkImportHappSendHwidAction =>
-      'Отправить HWID и импортировать';
-
-  @override
-  String get deepLinkImportHappWithoutHwidAction => 'Импортировать без HWID';
-
-  @override
-  String get deepLinkImportHappCancelAction => 'Не импортировать';
-
-  @override
   String get deepLinkImportUserAgentLabel => 'User-Agent';
 
   @override
@@ -2547,26 +2529,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String deepLinkImportAlreadyExists(String name) {
     return 'Подписка \"$name\" уже добавлена';
   }
-
-  @override
-  String get happCryptoLinkImportedLabel => 'Импортировано из ссылки Happ';
-
-  @override
-  String get happCryptoLinkTitle => 'Ссылка Happ';
-
-  @override
-  String get happCryptUnsupportedTitle => 'Happ crypt5';
-
-  @override
-  String get happCryptUnsupportedMessage =>
-      'Эта ссылка Happ пока не поддерживается.';
-
-  @override
-  String get happImportTitle => 'Подписка Happ';
-
-  @override
-  String get happImportMessage =>
-      'Для этой Happ-подписки может понадобиться HWID. Отправьте его сейчас или импортируйте подписку без HWID.';
 
   @override
   String get subscriptionOperationSlowWarning =>
@@ -2920,23 +2882,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String refreshIntervalMinutesShort(int count) {
     return '$count мин.';
   }
-
-  @override
-  String get happCrypt5Supported => 'Доступно';
-
-  @override
-  String get happCrypt5Unsupported => 'Недоступно';
-
-  @override
-  String get happCrypt5Checking => 'Проверяем Happ crypt5...';
-
-  @override
-  String get happCrypt5SupportedDescription =>
-      'Эта сборка открывает ссылки Happ crypt5.';
-
-  @override
-  String get happCrypt5UnsupportedDescription =>
-      'В этой сборке нет файлов Happ crypt5. Обычные подписки работают.';
 
   @override
   String get subscriptionLikelyRequiresHwidTitle => 'Похоже, нужен HWID';

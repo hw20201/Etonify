@@ -1107,8 +1107,6 @@ class SubscriptionStore {
         groups: payload.groups,
         urlTestConfig: const UrlTestConfig(),
         info: result.headerInfo.copyWith(
-          happCryptoLink:
-              requestInfo?.happCryptoLink ?? result.headerInfo.happCryptoLink,
           customUserAgent:
               requestInfo?.customUserAgent ?? result.headerInfo.customUserAgent,
           customRequestHeader:
@@ -1480,7 +1478,6 @@ class SubscriptionStore {
             ? result.headerInfo.updateIntervalHours! * 60
             : existing.autoRefreshMinutes,
         info: result.headerInfo.copyWith(
-          happCryptoLink: existing.info?.happCryptoLink,
           ignoreSubscriptionMoved: preserveMovedIgnore,
           customUserAgent: existing.info?.customUserAgent,
           customRequestHeader: existing.info?.customRequestHeader,

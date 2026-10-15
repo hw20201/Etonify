@@ -24,11 +24,6 @@ class MeowApplication : Application() {
         } else {
             applicationInfo.processName
         }.orEmpty()
-        // Legacy native Happ crypt5 used an isolated process:
-        // if (!processName.endsWith(":happ_crypto5_isolated")) {
-        //     MeowDiagnostics.pruneLegacyRuntimeFiles()
-        // }
-        // That bridge is excluded from build; the pure Dart crypt5 path has no extra process.
         MeowDiagnostics.pruneLegacyRuntimeFiles()
         MeowDiagnostics.log(
             "Application",

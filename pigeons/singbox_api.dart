@@ -412,9 +412,6 @@ abstract class SingboxHostApi {
   String getRuntimeMeasurementReport();
 
   @asyncCallback
-  Map<String?, Object?> getHappCrypt5Support();
-
-  @asyncCallback
   List<InstalledAppMessage?> getInstalledApps();
 
   @asyncCallback

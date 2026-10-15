@@ -6,7 +6,7 @@ void main() {
     test('keeps ordinary subscription urls unchanged', () {
       final request = DeepLinkImportRequest.fromPayload({
         'url': 'https://example.com/subscription',
-        'name': 'Example',
+        'name': ' Example ',
         'scheme': 'meowvpn',
       });
 
@@ -17,61 +17,16 @@ void main() {
       expect(request.sourceType, DeepLinkImportSource.etonifyImport);
     });
 
-    test('normalizes happ add links without explicit scheme', () {
+    test('preserves an explicit Etonify import source type', () {
       final request = DeepLinkImportRequest.fromPayload({
-        'url': 'happ://add/google.com',
-        'scheme': 'happ',
-      });
-
-      expect(request, isNotNull);
-      expect(request!.url, 'https://google.com');
-      expect(request.sourceType, DeepLinkImportSource.happAdd);
-      expect(request.isHapp, isTrue);
-    });
-
-    test('normalizes happ add links with embedded https url', () {
-      final request = DeepLinkImportRequest.fromPayload({
-        'url': 'happ://add/https://example.com/subscription',
-        'scheme': 'happ',
+        'url': 'https://example.com/subscription',
+        'scheme': 'etonify',
+        'sourceType': 'etonifyImport',
       });
 
       expect(request, isNotNull);
       expect(request!.url, 'https://example.com/subscription');
-      expect(request.sourceType, DeepLinkImportSource.happAdd);
-    });
-
-    test('normalizes happ add links with url query parameter', () {
-      final request = DeepLinkImportRequest.fromPayload({
-        'url': 'happ://add?url=https://example.com/subscription',
-        'scheme': 'happ',
-      });
-
-      expect(request, isNotNull);
-      expect(request!.url, 'https://example.com/subscription');
-      expect(request.sourceType, DeepLinkImportSource.happAdd);
-    });
-
-    test('preserves non-add happ links for crypto import flow', () {
-      final request = DeepLinkImportRequest.fromPayload({
-        'url': 'happ://crypt5/encrypted-payload',
-        'scheme': 'happ',
-      });
-
-      expect(request, isNotNull);
-      expect(request!.url, 'happ://crypt5/encrypted-payload');
-      expect(request.sourceType, DeepLinkImportSource.happCrypto);
-      expect(request.isHapp, isTrue);
-    });
-
-    test('preserves happ crypt4 links for crypto import flow', () {
-      final request = DeepLinkImportRequest.fromPayload({
-        'url': 'happ://crypt4/encrypted-payload',
-        'scheme': 'happ',
-      });
-
-      expect(request, isNotNull);
-      expect(request!.url, 'happ://crypt4/encrypted-payload');
-      expect(request.sourceType, DeepLinkImportSource.happCrypto);
+      expect(request.sourceType, DeepLinkImportSource.etonifyImport);
     });
 
     test('normalizes sing-box remote profile import links', () {
@@ -86,16 +41,36 @@ void main() {
       expect(request.sourceType, DeepLinkImportSource.singBoxRemoteProfile);
     });
 
-    test('keeps remaining query parameters on happ add links', () {
-      final request = DeepLinkImportRequest.fromPayload({
-        'url': 'happ://add/sub.example.com/list?token=abc&name=Demo',
-        'name': 'Demo',
-        'scheme': 'happ',
-      });
+    test('rejects Happ scheme links', () {
+      expect(
+        DeepLinkImportRequest.fromPayload({
+          'url': 'happ://crypt5/encrypted-payload',
+          'scheme': 'happ',
+        }),
+        isNull,
+      );
+    });
 
-      expect(request, isNotNull);
-      expect(request!.url, 'https://sub.example.com/list?token=abc');
-      expect(request.name, 'Demo');
+    test('rejects wrapped Happ links even if the URL is already resolved', () {
+      expect(
+        DeepLinkImportRequest.fromPayload({
+          'url': 'https://example.com/subscription',
+          'scheme': 'happ',
+        }),
+        isNull,
+      );
+      expect(
+        DeepLinkImportRequest.fromPayload({
+          'url': 'https://example.com/subscription',
+          'sourceType': 'happAdd',
+        }),
+        isNull,
+      );
+    });
+
+    test('rejects a missing or blank URL', () {
+      expect(DeepLinkImportRequest.fromPayload({'url': '  '}), isNull);
+      expect(DeepLinkImportRequest.fromPayload({'name': 'No URL'}), isNull);
     });
   });
 }

@@ -34,8 +34,6 @@ String subscriptionErrorMessage(Object error, AppLocalizations l10n) {
       l10n.wireGuardUnsupportedMessage,
     SubscriptionFailureKind.invalidContent =>
       l10n.subscriptionErrorInvalidContent,
-    SubscriptionFailureKind.happUnsupported => l10n.happCryptUnsupportedMessage,
-    SubscriptionFailureKind.happInvalid => l10n.subscriptionErrorHappInvalid,
     SubscriptionFailureKind.unknown => l10n.subscriptionErrorUnknown,
   };
 }

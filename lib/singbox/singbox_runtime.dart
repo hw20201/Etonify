@@ -806,23 +806,6 @@ class SingboxRuntime {
     }
   }
 
-  Future<Map<String, dynamic>> getHappCrypt5Support() async {
-    if (!Platform.isAndroid) {
-      return const {
-        'supported': false,
-        'detail': 'This platform is not supported.',
-      };
-    }
-    try {
-      return _normalizeMap(await _hostApi.getHappCrypt5Support());
-    } on MissingPluginException {
-      return const {
-        'supported': false,
-        'detail': 'Android bridge is unavailable.',
-      };
-    }
-  }
-
   Future<List<Map<String, dynamic>>> getInstalledApps() async {
     if (!Platform.isAndroid) {
       return const <Map<String, dynamic>>[];

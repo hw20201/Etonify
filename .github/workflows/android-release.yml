@@ -118,10 +118,9 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          HAPP_CRYPTO_ASSETS_PASSPHRASE: ${{ secrets.HAPP_CRYPTO_ASSETS_PASSPHRASE }}
         run: |
           missing=0
-          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD HAPP_CRYPTO_ASSETS_PASSPHRASE; do
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
             if [ -z "${!name}" ]; then
               echo "::error title=Missing secret::$name is not configured in repository secrets"
               missing=1
@@ -147,60 +146,6 @@ jobs:
           EOF
           chmod 600 "${KEYSTORE_PATH}" android/key.properties
 
-      - name: Restore private Happ crypto assets
-        shell: bash
-        env:
-          HAPP_CRYPTO_ASSETS_PASSPHRASE: ${{ secrets.HAPP_CRYPTO_ASSETS_PASSPHRASE }}
-        run: |
-          encrypted_assets=".github/private/happ_crypto_assets.zip.gpg"
-          if [ ! -s "${encrypted_assets}" ]; then
-            echo "::error title=Missing encrypted Happ crypto assets::${encrypted_assets} is missing or empty"
-            exit 1
-          fi
-          tmp_dir="$(mktemp -d)"
-          gpg --batch --yes --pinentry-mode loopback \
-            --passphrase "$HAPP_CRYPTO_ASSETS_PASSPHRASE" \
-            --output "${tmp_dir}/happ_crypto_assets.zip" \
-            --decrypt "${encrypted_assets}"
-          unzip -q "${tmp_dir}/happ_crypto_assets.zip" -d "${tmp_dir}/unzipped"
-          mkdir -p assets/happ_crypto
-          if [ -d "${tmp_dir}/unzipped/assets/happ_crypto" ]; then
-            cp -R "${tmp_dir}/unzipped/assets/happ_crypto/." assets/happ_crypto/
-          else
-            cp -R "${tmp_dir}/unzipped/." assets/happ_crypto/
-          fi
-          for file in selectors.json expanded_rsa_keys.json crypt51_rsa_keys.json native_rsa_keys.json; do
-            if [ ! -s "assets/happ_crypto/${file}" ]; then
-              echo "::error title=Missing Happ crypto asset::assets/happ_crypto/${file} is missing or empty"
-              exit 1
-            fi
-          done
-          python3 - <<'PY'
-          from pathlib import Path
-
-          pubspec = Path("pubspec.yaml")
-          lines = pubspec.read_text(encoding="utf-8").splitlines()
-          entries = [
-              "    - assets/happ_crypto/crypt51_rsa_keys.json",
-              "    - assets/happ_crypto/expanded_rsa_keys.json",
-              "    - assets/happ_crypto/native_rsa_keys.json",
-              "    - assets/happ_crypto/selectors.json",
-          ]
-          if all(entry in lines for entry in entries):
-              raise SystemExit(0)
-          out = []
-          inserted = False
-          for line in lines:
-              out.append(line)
-              if line.strip() == "assets:" and not inserted:
-                  out.extend(entries)
-                  inserted = True
-          if not inserted:
-              raise SystemExit("Could not find flutter assets section in pubspec.yaml")
-          pubspec.write_text("\n".join(out) + "\n", encoding="utf-8")
-          PY
-          rm -rf "${tmp_dir}"
-
       - name: Install dependencies
         run: flutter pub get
 
@@ -214,8 +159,6 @@ jobs:
         run: flutter analyze
 
       - name: Test
-        env:
-          HAPP_CRYPTO_TESTS: "true"
         run: flutter test
 
       - name: Build obfuscated universal and ABI APKs

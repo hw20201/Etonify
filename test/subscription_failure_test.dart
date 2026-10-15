@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:meow_client/data/subscription/happ_crypto_link.dart';
 import 'package:meow_client/data/subscription/subscription_failure.dart';
 import 'package:meow_client/features/subscriptions/subscription_error_message.dart';
 import 'package:meow_client/l10n/generated/app_localizations_en.dart';
@@ -68,7 +67,7 @@ void main() {
       );
     });
 
-    test('distinguishes content and Happ failures', () {
+    test('distinguishes content failures', () {
       expect(
         classifySubscriptionFailure(
           const SubscriptionContentException(
@@ -88,18 +87,6 @@ void main() {
           ),
         ).kind,
         SubscriptionFailureKind.wireGuardUnsupported,
-      );
-      expect(
-        classifySubscriptionFailure(
-          const UnsupportedHappCryptoLinkException('unsupported'),
-        ).kind,
-        SubscriptionFailureKind.happUnsupported,
-      );
-      expect(
-        classifySubscriptionFailure(
-          const HappCryptoLinkException('decrypt failed'),
-        ).kind,
-        SubscriptionFailureKind.happInvalid,
       );
     });
 

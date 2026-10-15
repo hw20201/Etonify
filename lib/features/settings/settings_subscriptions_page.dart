@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:meow_client/core/widgets/input_formatters.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/subscription/happ_crypt5_local.dart';
-import 'package:meow_client/data/subscription/happ_crypto_link.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/logging/app_log_store.dart';
@@ -25,7 +23,6 @@ class SettingsSubscriptionsPage extends StatefulWidget {
     required this.onLocationLookupTimeoutSecondsChanged,
     required this.onLocationLookupConcurrencyChanged,
     this.androidIdLoader,
-    this.happSupportLoader,
   });
 
   final UrlTestConfig currentConfig;
@@ -39,7 +36,6 @@ class SettingsSubscriptionsPage extends StatefulWidget {
   final ValueChanged<int> onLocationLookupTimeoutSecondsChanged;
   final ValueChanged<int> onLocationLookupConcurrencyChanged;
   final Future<String> Function()? androidIdLoader;
-  final Future<HappCrypt5Support> Function()? happSupportLoader;
 
   @override
   State<SettingsSubscriptionsPage> createState() =>
@@ -50,8 +46,6 @@ class _SettingsSubscriptionsPageState extends State<SettingsSubscriptionsPage> {
   late final TextEditingController _urlController;
   String _androidId = '';
   bool _loadingAndroidId = true;
-  bool _loadingHappSupport = true;
-  bool _happCrypt5Supported = false;
   late int _intervalSeconds;
   late int _timeoutSeconds;
   late int _concurrency;
@@ -91,7 +85,6 @@ class _SettingsSubscriptionsPageState extends State<SettingsSubscriptionsPage> {
         .clamp(1, 60)
         .toInt();
     _loadAndroidId();
-    _loadHappSupport();
   }
 
   @override
@@ -121,30 +114,6 @@ class _SettingsSubscriptionsPageState extends State<SettingsSubscriptionsPage> {
     setState(() {
       _androidId = androidId.trim();
       _loadingAndroidId = false;
-    });
-  }
-
-  Future<void> _loadHappSupport() async {
-    late HappCrypt5Support support;
-    try {
-      support =
-          await (widget.happSupportLoader?.call() ??
-              HappCryptoLinkDecoder.getCrypt5Support());
-    } catch (error) {
-      support = HappCrypt5Support(
-        supported: false,
-        detail: 'Happ crypt5 compatibility check failed: $error',
-      );
-    }
-    if (support.supported) {
-      AppLogStore.info('happ crypto', support.detail);
-    } else {
-      AppLogStore.warning('happ crypto', support.detail);
-    }
-    if (!mounted) return;
-    setState(() {
-      _happCrypt5Supported = support.supported;
-      _loadingHappSupport = false;
     });
   }
 
@@ -223,16 +192,6 @@ class _SettingsSubscriptionsPageState extends State<SettingsSubscriptionsPage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final happStatusColor = _loadingHappSupport
-        ? cs.onSurfaceVariant
-        : _happCrypt5Supported
-        ? const Color(0xFF1F9D63)
-        : cs.error;
-    final happStatusText = _loadingHappSupport
-        ? l10n.loading
-        : _happCrypt5Supported
-        ? l10n.happCrypt5Supported
-        : l10n.happCrypt5Unsupported;
 
     return ProgressiveBlurScaffold(
       appBar: AppBar(title: Text(l10n.settingsProfilesChecksTitle)),
@@ -431,22 +390,9 @@ class _SettingsSubscriptionsPageState extends State<SettingsSubscriptionsPage> {
               ],
             ),
             const Gap(settingsSectionGap),
-            const _SettingsSectionLabel(label: 'Happ'),
-            const Gap(settingsSectionLabelGap),
             SettingsTileGroup(
               dividerIndent: 64,
               children: [
-                _CompactSettingTile(
-                  key: const ValueKey('happ-crypt5-status'),
-                  icon: Icons.key_rounded,
-                  color: cs.secondary,
-                  title: 'Crypt5',
-                  value: happStatusText,
-                  valueColor: happStatusColor,
-                  subtitle: !_loadingHappSupport && !_happCrypt5Supported
-                      ? l10n.happCrypt5UnsupportedDescription
-                      : null,
-                ),
                 _CompactSettingTile(
                   key: const ValueKey('device-hwid-value'),
                   icon: Icons.fingerprint_rounded,
@@ -494,8 +440,6 @@ class _CompactSettingTile extends StatelessWidget {
     required this.color,
     required this.title,
     required this.value,
-    this.subtitle,
-    this.valueColor,
     this.monospaceValue = false,
     this.onTap,
   });
@@ -504,8 +448,6 @@ class _CompactSettingTile extends StatelessWidget {
   final Color color;
   final String title;
   final String value;
-  final String? subtitle;
-  final Color? valueColor;
   final bool monospaceValue;
   final VoidCallback? onTap;
 
@@ -529,7 +471,7 @@ class _CompactSettingTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: valueColor ?? cs.onSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                   fontFamily: monospaceValue ? 'monospace' : null,
                   fontWeight: FontWeight.w600,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -554,12 +496,7 @@ class _CompactSettingTile extends StatelessWidget {
       child: ListTile(
         dense: true,
         visualDensity: VisualDensity.compact,
-        contentPadding: EdgeInsets.fromLTRB(
-          16,
-          subtitle == null ? 4 : 8,
-          16,
-          subtitle == null ? 4 : 8,
-        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: SettingsLeadingIcon(
           icon: icon,
           color: color,
@@ -572,17 +509,6 @@ class _CompactSettingTile extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        subtitle: subtitle == null
-            ? null
-            : Padding(
-                padding: const EdgeInsets.only(top: 3),
-                child: Text(
-                  subtitle!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
-                ),
-              ),
         trailing: trailing,
         onTap: onTap,
       ),

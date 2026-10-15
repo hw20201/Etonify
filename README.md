@@ -137,10 +137,10 @@ dart run pigeon --input pigeons/singbox_api.dart
 python scripts/verify_libbox.py
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --target-platform android-arm64 --split-per-abi
 ```
 
-For release builds, configure signing in `android/key.properties`. Official builds may restore private Happ encrypted-subscription compatibility assets; read [private build inputs](.github/private/README.md) before expecting a local build to match that behavior.
+For release builds, configure signing in `android/key.properties`. This fork does not include Happ encrypted-subscription support or its private compatibility assets. HTTP(S) subscriptions and standard protocols remain available.
 
 </details>
 

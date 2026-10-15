@@ -90,7 +90,34 @@ void main() {
 
     test('derives user agent from the installed app version', () {
       SubscriptionFetcher.configureAppVersion('v0.3.7');
-      expect(SubscriptionFetcher.defaultUserAgent, 'Happ/3.24.1 Etonify/0.3.7');
+      expect(SubscriptionFetcher.defaultUserAgent, 'Etonify/0.3.7');
+    });
+
+    test('supports only ordinary HTTP and HTTPS subscription URLs', () {
+      expect(
+        SubscriptionFetcher.isSupportedSubscriptionUrl(
+          'https://example.com/sub',
+        ),
+        isTrue,
+      );
+      expect(
+        SubscriptionFetcher.isSupportedSubscriptionUrl(
+          'http://example.com/sub',
+        ),
+        isTrue,
+      );
+      expect(
+        SubscriptionFetcher.isSupportedSubscriptionUrl(
+          'happ://crypt5/encrypted-payload',
+        ),
+        isFalse,
+      );
+      expect(
+        SubscriptionFetcher.isSupportedSubscriptionUrl(
+          'vless://uuid@example.com:443',
+        ),
+        isFalse,
+      );
     });
 
     test('keeps insecure TLS opt-in on the scoped app client', () async {

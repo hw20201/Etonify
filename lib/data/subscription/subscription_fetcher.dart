@@ -69,7 +69,16 @@ class SubscriptionFetcher {
 
   static bool shouldSendHwid(SubscriptionInfo? requestInfo) =>
       _sendHwidToProviders || requestInfo?.requireHwid == true;
-  static String get defaultUserAgent => 'Happ/3.24.1 Etonify/$_appVersion';
+  static String get defaultUserAgent => 'Etonify/$_appVersion';
+
+  static bool isSupportedSubscriptionUrl(String value) {
+    final uri = Uri.tryParse(value.trim());
+    if (uri == null || !uri.hasAuthority || uri.host.isEmpty) {
+      return false;
+    }
+    final scheme = uri.scheme.toLowerCase();
+    return scheme == 'http' || scheme == 'https';
+  }
 
   static String get currentAppVersion => _appVersion;
   static const _maxSubscriptionResponseBytes = 16 * 1024 * 1024;
@@ -881,7 +890,6 @@ class SubscriptionFetcher {
     int? download;
     int? total;
     int? expire;
-    String? happCryptoLink;
     String? supportUrl;
     String? webPageUrl;
     String? newUrl;
@@ -914,9 +922,6 @@ class SubscriptionFetcher {
     }
 
     // support-url
-    happCryptoLink = headerValue('happ-crypto-link');
-
-    // support-url
     supportUrl = headerValue('support-url');
 
     // profile-web-page-url
@@ -944,7 +949,6 @@ class SubscriptionFetcher {
       download: download,
       total: total,
       expire: expire,
-      happCryptoLink: happCryptoLink,
       supportUrl: supportUrl,
       webPageUrl: webPageUrl,
       newUrl: newUrl,
@@ -967,7 +971,6 @@ class SubscriptionFetcher {
     int? download = header.download;
     int? total = header.total;
     int? expire = header.expire;
-    String? happCryptoLink = header.happCryptoLink;
     String? supportUrl = header.supportUrl;
     String? webPageUrl = header.webPageUrl;
     String? newUrl = header.newUrl;
@@ -990,7 +993,6 @@ class SubscriptionFetcher {
       }
     }
 
-    happCryptoLink ??= bodyMeta['happ-crypto-link'];
     supportUrl ??= bodyMeta['support-url'];
     webPageUrl ??= bodyMeta['profile-web-page-url'];
     newUrl ??= bodyMeta['new-url'];
@@ -1014,7 +1016,6 @@ class SubscriptionFetcher {
       download: download,
       total: total,
       expire: expire,
-      happCryptoLink: happCryptoLink,
       supportUrl: supportUrl,
       webPageUrl: webPageUrl,
       newUrl: newUrl,

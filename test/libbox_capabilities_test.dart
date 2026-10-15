@@ -133,7 +133,7 @@ void main() {
         ),
         isTrue,
       );
-      // Happ and Astracat put tuning fields between the mode and the key.
+      // Some subscription providers put tuning fields between the mode and key.
       expect(
         capabilities.supportsVlessEncryptionValue(
           'mlkem768x25519plus.native.0rtt.100-111-1111.75-0-111.$key',

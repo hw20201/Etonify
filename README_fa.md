@@ -141,12 +141,12 @@ dart run pigeon --input pigeons/singbox_api.dart
 python scripts/verify_libbox.py
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --target-platform android-arm64 --split-per-abi
 ```
 
 </div>
 
-برای ساخت انتشار، امضا را در `android/key.properties` تنظیم کنید. ساخت‌های رسمی ممکن است منابع خصوصی سازگاری با اشتراک‌های رمزگذاری‌شدهٔ Happ را بازیابی کنند؛ برای آزمایش محلی این قابلیت، [ورودی‌های خصوصی ساخت](.github/private/README.md) را بخوانید.
+برای ساخت انتشار، امضا را در `android/key.properties` تنظیم کنید. پشتیبانی از اشتراک‌های رمزگذاری‌شدهٔ Happ و منابع خصوصی سازگاری آن در این فورک حذف شده است؛ اشتراک‌های معمول HTTP(S) و پروتکل‌های رایج همچنان در دسترس‌اند.
 
 </details>
 

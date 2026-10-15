@@ -14,7 +14,6 @@ import 'package:meow_client/core/outbound_location.dart';
 import 'package:meow_client/core/security/sensitive_clipboard.dart';
 import 'package:meow_client/core/widgets/app_notice.dart';
 import 'package:meow_client/data/backup/etonify_backup_service.dart';
-import 'package:meow_client/data/subscription/happ_crypto_link.dart';
 import 'package:meow_client/data/subscription/outbound_support.dart';
 import 'package:meow_client/data/subscription/subscription_failure.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
@@ -91,8 +90,6 @@ String _subscriptionLastUpdatedText(BuildContext context, int milliseconds) {
 
 bool subscriptionCountNeedsHydration(Subscription subscription) =>
     subscription.cachedVisibleProxyCount < 0;
-
-enum _HappImportDecision { sendHwid, withoutHwid }
 
 enum _SubscriptionSortMode { manual, name, updated, servers }
 
@@ -568,99 +565,9 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
       );
     }
 
-    final rawUrl = result.url.trim();
-    if (!HappCryptoLinkDecoder.isSupportedLink(rawUrl)) {
-      return _PreparedSubscriptionImport(
-        url: rawUrl,
-        requestInfo: result.requestInfo,
-      );
-    }
-
-    final globalHwid = SubscriptionFetcher.sendHwidToProviders;
-    final decision = globalHwid
-        ? _HappImportDecision.withoutHwid
-        : await _showHappImportDialog();
-    if (decision == null) {
-      return null;
-    }
-
-    final prepared = await HappCryptoLinkDecoder.prepare(rawUrl);
-    final requestInfo = switch (decision) {
-      _HappImportDecision.sendHwid => prepared.requestInfo,
-      _HappImportDecision.withoutHwid => prepared.requestInfo?.copyWith(
-        requireHwid: false,
-      ),
-    };
     return _PreparedSubscriptionImport(
-      url: prepared.resolvedUrl,
-      requestInfo: _mergeSubscriptionRequestInfo(
-        requestInfo,
-        result.requestInfo,
-      ),
-    );
-  }
-
-  SubscriptionInfo? _mergeSubscriptionRequestInfo(
-    SubscriptionInfo? base,
-    SubscriptionInfo? override,
-  ) {
-    if (base == null) {
-      return override;
-    }
-    if (override == null) {
-      return base;
-    }
-    return SubscriptionInfo(
-      title: base.title,
-      upload: base.upload,
-      download: base.download,
-      total: base.total,
-      expire: base.expire,
-      happCryptoLink: base.happCryptoLink,
-      supportUrl: base.supportUrl,
-      webPageUrl: base.webPageUrl,
-      newUrl: base.newUrl,
-      ignoreSubscriptionMoved: base.ignoreSubscriptionMoved,
-      updateIntervalHours: base.updateIntervalHours,
-      perAppProxyMode: base.perAppProxyMode,
-      perAppProxyList: base.perAppProxyList,
-      customUserAgent: override.customUserAgent ?? base.customUserAgent,
-      customRequestHeader:
-          override.customRequestHeader ?? base.customRequestHeader,
-      requireHwid: base.requireHwid || override.requireHwid,
-      customHwid: override.customHwid ?? base.customHwid,
-    );
-  }
-
-  Future<_HappImportDecision?> _showHappImportDialog() {
-    final l10n = AppLocalizations.of(context);
-    return showDialog<_HappImportDecision>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.happImportTitle),
-        content: Text(l10n.happImportMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(AppLocalizations.of(dialogContext).cancel),
-          ),
-          FilledButton.tonal(
-            onPressed: () => Navigator.of(
-              dialogContext,
-            ).pop(_HappImportDecision.withoutHwid),
-            child: Text(l10n.deepLinkImportHappWithoutHwidAction),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.of(dialogContext).pop(_HappImportDecision.sendHwid),
-            child: Text(
-              AppLocalizations.of(
-                dialogContext,
-              ).deepLinkImportHappSendHwidAction,
-            ),
-          ),
-        ],
-      ),
+      url: result.url.trim(),
+      requestInfo: result.requestInfo,
     );
   }
 
@@ -996,24 +903,14 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
     }
   }
 
-  String _qrShareValue(Subscription subscription) {
-    final happCryptoLink = subscription.info?.happCryptoLink?.trim() ?? '';
-    if (happCryptoLink.isEmpty) {
-      return subscription.url;
-    }
-    if (happCryptoLink.toLowerCase().startsWith('happ://crypt5/')) {
-      return subscription.url;
-    }
-    return happCryptoLink;
-  }
+  String _qrShareValue(Subscription subscription) => subscription.url;
 
   Future<void> _showSubscriptionQr(
     Subscription subscription, {
     required String title,
   }) async {
     final value = _qrShareValue(subscription).trim();
-    if (value.isEmpty ||
-        !HappCryptoLinkDecoder.isSupportedSubscriptionUrl(value)) {
+    if (!SubscriptionFetcher.isSupportedSubscriptionUrl(value)) {
       if (!mounted) return;
       AppNotice.show(
         context,

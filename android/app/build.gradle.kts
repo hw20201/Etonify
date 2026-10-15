@@ -72,9 +72,9 @@ android {
 
     packaging {
         jniLibs {
-            // Load uncompressed native libraries directly from the APK.
-            useLegacyPackaging = false
-            // Keep the old Happ native library on disk, but do not package it.
+            // Compress native libraries in the APK; Android extracts them during installation.
+            useLegacyPackaging = true
+            // The bundled AAR's legacy error-code library is unused by this app.
             excludes += setOf("**/liberror-code.so")
         }
     }

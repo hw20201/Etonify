@@ -7,6 +7,7 @@ import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
 import 'app_localizations_ru.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -96,6 +97,7 @@ abstract class AppLocalizations {
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('ru'),
+    Locale('zh'),
   ];
 
   /// No description provided for @coreConfigActive.
@@ -1421,7 +1423,7 @@ abstract class AppLocalizations {
   /// No description provided for @documentationProtocolsBody.
   ///
   /// In en, this message translates to:
-  /// **'You can import links, QR codes, and sing-box, Xray, or Happ configurations.\n\nSupported protocols include VLESS, VMess, Trojan, Shadowsocks, ShadowsocksR, Hysteria, Hysteria2, TUIC, AnyTLS, Naive, HTTP, and SOCKS. Import confirms the format, not server availability.'**
+  /// **'You can import links, QR codes, and sing-box or Xray configurations.\\n\\nSupported protocols include VLESS, VMess, Trojan, Shadowsocks, ShadowsocksR, Hysteria, Hysteria2, TUIC, AnyTLS, Naive, HTTP, and SOCKS. Import confirms the format, not server availability.'**
   String get documentationProtocolsBody;
 
   /// No description provided for @documentationChainsTitle.
@@ -1897,6 +1899,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Russian'**
   String get languageRussian;
+
+  /// No description provided for @languageChinese.
+  ///
+  /// In en, this message translates to:
+  /// **'Chinese'**
+  String get languageChinese;
 
   /// No description provided for @themeSystem.
   ///
@@ -3584,7 +3592,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendHwidSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Required by some Happ subscriptions'**
+  /// **'Required by some subscription providers'**
   String get sendHwidSubtitle;
 
   /// No description provided for @sendHwidGlobalEnabledSubtitle.
@@ -4046,7 +4054,7 @@ abstract class AppLocalizations {
   /// No description provided for @subscriptionImportHelpBody.
   ///
   /// In en, this message translates to:
-  /// **'Copy the subscription link from your provider and tap Clipboard, or scan a QR code. If the link is not recognized, open Manual and paste a URL, vless:// link, key list, or sing-box/Xray config. For Happ subscriptions, enable User-Agent or HWID in manual import when your provider requires it.'**
+  /// **'Copy the subscription link from your provider and tap Clipboard, or scan a QR code. If the link is not recognized, open Manual and paste a URL, vless:// link, key list, or sing-box/Xray config. If a provider requires a User-Agent or HWID, configure them in manual import.'**
   String get subscriptionImportHelpBody;
 
   /// No description provided for @subscriptionsRefreshAllComplete.
@@ -4439,12 +4447,6 @@ abstract class AppLocalizations {
   /// **'The server response is not a valid subscription. Check that the link points directly to a subscription file.'**
   String get subscriptionErrorInvalidContent;
 
-  /// No description provided for @subscriptionErrorHappInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'The Happ link could not be decrypted or contains an invalid subscription URL. Copy a fresh link and try again.'**
-  String get subscriptionErrorHappInvalid;
-
   /// No description provided for @subscriptionErrorUnknown.
   ///
   /// In en, this message translates to:
@@ -4499,36 +4501,6 @@ abstract class AppLocalizations {
   /// **'Resolved subscription URL'**
   String get deepLinkImportResolvedUrlLabel;
 
-  /// No description provided for @deepLinkImportHappBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'Happ subscription'**
-  String get deepLinkImportHappBadge;
-
-  /// No description provided for @deepLinkImportHappNotice.
-  ///
-  /// In en, this message translates to:
-  /// **'Some Happ subscriptions require an HWID. Etonify sends it only after you confirm.'**
-  String get deepLinkImportHappNotice;
-
-  /// No description provided for @deepLinkImportHappSendHwidAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Send HWID and import'**
-  String get deepLinkImportHappSendHwidAction;
-
-  /// No description provided for @deepLinkImportHappWithoutHwidAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Import without HWID'**
-  String get deepLinkImportHappWithoutHwidAction;
-
-  /// No description provided for @deepLinkImportHappCancelAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Do not import'**
-  String get deepLinkImportHappCancelAction;
-
   /// No description provided for @deepLinkImportUserAgentLabel.
   ///
   /// In en, this message translates to:
@@ -4558,42 +4530,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subscription \"{name}\" is already added'**
   String deepLinkImportAlreadyExists(String name);
-
-  /// No description provided for @happCryptoLinkImportedLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Imported from a Happ link'**
-  String get happCryptoLinkImportedLabel;
-
-  /// No description provided for @happCryptoLinkTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Happ link'**
-  String get happCryptoLinkTitle;
-
-  /// No description provided for @happCryptUnsupportedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Happ crypt5'**
-  String get happCryptUnsupportedTitle;
-
-  /// No description provided for @happCryptUnsupportedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'This Happ link is not supported yet.'**
-  String get happCryptUnsupportedMessage;
-
-  /// No description provided for @happImportTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Happ subscription'**
-  String get happImportTitle;
-
-  /// No description provided for @happImportMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'This Happ subscription may require an HWID. Send it now or try importing without it.'**
-  String get happImportMessage;
 
   /// No description provided for @subscriptionOperationSlowWarning.
   ///
@@ -5171,36 +5107,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} min'**
   String refreshIntervalMinutesShort(int count);
-
-  /// No description provided for @happCrypt5Supported.
-  ///
-  /// In en, this message translates to:
-  /// **'Available'**
-  String get happCrypt5Supported;
-
-  /// No description provided for @happCrypt5Unsupported.
-  ///
-  /// In en, this message translates to:
-  /// **'Unavailable'**
-  String get happCrypt5Unsupported;
-
-  /// No description provided for @happCrypt5Checking.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking Happ crypt5...'**
-  String get happCrypt5Checking;
-
-  /// No description provided for @happCrypt5SupportedDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'This build can open Happ crypt5 links.'**
-  String get happCrypt5SupportedDescription;
-
-  /// No description provided for @happCrypt5UnsupportedDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'This build has no Happ crypt5 files. Regular subscriptions still work.'**
-  String get happCrypt5UnsupportedDescription;
 
   /// No description provided for @subscriptionLikelyRequiresHwidTitle.
   ///
@@ -6378,7 +6284,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'ru'].contains(locale.languageCode);
+      <String>['en', 'ru', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -6391,6 +6297,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsEn();
     case 'ru':
       return AppLocalizationsRu();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

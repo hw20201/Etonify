@@ -743,7 +743,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get documentationProtocolsBody =>
-      'You can import links, QR codes, and sing-box, Xray, or Happ configurations.\n\nSupported protocols include VLESS, VMess, Trojan, Shadowsocks, ShadowsocksR, Hysteria, Hysteria2, TUIC, AnyTLS, Naive, HTTP, and SOCKS. Import confirms the format, not server availability.';
+      'You can import links, QR codes, and sing-box or Xray configurations.\\n\\nSupported protocols include VLESS, VMess, Trojan, Shadowsocks, ShadowsocksR, Hysteria, Hysteria2, TUIC, AnyTLS, Naive, HTTP, and SOCKS. Import confirms the format, not server availability.';
 
   @override
   String get documentationChainsTitle => 'Proxy chains';
@@ -1021,6 +1021,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageRussian => 'Russian';
+
+  @override
+  String get languageChinese => 'Chinese';
 
   @override
   String get themeSystem => 'System';
@@ -1979,7 +1982,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendHwidTitle => 'Send HWID';
 
   @override
-  String get sendHwidSubtitle => 'Required by some Happ subscriptions';
+  String get sendHwidSubtitle => 'Required by some subscription providers';
 
   @override
   String get sendHwidGlobalEnabledSubtitle =>
@@ -2227,7 +2230,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionImportHelpBody =>
-      'Copy the subscription link from your provider and tap Clipboard, or scan a QR code. If the link is not recognized, open Manual and paste a URL, vless:// link, key list, or sing-box/Xray config. For Happ subscriptions, enable User-Agent or HWID in manual import when your provider requires it.';
+      'Copy the subscription link from your provider and tap Clipboard, or scan a QR code. If the link is not recognized, open Manual and paste a URL, vless:// link, key list, or sing-box/Xray config. If a provider requires a User-Agent or HWID, configure them in manual import.';
 
   @override
   String subscriptionsRefreshAllComplete(int updated, int failed) {
@@ -2479,10 +2482,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The server response is not a valid subscription. Check that the link points directly to a subscription file.';
 
   @override
-  String get subscriptionErrorHappInvalid =>
-      'The Happ link could not be decrypted or contains an invalid subscription URL. Copy a fresh link and try again.';
-
-  @override
   String get subscriptionErrorUnknown =>
       'The subscription could not be processed. Check the link and open Diagnostics for the technical reason.';
 
@@ -2514,22 +2513,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deepLinkImportResolvedUrlLabel => 'Resolved subscription URL';
 
   @override
-  String get deepLinkImportHappBadge => 'Happ subscription';
-
-  @override
-  String get deepLinkImportHappNotice =>
-      'Some Happ subscriptions require an HWID. Etonify sends it only after you confirm.';
-
-  @override
-  String get deepLinkImportHappSendHwidAction => 'Send HWID and import';
-
-  @override
-  String get deepLinkImportHappWithoutHwidAction => 'Import without HWID';
-
-  @override
-  String get deepLinkImportHappCancelAction => 'Do not import';
-
-  @override
   String get deepLinkImportUserAgentLabel => 'User-Agent';
 
   @override
@@ -2547,26 +2530,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String deepLinkImportAlreadyExists(String name) {
     return 'Subscription \"$name\" is already added';
   }
-
-  @override
-  String get happCryptoLinkImportedLabel => 'Imported from a Happ link';
-
-  @override
-  String get happCryptoLinkTitle => 'Happ link';
-
-  @override
-  String get happCryptUnsupportedTitle => 'Happ crypt5';
-
-  @override
-  String get happCryptUnsupportedMessage =>
-      'This Happ link is not supported yet.';
-
-  @override
-  String get happImportTitle => 'Happ subscription';
-
-  @override
-  String get happImportMessage =>
-      'This Happ subscription may require an HWID. Send it now or try importing without it.';
 
   @override
   String get subscriptionOperationSlowWarning =>
@@ -2917,23 +2880,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String refreshIntervalMinutesShort(int count) {
     return '$count min';
   }
-
-  @override
-  String get happCrypt5Supported => 'Available';
-
-  @override
-  String get happCrypt5Unsupported => 'Unavailable';
-
-  @override
-  String get happCrypt5Checking => 'Checking Happ crypt5...';
-
-  @override
-  String get happCrypt5SupportedDescription =>
-      'This build can open Happ crypt5 links.';
-
-  @override
-  String get happCrypt5UnsupportedDescription =>
-      'This build has no Happ crypt5 files. Regular subscriptions still work.';
 
   @override
   String get subscriptionLikelyRequiresHwidTitle => 'HWID may be required';

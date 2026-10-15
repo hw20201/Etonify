@@ -137,10 +137,10 @@ dart run pigeon --input pigeons/singbox_api.dart
 python scripts/verify_libbox.py
 flutter analyze
 flutter test
-flutter build apk --debug
+flutter build apk --debug --target-platform android-arm64 --split-per-abi
 ```
 
-发布构建需要在 `android/key.properties` 中配置签名。官方构建可能恢复用于 Happ 加密订阅兼容性的私有资源；如果希望在本地验证该功能，请阅读 [私有构建输入](.github/private/README.md)。
+发布构建仍需在 `android/key.properties` 中配置签名。本 fork 已移除 Happ 加密订阅支持及其私有兼容资源；普通 HTTP(S) 订阅以及 VLESS、Trojan、Shadowsocks 等常见协议不受影响。
 
 </details>
 

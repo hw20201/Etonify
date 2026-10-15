@@ -45,7 +45,6 @@ object SubscriptionRefreshJobs {
         "profile-title",
         "content-disposition",
         "subscription-userinfo",
-        "happ-crypto-link",
         "support-url",
         "profile-web-page-url",
         "new-url",

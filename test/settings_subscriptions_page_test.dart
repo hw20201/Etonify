@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/subscription/happ_crypt5_local.dart';
 import 'package:meow_client/features/settings/settings_subscriptions_page.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
@@ -36,8 +35,6 @@ Widget _subscriptionsSettingsApp({
       onLocationLookupTimeoutSecondsChanged: (_) {},
       onLocationLookupConcurrencyChanged: (_) {},
       androidIdLoader: () async => '0123456789abcdef',
-      happSupportLoader: () async =>
-          const HappCrypt5Support(supported: true, detail: 'ready'),
     ),
   );
 }
@@ -72,9 +69,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    await tester.scrollUntilVisible(find.text('Happ'), 300);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('device-hwid-value')),
+      300,
+    );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
+    expect(find.byKey(const ValueKey('device-hwid-value')), findsOneWidget);
+    expect(find.text('Crypt5'), findsNothing);
   });
 
   testWidgets(

@@ -59,28 +59,6 @@ final class MeowDeepLinkBridge: NSObject {
       return nil
     }
 
-    if scheme == "happ" {
-      let host = components.host?.lowercased() ?? ""
-      let path = components.path
-        .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        .lowercased()
-      if host == "routing" || path == "routing" || path.hasPrefix("routing/") {
-        return nil
-      }
-
-      let queryItems = components.queryItems ?? []
-      let importUrl = queryItems.first(where: { $0.name == "url" })?.value?
-        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-      let name = queryItems.first(where: { $0.name == "name" })?.value?
-        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-      return [
-        "scheme": scheme,
-        "url": importUrl.isEmpty ? url.absoluteString : importUrl,
-        "name": name,
-      ]
-    }
-
     guard scheme == "etonify" || scheme == "meowvpn" else {
       return nil
     }

@@ -2,13 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 
-enum DeepLinkImportSource {
-  unknown,
-  etonifyImport,
-  happAdd,
-  happCrypto,
-  singBoxRemoteProfile,
-}
+enum DeepLinkImportSource { unknown, etonifyImport, singBoxRemoteProfile }
 
 class DeepLinkImportRequest {
   const DeepLinkImportRequest({
@@ -22,11 +16,6 @@ class DeepLinkImportRequest {
   final String? name;
   final String? scheme;
   final DeepLinkImportSource sourceType;
-
-  bool get isHapp =>
-      sourceType == DeepLinkImportSource.happAdd ||
-      sourceType == DeepLinkImportSource.happCrypto ||
-      scheme?.toLowerCase() == 'happ';
 
   static DeepLinkImportRequest? fromPayload(Object? payload) {
     if (payload is! Map) {
@@ -45,11 +34,21 @@ class DeepLinkImportRequest {
     final scheme = rawScheme is String && rawScheme.trim().isNotEmpty
         ? rawScheme.trim()
         : null;
-    final sourceType =
-        _parseSourceType(payload['sourceType']) ??
-        _inferSourceType(rawUrl.trim(), scheme: scheme);
+    final rawSourceType = payload['sourceType'];
 
-    final url = _normalizeImportUrl(rawUrl.trim(), name: name);
+    // This fork no longer handles Happ links, including Happ's wrapped HTTP
+    // links whose payload itself only contains the resolved subscription URL.
+    if (scheme?.toLowerCase() == 'happ' ||
+        rawUrl.trim().toLowerCase().startsWith('happ:') ||
+        (rawSourceType is String &&
+            rawSourceType.trim().toLowerCase().startsWith('happ'))) {
+      return null;
+    }
+
+    final sourceType =
+        _parseSourceType(rawSourceType) ??
+        _inferSourceType(rawUrl.trim(), scheme: scheme);
+    final url = _normalizeImportUrl(rawUrl.trim());
     if (url == null) {
       return null;
     }
@@ -62,13 +61,11 @@ class DeepLinkImportRequest {
     );
   }
 
-  static String? _normalizeImportUrl(String rawUrl, {String? name}) {
+  static String? _normalizeImportUrl(String rawUrl) {
     if (rawUrl.isEmpty) {
       return null;
     }
-    return _normalizeHappAddUrl(rawUrl, name: name) ??
-        _normalizeSingBoxRemoteProfileUrl(rawUrl) ??
-        rawUrl;
+    return _normalizeSingBoxRemoteProfileUrl(rawUrl) ?? rawUrl;
   }
 
   static DeepLinkImportSource? _parseSourceType(Object? value) {
@@ -77,8 +74,6 @@ class DeepLinkImportRequest {
     }
     return switch (value.trim()) {
       'etonifyImport' => DeepLinkImportSource.etonifyImport,
-      'happAdd' => DeepLinkImportSource.happAdd,
-      'happCrypto' => DeepLinkImportSource.happCrypto,
       'singBoxRemoteProfile' => DeepLinkImportSource.singBoxRemoteProfile,
       _ => null,
     };
@@ -90,23 +85,9 @@ class DeepLinkImportRequest {
   }) {
     final uri = Uri.tryParse(rawUrl);
     final rawScheme = uri?.scheme.toLowerCase() ?? '';
-    final normalizedScheme = rawScheme == 'happ' || rawScheme == 'sing-box'
+    final normalizedScheme = rawScheme == 'sing-box'
         ? rawScheme
         : (scheme ?? rawScheme).toLowerCase();
-    if (normalizedScheme == 'happ') {
-      final host = uri?.host.toLowerCase() ?? '';
-      final path =
-          (uri?.path.startsWith('/') == true
-                  ? uri!.path.substring(1)
-                  : uri?.path ?? '')
-              .toLowerCase();
-      if (_isHappCryptoPart(host) ||
-          _isHappCryptoPart(path) ||
-          _startsWithHappCryptoPrefix(path)) {
-        return DeepLinkImportSource.happCrypto;
-      }
-      return DeepLinkImportSource.happAdd;
-    }
     if (normalizedScheme == 'sing-box') {
       return DeepLinkImportSource.singBoxRemoteProfile;
     }
@@ -114,91 +95,6 @@ class DeepLinkImportRequest {
       return DeepLinkImportSource.etonifyImport;
     }
     return DeepLinkImportSource.unknown;
-  }
-
-  static bool _isHappCryptoPart(String value) {
-    return value == 'crypt' ||
-        value == 'crypt2' ||
-        value == 'crypt3' ||
-        value == 'crypt4' ||
-        value == 'crypt5';
-  }
-
-  static bool _startsWithHappCryptoPrefix(String value) {
-    return value.startsWith('crypt/') ||
-        value.startsWith('crypt2/') ||
-        value.startsWith('crypt3/') ||
-        value.startsWith('crypt4/') ||
-        value.startsWith('crypt5/');
-  }
-
-  static String? _normalizeHappAddUrl(String rawUrl, {String? name}) {
-    final uri = Uri.tryParse(rawUrl);
-    if (uri == null || uri.scheme.toLowerCase() != 'happ') {
-      return null;
-    }
-
-    final host = uri.host.toLowerCase();
-    final trimmedPath = uri.path.startsWith('/')
-        ? uri.path.substring(1)
-        : uri.path;
-    final lowercasePath = trimmedPath.toLowerCase();
-
-    String embeddedUrl;
-    final queryUrl = uri.queryParameters['url']?.trim();
-    if (queryUrl != null && queryUrl.isNotEmpty) {
-      embeddedUrl = queryUrl;
-    } else if (host == 'add') {
-      embeddedUrl = trimmedPath;
-    } else if (lowercasePath == 'add') {
-      embeddedUrl = '';
-    } else if (lowercasePath.startsWith('add/')) {
-      embeddedUrl = trimmedPath.substring(4);
-    } else {
-      return null;
-    }
-
-    embeddedUrl = embeddedUrl.trim();
-    if (embeddedUrl.isEmpty) {
-      return null;
-    }
-
-    final remainingQuery = <String, List<String>>{};
-    for (final entry in uri.queryParametersAll.entries) {
-      if (entry.key == 'name' && name != null) {
-        continue;
-      }
-      if (entry.key == 'url') {
-        continue;
-      }
-      remainingQuery[entry.key] = entry.value;
-    }
-    if (remainingQuery.isNotEmpty) {
-      final query = Uri(
-        queryParameters: {
-          for (final entry in remainingQuery.entries)
-            if (entry.value.isNotEmpty)
-              entry.key: entry.value.length == 1
-                  ? entry.value.first
-                  : entry.value,
-        },
-      ).query;
-      if (query.isNotEmpty) {
-        embeddedUrl = embeddedUrl.contains('?')
-            ? '$embeddedUrl&$query'
-            : '$embeddedUrl?$query';
-      }
-    }
-
-    if (embeddedUrl.startsWith('//')) {
-      return 'https:$embeddedUrl';
-    }
-
-    final embeddedUri = Uri.tryParse(embeddedUrl);
-    if (embeddedUri != null && embeddedUri.hasScheme) {
-      return embeddedUrl;
-    }
-    return 'https://$embeddedUrl';
   }
 
   static String? _normalizeSingBoxRemoteProfileUrl(String rawUrl) {

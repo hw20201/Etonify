@@ -1106,7 +1106,6 @@ interface SingboxHostApi {
   fun stopRuntimeMeasurement(callback: (Result<Unit>) -> Unit)
   fun getRuntimeMeasurement(callback: (Result<Map<String?, Any?>>) -> Unit)
   fun getRuntimeMeasurementReport(callback: (Result<String>) -> Unit)
-  fun getHappCrypt5Support(callback: (Result<Map<String?, Any?>>) -> Unit)
   fun getInstalledApps(callback: (Result<List<InstalledAppMessage?>>) -> Unit)
   fun getInstalledAppIcon(packageName: String, sizePx: Long, callback: (Result<ByteArray?>) -> Unit)
   fun setQuickSettingsTileLabel(label: String, callback: (Result<Unit>) -> Unit)
@@ -1935,24 +1934,6 @@ interface SingboxHostApi {
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             api.getRuntimeMeasurementReport{ result: Result<String> ->
-              val error = result.exceptionOrNull()
-              if (error != null) {
-                reply.reply(SingboxApiPigeonUtils.wrapError(error))
-              } else {
-                val data = result.getOrNull()
-                reply.reply(SingboxApiPigeonUtils.wrapResult(data))
-              }
-            }
-          }
-        } else {
-          channel.setMessageHandler(null)
-        }
-      }
-      run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.meow_client.SingboxHostApi.getHappCrypt5Support$separatedMessageChannelSuffix", codec)
-        if (api != null) {
-          channel.setMessageHandler { _, reply ->
-            api.getHappCrypt5Support{ result: Result<Map<String?, Any?>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(SingboxApiPigeonUtils.wrapError(error))

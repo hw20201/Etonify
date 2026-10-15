@@ -30,11 +30,10 @@
 			<key>CFBundleURLName</key>
 			<string>com.etonify.meowClient.import</string>
 			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>etonify</string>
-				<string>meowvpn</string>
-				<string>happ</string>
-			</array>
+				<array>
+					<string>etonify</string>
+					<string>meowvpn</string>
+				</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>

@@ -604,8 +604,7 @@ class _SubscriptionDetailsPageState extends State<_SubscriptionDetailsPage> {
     required String title,
   }) async {
     final trimmed = value.trim();
-    if (trimmed.isEmpty ||
-        !HappCryptoLinkDecoder.isSupportedSubscriptionUrl(trimmed)) {
+    if (!SubscriptionFetcher.isSupportedSubscriptionUrl(trimmed)) {
       if (!mounted) return;
       AppNotice.show(
         context,
@@ -621,16 +620,7 @@ class _SubscriptionDetailsPageState extends State<_SubscriptionDetailsPage> {
     );
   }
 
-  String _qrShareValue(Subscription subscription) {
-    final happCryptoLink = subscription.info?.happCryptoLink?.trim() ?? '';
-    if (happCryptoLink.isEmpty) {
-      return subscription.url;
-    }
-    if (happCryptoLink.toLowerCase().startsWith('happ://crypt5/')) {
-      return subscription.url;
-    }
-    return happCryptoLink;
-  }
+  String _qrShareValue(Subscription subscription) => subscription.url;
 
   Future<void> _reparseSubscription(Subscription subscription) async {
     setState(() => _busy = true);
