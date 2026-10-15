@@ -114,6 +114,7 @@ class SettingsGeneralPage extends StatelessWidget {
   String _localeName(AppLocalizations l10n, String code) => switch (code) {
     'en' => l10n.languageEnglish,
     'ru' => l10n.languageRussian,
+    'zh' => l10n.languageChinese,
     _ => l10n.languageSystem,
   };
 
@@ -129,6 +130,7 @@ class SettingsGeneralPage extends StatelessWidget {
           RadioChoice(value: 'system', label: l10n.languageSystem),
           RadioChoice(value: 'en', label: l10n.languageEnglish),
           RadioChoice(value: 'ru', label: l10n.languageRussian),
+          RadioChoice(value: 'zh', label: l10n.languageChinese),
         ],
       ),
     );
