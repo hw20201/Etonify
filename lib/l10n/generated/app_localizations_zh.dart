@@ -3005,13 +3005,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trafficRulesDeleteData => '删除规则数据';
 
   @override
-  String get trafficRulesRussianTitle => '.RU 不走 VPN';
+  String get trafficRulesChinaTitle => '中国直连';
 
   @override
-  String get trafficRulesRussianSubtitle => '俄罗斯服务和本地地址绕过 VPN。';
+  String get trafficRulesChinaSubtitle => '中国域名与 IP 网段直连，其余流量走代理。';
 
   @override
-  String get trafficRulesRussianSummary => '俄罗斯服务直连，其他流量走 VPN。';
+  String get trafficRulesChinaSummary => '中国域名与 IP 直连，其余流量走代理。';
 
   @override
   String get trafficRulesAiTitle => 'AI 服务走 VPN';
@@ -3045,12 +3045,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trafficRulesSettings => '设置';
-
-  @override
-  String get trafficRulesRuDnsTitle => '.RU 域名 DNS 不走 VPN';
-
-  @override
-  String get trafficRulesRuDnsSubtitle => '仅用于该规则直连的俄罗斯域名。默认：udp://77.88.8.8。';
 
   @override
   String get trafficRulesDefaultRoute => '其他所有';

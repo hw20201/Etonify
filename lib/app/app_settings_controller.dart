@@ -362,12 +362,11 @@ class AppSettingsController {
     trafficRulePreset =
         state.trafficRulePreset == TrafficRulePreset.none &&
             state.useRussiaRouteData
-        ? TrafficRulePreset.russianServicesDirect
+        ? TrafficRulePreset.chinaDirect
         : state.trafficRulePreset;
-    // Kept only for the legacy config builder call while profiles migrate.
-    // The persisted source of truth is now trafficRulePreset.
-    useRussiaRouteData =
-        trafficRulePreset == TrafficRulePreset.russianServicesDirect;
+    // Kept only for the legacy config builder/bootstrap call while profiles
+    // migrate. The persisted source of truth is now trafficRulePreset.
+    useRussiaRouteData = trafficRulePreset == TrafficRulePreset.chinaDirect;
     bypassLocalNetwork = state.bypassLocalNetwork;
     splitRoutingMode = state.splitRoutingMode;
     splitRoutingPackages = List<String>.from(state.splitRoutingPackages);
@@ -935,7 +934,7 @@ class AppSettingsController {
 
   AppSettingsChange setRussiaRouteDataEnabled(bool value) {
     return setTrafficRulePreset(
-      value ? TrafficRulePreset.russianServicesDirect : TrafficRulePreset.none,
+      value ? TrafficRulePreset.chinaDirect : TrafficRulePreset.none,
     );
   }
 
@@ -944,7 +943,7 @@ class AppSettingsController {
       return const AppSettingsChange.none();
     }
     trafficRulePreset = value;
-    useRussiaRouteData = value == TrafficRulePreset.russianServicesDirect;
+    useRussiaRouteData = value == TrafficRulePreset.chinaDirect;
     return const AppSettingsChange(
       changed: true,
       configReason: 'traffic rule preset changed',

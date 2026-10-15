@@ -5636,23 +5636,23 @@ abstract class AppLocalizations {
   /// **'Delete rule data'**
   String get trafficRulesDeleteData;
 
-  /// No description provided for @trafficRulesRussianTitle.
+  /// No description provided for @trafficRulesChinaTitle.
   ///
   /// In en, this message translates to:
-  /// **'.RU without VPN'**
-  String get trafficRulesRussianTitle;
+  /// **'China direct'**
+  String get trafficRulesChinaTitle;
 
-  /// No description provided for @trafficRulesRussianSubtitle.
+  /// No description provided for @trafficRulesChinaSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Russian services and local addresses bypass the VPN.'**
-  String get trafficRulesRussianSubtitle;
+  /// **'Chinese domains and IP ranges go direct; other traffic uses the VPN.'**
+  String get trafficRulesChinaSubtitle;
 
-  /// No description provided for @trafficRulesRussianSummary.
+  /// No description provided for @trafficRulesChinaSummary.
   ///
   /// In en, this message translates to:
-  /// **'Russian services bypass VPN; other traffic uses VPN.'**
-  String get trafficRulesRussianSummary;
+  /// **'Chinese domains and IP ranges go direct; other traffic uses the VPN.'**
+  String get trafficRulesChinaSummary;
 
   /// No description provided for @trafficRulesAiTitle.
   ///
@@ -5719,18 +5719,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get trafficRulesSettings;
-
-  /// No description provided for @trafficRulesRuDnsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'DNS for .RU without VPN'**
-  String get trafficRulesRuDnsTitle;
-
-  /// No description provided for @trafficRulesRuDnsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Used only for Russian domains that this rule sends directly. Default: udp://77.88.8.8.'**
-  String get trafficRulesRuDnsSubtitle;
 
   /// No description provided for @trafficRulesDefaultRoute.
   ///

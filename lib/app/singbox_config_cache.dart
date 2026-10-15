@@ -2,7 +2,7 @@ part of 'app_background_tasks.dart';
 
 // Bump when config generation/validation semantics change, even if the native
 // contract stays the same. Only one entry is retained, in private app storage.
-const _configCacheSchema = 2;
+const _configCacheSchema = 3;
 
 Future<String> singboxConfigFingerprintInBackground(
   SingboxConfigBuildInput input,
@@ -28,6 +28,8 @@ Future<String> _configFingerprint(
     input.russiaCuratedDirectServicesPath,
     input.russiaAiServicesPath,
     input.russiaSocialServicesPath,
+    input.chinaGeositePath,
+    input.chinaGeoipPath,
   ].whereType<String>().where((path) => path.isNotEmpty).toSet()) {
     final file = File(path);
     rules[path] = await file.exists()
@@ -83,6 +85,8 @@ Future<String> _configFingerprint(
     'russiaCuratedDirectServicesPath': input.russiaCuratedDirectServicesPath,
     'russiaAiServicesPath': input.russiaAiServicesPath,
     'russiaSocialServicesPath': input.russiaSocialServicesPath,
+    'chinaGeositePath': input.chinaGeositePath,
+    'chinaGeoipPath': input.chinaGeoipPath,
     'trafficRulePreset': input.trafficRulePreset.name,
     'bypassLocalNetwork': input.bypassLocalNetwork,
     'splitRoutingMode': input.splitRoutingMode.name,

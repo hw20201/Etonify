@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
-import 'package:meow_client/core/widgets/input_formatters.dart';
 import 'package:meow_client/core/network/remote_download_error_message.dart';
-import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/core/widgets/app_notice.dart';
 import 'package:meow_client/data/routing/russia_route_data_service.dart';
 import 'package:meow_client/data/routing/traffic_rule_preset.dart';
@@ -16,19 +14,15 @@ class TrafficRulesPage extends StatefulWidget {
     super.key,
     required this.currentPreset,
     required this.currentStatus,
-    required this.currentRussiaDnsDirectResolver,
     required this.onPrepareRuleData,
     required this.onPresetChanged,
-    required this.onRussiaDnsDirectResolverChanged,
   });
 
   final TrafficRulePreset currentPreset;
   final RussiaRouteDataStatus currentStatus;
-  final String currentRussiaDnsDirectResolver;
   final Future<RussiaRouteDataStatus> Function(TrafficRulePreset preset)
   onPrepareRuleData;
   final ValueChanged<TrafficRulePreset> onPresetChanged;
-  final ValueChanged<String> onRussiaDnsDirectResolverChanged;
 
   @override
   State<TrafficRulesPage> createState() => _TrafficRulesPageState();
@@ -44,7 +38,9 @@ class _TrafficRulesPageState extends State<TrafficRulesPage> {
     super.initState();
     _currentPreset = widget.currentPreset;
     _status = widget.currentStatus;
-    if (!_status.available) {
+    if (!_status.available &&
+        (_currentPreset == TrafficRulePreset.aiViaVpn ||
+            _currentPreset == TrafficRulePreset.socialViaVpn)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _prepareBundledRuleData();
@@ -82,7 +78,7 @@ class _TrafficRulesPageState extends State<TrafficRulesPage> {
   bool _hasPreparedData(TrafficRulePreset preset) {
     return switch (preset) {
       TrafficRulePreset.none => true,
-      TrafficRulePreset.russianServicesDirect => _status.available,
+      TrafficRulePreset.chinaDirect => _status.chinaRouteDataAvailable,
       TrafficRulePreset.aiViaVpn =>
         _status.available && (_status.aiServicesPath?.isNotEmpty ?? false),
       TrafficRulePreset.socialViaVpn =>
@@ -92,7 +88,7 @@ class _TrafficRulesPageState extends State<TrafficRulesPage> {
 
   Future<bool> _applyPreset(TrafficRulePreset preset) async {
     if (_busy) return false;
-    if (preset == _currentPreset) return true;
+    if (preset == _currentPreset && _hasPreparedData(preset)) return true;
     if (preset == TrafficRulePreset.none) {
       widget.onPresetChanged(preset);
       setState(() => _currentPreset = preset);
@@ -139,7 +135,7 @@ class _TrafficRulesPageState extends State<TrafficRulesPage> {
   ) {
     return switch (preset) {
       TrafficRulePreset.none => true,
-      TrafficRulePreset.russianServicesDirect => status.available,
+      TrafficRulePreset.chinaDirect => status.chinaRouteDataAvailable,
       TrafficRulePreset.aiViaVpn =>
         status.available && (status.aiServicesPath?.isNotEmpty ?? false),
       TrafficRulePreset.socialViaVpn =>
@@ -156,9 +152,6 @@ class _TrafficRulesPageState extends State<TrafficRulesPage> {
           definition: definition,
           selectedPreset: _currentPreset,
           onApply: _applyPreset,
-          currentRussiaDnsDirectResolver: widget.currentRussiaDnsDirectResolver,
-          onRussiaDnsDirectResolverChanged:
-              widget.onRussiaDnsDirectResolverChanged,
         ),
       ),
     );
@@ -212,7 +205,7 @@ class _TrafficRulesPageState extends State<TrafficRulesPage> {
                         if (!value) {
                           _applyPreset(TrafficRulePreset.none);
                         } else {
-                          _applyPreset(TrafficRulePreset.russianServicesDirect);
+                          _applyPreset(TrafficRulePreset.chinaDirect);
                         }
                       },
               ),
@@ -339,15 +332,11 @@ class _TrafficRuleDetailsPage extends StatefulWidget {
     required this.definition,
     required this.selectedPreset,
     required this.onApply,
-    required this.currentRussiaDnsDirectResolver,
-    required this.onRussiaDnsDirectResolverChanged,
   });
 
   final TrafficRulePresetDefinition definition;
   final TrafficRulePreset selectedPreset;
   final Future<bool> Function(TrafficRulePreset preset) onApply;
-  final String currentRussiaDnsDirectResolver;
-  final ValueChanged<String> onRussiaDnsDirectResolverChanged;
 
   @override
   State<_TrafficRuleDetailsPage> createState() =>
@@ -356,69 +345,8 @@ class _TrafficRuleDetailsPage extends StatefulWidget {
 
 class _TrafficRuleDetailsPageState extends State<_TrafficRuleDetailsPage> {
   bool _busy = false;
-  late final TextEditingController _russiaDnsController;
-  late final FocusNode _russiaDnsFocusNode;
 
   bool get _selected => widget.selectedPreset == widget.definition.preset;
-  bool get _usesRussiaDirectDns =>
-      widget.definition.preset == TrafficRulePreset.russianServicesDirect;
-
-  @override
-  void initState() {
-    super.initState();
-    _russiaDnsController = TextEditingController(
-      text: _dnsResolverFieldText(widget.currentRussiaDnsDirectResolver),
-    );
-    _russiaDnsFocusNode = FocusNode(debugLabel: 'russiaTrafficRuleDns')
-      ..addListener(_handleRussiaDnsFocusChanged);
-  }
-
-  @override
-  void didUpdateWidget(covariant _TrafficRuleDetailsPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_russiaDnsFocusNode.hasFocus) {
-      return;
-    }
-    final current = normalizeDnsResolverInput(_russiaDnsController.text);
-    final updated = normalizeDnsResolverInput(
-      widget.currentRussiaDnsDirectResolver,
-    );
-    if (current != updated) {
-      _russiaDnsController.text = _dnsResolverFieldText(
-        widget.currentRussiaDnsDirectResolver,
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _russiaDnsFocusNode
-      ..removeListener(_handleRussiaDnsFocusChanged)
-      ..dispose();
-    _russiaDnsController.dispose();
-    super.dispose();
-  }
-
-  void _handleRussiaDnsFocusChanged() {
-    if (!_russiaDnsFocusNode.hasFocus) {
-      _commitRussiaDnsResolver();
-    }
-  }
-
-  void _commitRussiaDnsResolver() {
-    final value = _russiaDnsController.text.trim();
-    if (value.isEmpty) {
-      _russiaDnsController.text = _dnsResolverFieldText(
-        defaultRussiaDnsDirectResolver,
-      );
-      widget.onRussiaDnsDirectResolverChanged(defaultRussiaDnsDirectResolver);
-      return;
-    }
-    if (normalizeDnsResolverInput(value) !=
-        normalizeDnsResolverInput(widget.currentRussiaDnsDirectResolver)) {
-      widget.onRussiaDnsDirectResolverChanged(value);
-    }
-  }
 
   Future<void> _apply() async {
     if (_busy) return;
@@ -531,25 +459,6 @@ class _TrafficRuleDetailsPageState extends State<_TrafficRuleDetailsPage> {
                         ],
                       ),
                     ),
-                    if (_usesRussiaDirectDns) ...[
-                      const Gap(settingsIslandGap),
-                      _DetailsSection(
-                        label: l10n.trafficRulesRuDnsTitle,
-                        child: TextField(
-                          controller: _russiaDnsController,
-                          focusNode: _russiaDnsFocusNode,
-                          textInputAction: TextInputAction.done,
-                          onTapOutside: (_) => _russiaDnsFocusNode.unfocus(),
-                          onSubmitted: (_) => _russiaDnsFocusNode.unfocus(),
-                          inputFormatters: [noNewlineInputFormatter],
-                          decoration: InputDecoration(
-                            labelText: l10n.dnsResolverTitle,
-                            helperText: l10n.trafficRulesRuDnsSubtitle,
-                            hintText: defaultRussiaDnsDirectResolver,
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -899,7 +808,7 @@ class _PresetGlyph extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = switch (preset) {
-      TrafficRulePreset.russianServicesDirect => null,
+      TrafficRulePreset.chinaDirect => Icons.public_rounded,
       TrafficRulePreset.aiViaVpn => Icons.auto_awesome_rounded,
       TrafficRulePreset.socialViaVpn => Icons.share_rounded,
       TrafficRulePreset.none => Icons.remove_rounded,
@@ -911,9 +820,7 @@ class _PresetGlyph extends StatelessWidget {
         color: accent.withValues(alpha: .14),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: icon == null
-          ? const Center(child: Text('🇷🇺', style: TextStyle(fontSize: 28)))
-          : Icon(icon, color: accent, size: 28),
+      child: Icon(icon, color: accent, size: 28),
     );
   }
 }
@@ -930,30 +837,12 @@ class _RulePreview {
   final List<String> items;
 }
 
-String _dnsResolverFieldText(String value) {
-  final trimmed = value.trim();
-  if (!trimmed.toLowerCase().startsWith('udp://')) {
-    return trimmed;
-  }
-  final endpoint = trimmed.substring('udp://'.length);
-  if (endpoint.startsWith('[') && endpoint.endsWith(']')) {
-    return endpoint.substring(1, endpoint.length - 1);
-  }
-  return endpoint;
-}
-
 _RulePreview _previewFor(AppLocalizations l10n, TrafficRulePreset preset) {
   return switch (preset) {
-    TrafficRulePreset.russianServicesDirect => _RulePreview(
+    TrafficRulePreset.chinaDirect => _RulePreview(
       title: l10n.trafficRulesDirect,
       icon: Icons.arrow_upward_rounded,
-      items: [
-        'VK',
-        'Yandex',
-        'Ozon',
-        'Wildberries',
-        l10n.trafficRulesLocalNetwork,
-      ],
+      items: ['China domains', 'China IPv4 ranges', 'China IPv6 ranges'],
     ),
     TrafficRulePreset.aiViaVpn => _RulePreview(
       title: l10n.trafficRulesVpn,
@@ -984,7 +873,7 @@ _RulePreview _previewFor(AppLocalizations l10n, TrafficRulePreset preset) {
 }
 
 Color _accentFor(ColorScheme cs, TrafficRulePreset preset) => switch (preset) {
-  TrafficRulePreset.russianServicesDirect => const Color(0xFF2F63CC),
+  TrafficRulePreset.chinaDirect => const Color(0xFF2F63CC),
   TrafficRulePreset.aiViaVpn => cs.tertiary,
   TrafficRulePreset.socialViaVpn => cs.secondary,
   TrafficRulePreset.none => cs.outline,
@@ -992,7 +881,7 @@ Color _accentFor(ColorScheme cs, TrafficRulePreset preset) => switch (preset) {
 
 Color _onAccentFor(ColorScheme cs, TrafficRulePreset preset) =>
     switch (preset) {
-      TrafficRulePreset.russianServicesDirect => Colors.white,
+      TrafficRulePreset.chinaDirect => Colors.white,
       TrafficRulePreset.aiViaVpn => cs.onTertiary,
       TrafficRulePreset.socialViaVpn => cs.onSecondary,
       TrafficRulePreset.none => cs.onSurface,
@@ -1001,7 +890,7 @@ Color _onAccentFor(ColorScheme cs, TrafficRulePreset preset) =>
 String _titleFor(AppLocalizations l10n, TrafficRulePreset preset) {
   return switch (preset) {
     TrafficRulePreset.none => l10n.trafficRulesNone,
-    TrafficRulePreset.russianServicesDirect => l10n.trafficRulesRussianTitle,
+    TrafficRulePreset.chinaDirect => l10n.trafficRulesChinaTitle,
     TrafficRulePreset.aiViaVpn => l10n.trafficRulesAiTitle,
     TrafficRulePreset.socialViaVpn => l10n.trafficRulesSocialTitle,
   };
@@ -1010,7 +899,7 @@ String _titleFor(AppLocalizations l10n, TrafficRulePreset preset) {
 String _subtitleFor(AppLocalizations l10n, TrafficRulePreset preset) {
   return switch (preset) {
     TrafficRulePreset.none => l10n.trafficRulesNone,
-    TrafficRulePreset.russianServicesDirect => l10n.trafficRulesRussianSubtitle,
+    TrafficRulePreset.chinaDirect => l10n.trafficRulesChinaSubtitle,
     TrafficRulePreset.aiViaVpn => l10n.trafficRulesAiSubtitle,
     TrafficRulePreset.socialViaVpn => l10n.trafficRulesSocialSubtitle,
   };
@@ -1019,8 +908,7 @@ String _subtitleFor(AppLocalizations l10n, TrafficRulePreset preset) {
 String _summaryFor(AppLocalizations l10n, TrafficRulePreset preset) =>
     switch (preset) {
       TrafficRulePreset.none => l10n.trafficRulesNone,
-      TrafficRulePreset.russianServicesDirect =>
-        l10n.trafficRulesRussianSummary,
+      TrafficRulePreset.chinaDirect => l10n.trafficRulesChinaSummary,
       TrafficRulePreset.aiViaVpn => l10n.trafficRulesAiSummary,
       TrafficRulePreset.socialViaVpn => l10n.trafficRulesSocialSummary,
     };

@@ -3,20 +3,36 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Android release workflow uses updater-compatible tags and APK names', () {
+  test('Android workflow builds master artifacts and signed tag drafts', () {
     final workflow = File(
       '.github/workflows/android-release.yml',
     ).readAsStringSync();
 
-    expect(workflow, contains(r'raw="${raw#v}"'));
-    expect(workflow, contains(r'TAG_NAME=${raw}'));
-    expect(workflow, contains(r'RELEASE_TITLE=v${raw}'));
-    expect(workflow, contains(r'etonify-v${RELEASE_VERSION}-universal.apk'));
-    expect(workflow, contains(r'etonify-v${RELEASE_VERSION}-arm64-v8a.apk'));
-    expect(workflow, contains(r'etonify-v${RELEASE_VERSION}-armeabi-v7a.apk'));
-    expect(workflow, contains('--target-platform android-arm,android-arm64'));
-    expect(workflow, isNot(contains('x86')));
+    expect(workflow, contains('branches:'));
+    expect(workflow, contains('- master'));
+    expect(workflow, contains('tags:'));
+    expect(workflow, contains('- "v*"'));
+    expect(workflow, contains('workflow_dispatch'));
+    expect(workflow, contains('name: Build arm64 APK artifact'));
+    expect(workflow, contains('MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "true"'));
+    expect(workflow, contains(r'etonify-arm64-v8a-${GITHUB_SHA::7}.apk'));
+    expect(workflow, contains('uses: actions/upload-artifact@'));
+    expect(workflow, contains('retention-days: 14'));
+
+    expect(workflow, contains('draft-tag-release:'));
+    expect(workflow, contains("startsWith(github.ref, 'refs/tags/v')"));
+    expect(workflow, contains('MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"'));
+    expect(workflow, contains('ANDROID_RELEASE_KEYSTORE_BASE64'));
+    expect(workflow, contains('ANDROID_RELEASE_KEYSTORE_PASSWORD'));
+    expect(workflow, contains('ANDROID_RELEASE_KEY_ALIAS'));
+    expect(workflow, contains('ANDROID_RELEASE_KEY_PASSWORD'));
+    expect(workflow, contains('will not use legacy ANDROID_* Secrets'));
+    expect(workflow, contains('storeFile=app/etonify-release.jks'));
+    expect(workflow, contains('gh release create'));
+    expect(workflow, contains('gh release upload'));
     expect(workflow, contains('--draft'));
+    expect(workflow, isNot(contains('secrets.ANDROID_KEYSTORE_BASE64')));
+    expect(workflow, isNot(contains('x86')));
     expect(
       workflow,
       contains(

@@ -273,7 +273,7 @@ class CoreConfigMigration {
     final preset =
         state.trafficRulePreset == TrafficRulePreset.none &&
             state.useRussiaRouteData
-        ? TrafficRulePreset.russianServicesDirect
+        ? TrafficRulePreset.chinaDirect
         : state.trafficRulePreset;
     if (preset != state.trafficRulePreset) {
       changes.add(

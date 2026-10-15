@@ -141,6 +141,8 @@ class SingboxConfigCoordinatorSnapshot {
     required this.russiaCuratedDirectServicesPath,
     required this.russiaAiServicesPath,
     this.russiaSocialServicesPath,
+    this.chinaGeositePath,
+    this.chinaGeoipPath,
     this.trafficRulePreset = TrafficRulePreset.none,
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
@@ -200,6 +202,8 @@ class SingboxConfigCoordinatorSnapshot {
   final String? russiaCuratedDirectServicesPath;
   final String? russiaAiServicesPath;
   final String? russiaSocialServicesPath;
+  final String? chinaGeositePath;
+  final String? chinaGeoipPath;
   final TrafficRulePreset trafficRulePreset;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
@@ -215,13 +219,15 @@ class SingboxConfigCoordinatorSnapshot {
   final bool markAllServersRussia;
   final LibboxCapabilities capabilities;
 
-  bool get routeDataPathsValid =>
-      russiaGeositeRuBlockedPath?.isNotEmpty == true &&
-      russiaGeositeRuAvailableOnlyInsidePath?.isNotEmpty == true &&
-      russiaGeositeCategoryRuPath?.isNotEmpty == true &&
-      russiaGeoipRuBlockedPath?.isNotEmpty == true &&
-      russiaGeoipRuWhitelistPath?.isNotEmpty == true &&
-      russiaGeoipRuPath?.isNotEmpty == true;
+  bool get routeDataPathsValid => switch (trafficRulePreset) {
+    TrafficRulePreset.none => true,
+    TrafficRulePreset.chinaDirect =>
+      chinaGeositePath?.isNotEmpty == true &&
+          chinaGeoipPath?.isNotEmpty == true,
+    TrafficRulePreset.aiViaVpn => russiaAiServicesPath?.isNotEmpty == true,
+    TrafficRulePreset.socialViaVpn =>
+      russiaSocialServicesPath?.isNotEmpty == true,
+  };
 }
 
 typedef SingboxConfigCoordinatorSnapshotReader =
@@ -1135,6 +1141,8 @@ class SingboxConfigCoordinator {
       russiaCuratedDirectServicesPath: snapshot.russiaCuratedDirectServicesPath,
       russiaAiServicesPath: snapshot.russiaAiServicesPath,
       russiaSocialServicesPath: snapshot.russiaSocialServicesPath,
+      chinaGeositePath: snapshot.chinaGeositePath,
+      chinaGeoipPath: snapshot.chinaGeoipPath,
       trafficRulePreset: snapshot.trafficRulePreset,
       bypassLocalNetwork: snapshot.bypassLocalNetwork,
       splitRoutingMode: snapshot.splitRoutingMode,

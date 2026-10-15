@@ -19,7 +19,6 @@ class SingboxConfigBuilder {
   // user-selected application. Core outbound sockets are VpnService.protect()-ed
   // by MeowVpnPlatformInterface, so they do not loop back into this TUN.
   static const _applicationPackageName = 'com.etonify.meow_client';
-  static const List<String> _russiaDirectDomainSuffixes = ['ru', 'su', 'рф'];
   static const int _urltestInterruptDelayThresholdMs = 300;
   static final RegExp _ipv4LiteralPattern = RegExp(
     r'^\d{1,3}(?:\.\d{1,3}){3}$',
@@ -65,6 +64,8 @@ class SingboxConfigBuilder {
     this.russiaCuratedDirectServicesPath,
     this.russiaAiServicesPath,
     this.russiaSocialServicesPath,
+    this.chinaGeositePath,
+    this.chinaGeoipPath,
     this.trafficRulePreset = TrafficRulePreset.none,
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
@@ -119,6 +120,8 @@ class SingboxConfigBuilder {
   final String? russiaCuratedDirectServicesPath;
   final String? russiaAiServicesPath;
   final String? russiaSocialServicesPath;
+  final String? chinaGeositePath;
+  final String? chinaGeoipPath;
   final TrafficRulePreset trafficRulePreset;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
@@ -159,19 +162,12 @@ class SingboxConfigBuilder {
         .toList(growable: false);
     final requestedTrafficRulePreset =
         trafficRulePreset == TrafficRulePreset.none && useRussiaRouteData
-        ? TrafficRulePreset.russianServicesDirect
+        ? TrafficRulePreset.chinaDirect
         : trafficRulePreset;
-    final russiaRouteDataActive =
-        requestedTrafficRulePreset == TrafficRulePreset.russianServicesDirect &&
-        _validRuleSetPath(russiaGeositeRuBlockedPath) &&
-        _validRuleSetPath(russiaGeositeRuAvailableOnlyInsidePath) &&
-        _validRuleSetPath(russiaGeositeCategoryRuPath) &&
-        _validRuleSetPath(russiaGeoipRuBlockedPath) &&
-        _validRuleSetPath(russiaGeoipRuWhitelistPath) &&
-        _validRuleSetPath(russiaGeoipRuPath);
-    final russiaCuratedDirectServicesActive =
-        requestedTrafficRulePreset == TrafficRulePreset.russianServicesDirect &&
-        _validRuleSetPath(russiaCuratedDirectServicesPath);
+    final chinaRouteDataActive =
+        requestedTrafficRulePreset == TrafficRulePreset.chinaDirect &&
+        _validRuleSetPath(chinaGeositePath) &&
+        _validRuleSetPath(chinaGeoipPath);
     final aiServicesActive =
         requestedTrafficRulePreset == TrafficRulePreset.aiViaVpn &&
         _validRuleSetPath(russiaAiServicesPath);
@@ -179,8 +175,8 @@ class SingboxConfigBuilder {
         requestedTrafficRulePreset == TrafficRulePreset.socialViaVpn &&
         _validRuleSetPath(russiaSocialServicesPath);
     final activeTrafficRulePreset = switch (requestedTrafficRulePreset) {
-      TrafficRulePreset.russianServicesDirect when russiaRouteDataActive =>
-        TrafficRulePreset.russianServicesDirect,
+      TrafficRulePreset.chinaDirect when chinaRouteDataActive =>
+        TrafficRulePreset.chinaDirect,
       TrafficRulePreset.aiViaVpn when aiServicesActive =>
         TrafficRulePreset.aiViaVpn,
       TrafficRulePreset.socialViaVpn when socialServicesActive =>
@@ -298,14 +294,6 @@ class SingboxConfigBuilder {
       dnsDirectResolver,
       defaultSecureDnsDirectResolver,
     );
-    final effectiveRussiaDnsDirectResolver = _effectiveSecureDnsResolver(
-      _normalizedResolver(
-        russiaDnsDirectResolver,
-        defaultRussiaDnsDirectResolver,
-      ),
-      defaultSecureDnsDirectResolver,
-    );
-
     final plan = SingboxBuildPlan(
       config: {
         'log': {'level': logLevel},
@@ -328,12 +316,6 @@ class SingboxConfigBuilder {
               value: effectiveDnsDirectResolver,
               detour: dnsDirectDetour,
             ),
-            if (russiaRouteDataActive)
-              _buildDnsServer(
-                tag: 'dns-ru-direct',
-                value: effectiveRussiaDnsDirectResolver,
-                detour: dnsDirectDetour,
-              ),
             if (fakeIpActive)
               <String, Object>{
                 'type': 'fakeip',
@@ -343,44 +325,17 @@ class SingboxConfigBuilder {
               },
             const <String, Object>{'type': 'local', 'tag': 'dns-local'},
           ],
-          if (russiaRouteDataActive ||
-              russiaCuratedDirectServicesActive ||
+          if (chinaRouteDataActive ||
               aiServicesActive ||
               socialServicesActive ||
               adBlockActive ||
               fakeIpActive)
             'rules': [
-              if (russiaRouteDataActive)
+              if (chinaRouteDataActive)
                 {
-                  'rule_set': 'ru-geosite-ru-blocked',
+                  'rule_set': 'cn-geosite-cn',
                   'action': 'route',
-                  'server': dnsFinal,
-                },
-              if (russiaRouteDataActive)
-                {
-                  'domain_suffix': _russiaDirectDomainSuffixes,
-                  'action': 'route',
-                  'server': 'dns-ru-direct',
-                },
-              if (russiaCuratedDirectServicesActive)
-                {
-                  'rule_set': 'ru-direct-services',
-                  'action': 'route',
-                  'server': russiaRouteDataActive
-                      ? 'dns-ru-direct'
-                      : 'dns-direct',
-                },
-              if (russiaRouteDataActive)
-                {
-                  'rule_set': 'ru-geosite-ru-available-only-inside',
-                  'action': 'route',
-                  'server': 'dns-ru-direct',
-                },
-              if (russiaRouteDataActive)
-                {
-                  'rule_set': 'ru-geosite-category-ru',
-                  'action': 'route',
-                  'server': 'dns-ru-direct',
+                  'server': 'dns-direct',
                 },
               if (aiServicesActive)
                 {
@@ -496,55 +451,23 @@ class SingboxConfigBuilder {
           // Android's current network DNS is the reliable bootstrap resolver;
           // user DNS choices still handle routed application queries above.
           'default_domain_resolver': 'dns-local',
-          if (russiaRouteDataActive ||
-              russiaCuratedDirectServicesActive ||
+          if (chinaRouteDataActive ||
               aiServicesActive ||
               socialServicesActive ||
               adBlockActive)
             'rule_set': [
-              if (russiaCuratedDirectServicesActive)
+              if (chinaRouteDataActive) ...[
                 {
                   'type': 'local',
-                  'tag': 'ru-direct-services',
+                  'tag': 'cn-geosite-cn',
                   'format': 'binary',
-                  'path': russiaCuratedDirectServicesPath,
-                },
-              if (russiaRouteDataActive) ...[
-                {
-                  'type': 'local',
-                  'tag': 'ru-geosite-ru-blocked',
-                  'format': 'binary',
-                  'path': russiaGeositeRuBlockedPath,
+                  'path': chinaGeositePath,
                 },
                 {
                   'type': 'local',
-                  'tag': 'ru-geosite-ru-available-only-inside',
+                  'tag': 'cn-geoip-cn',
                   'format': 'binary',
-                  'path': russiaGeositeRuAvailableOnlyInsidePath,
-                },
-                {
-                  'type': 'local',
-                  'tag': 'ru-geosite-category-ru',
-                  'format': 'binary',
-                  'path': russiaGeositeCategoryRuPath,
-                },
-                {
-                  'type': 'local',
-                  'tag': 'ru-geoip-ru-blocked',
-                  'format': 'binary',
-                  'path': russiaGeoipRuBlockedPath,
-                },
-                {
-                  'type': 'local',
-                  'tag': 'ru-geoip-ru-whitelist',
-                  'format': 'binary',
-                  'path': russiaGeoipRuWhitelistPath,
-                },
-                {
-                  'type': 'local',
-                  'tag': 'ru-geoip-ru',
-                  'format': 'binary',
-                  'path': russiaGeoipRuPath,
+                  'path': chinaGeoipPath,
                 },
               ],
               if (aiServicesActive)
@@ -610,30 +533,10 @@ class SingboxConfigBuilder {
                 'rule_set': 'social-services',
                 'outbound': hasProxies ? 'select' : 'direct',
               },
-            if (russiaRouteDataActive)
-              {
-                'rule_set': ['ru-geosite-ru-blocked', 'ru-geoip-ru-blocked'],
-                'outbound': hasProxies ? 'select' : 'direct',
-              },
-            if (russiaRouteDataActive)
-              {
-                'domain_suffix': _russiaDirectDomainSuffixes,
-                'outbound': 'direct',
-              },
-            if (russiaRouteDataActive)
-              {
-                'rule_set': 'ru-geosite-ru-available-only-inside',
-                'outbound': 'direct',
-              },
-            if (russiaRouteDataActive)
-              {'rule_set': 'ru-geosite-category-ru', 'outbound': 'direct'},
-            if (russiaCuratedDirectServicesActive)
-              {'rule_set': 'ru-direct-services', 'outbound': 'direct'},
-            if (russiaRouteDataActive)
-              {
-                'rule_set': ['ru-geoip-ru-whitelist', 'ru-geoip-ru'],
-                'outbound': 'direct',
-              },
+            if (chinaRouteDataActive)
+              {'rule_set': 'cn-geosite-cn', 'outbound': 'direct'},
+            if (chinaRouteDataActive)
+              {'rule_set': 'cn-geoip-cn', 'outbound': 'direct'},
           ],
           'final': routeFinal,
         },

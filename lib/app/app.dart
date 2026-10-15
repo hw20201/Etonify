@@ -6387,7 +6387,9 @@ class _MeowClientState extends ConsumerState<MeowClient>
   Future<RussiaRouteDataStatus> _installRussiaRouteData() async {
     final affectsActiveRuntime = _trafficRulePreset != TrafficRulePreset.none;
     final hadInstalledData = _russiaRouteDataStatus.available;
-    final status = hadInstalledData
+    var status = _trafficRulePreset == TrafficRulePreset.chinaDirect
+        ? await _russiaRouteDataService.ensureChinaRouteData(force: true)
+        : hadInstalledData
         ? await _russiaRouteDataService.ensureUpdated(force: true)
         : await _russiaRouteDataService.ensureBundledInstalled();
     if (!mounted) {
@@ -6416,10 +6418,14 @@ class _MeowClientState extends ConsumerState<MeowClient>
         (preset == TrafficRulePreset.none || preset == _trafficRulePreset);
     var status = _russiaRouteDataStatus;
     final hadPreparedData = status.available;
-    if (!status.available) {
+    if (!status.available && preset != TrafficRulePreset.chinaDirect) {
       status = await _russiaRouteDataService.ensureBundledInstalled();
     }
-    if (preset == TrafficRulePreset.aiViaVpn ||
+    if (preset == TrafficRulePreset.chinaDirect) {
+      status = await _russiaRouteDataService.ensureChinaRouteData(
+        force: !status.chinaRouteDataAvailable,
+      );
+    } else if (preset == TrafficRulePreset.aiViaVpn ||
         preset == TrafficRulePreset.socialViaVpn ||
         hadPreparedData) {
       status = await _russiaRouteDataService.ensureUpdated(force: true);
@@ -7376,6 +7382,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
       russiaCuratedDirectServicesPath: routeData.curatedDirectServicesPath,
       russiaAiServicesPath: routeData.aiServicesPath,
       russiaSocialServicesPath: routeData.socialServicesPath,
+      chinaGeositePath: routeData.chinaGeositePath,
+      chinaGeoipPath: routeData.chinaGeoipPath,
       trafficRulePreset: _trafficRulePreset,
       bypassLocalNetwork: _bypassLocalNetwork,
       splitRoutingMode: _splitRoutingMode,

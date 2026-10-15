@@ -3184,15 +3184,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get trafficRulesDeleteData => 'Удалить данные правил';
 
   @override
-  String get trafficRulesRussianTitle => '.RU без VPN';
+  String get trafficRulesChinaTitle => 'Китай напрямую';
 
   @override
-  String get trafficRulesRussianSubtitle =>
-      'Российские сервисы и локальные адреса работают в обход VPN.';
+  String get trafficRulesChinaSubtitle =>
+      'Домены и IP-адреса Китая идут напрямую, остальной трафик — через VPN.';
 
   @override
-  String get trafficRulesRussianSummary =>
-      'Российские сервисы без VPN, остальной трафик через VPN.';
+  String get trafficRulesChinaSummary =>
+      'Домены и IP-адреса Китая идут напрямую, остальной трафик — через VPN.';
 
   @override
   String get trafficRulesAiTitle => 'Нейросети через VPN';
@@ -3230,13 +3230,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get trafficRulesSettings => 'Настройки';
-
-  @override
-  String get trafficRulesRuDnsTitle => 'DNS для .RU без VPN';
-
-  @override
-  String get trafficRulesRuDnsSubtitle =>
-      'Используется только для российских доменов, которые правило отправляет напрямую. По умолчанию: udp://77.88.8.8.';
 
   @override
   String get trafficRulesDefaultRoute => 'Всё остальное';

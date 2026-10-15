@@ -404,12 +404,9 @@ void main() {
     expect(controller.trafficRulePreset, TrafficRulePreset.aiViaVpn);
     expect(controller.useRussiaRouteData, isFalse);
 
-    final russianChange = controller.setRussiaRouteDataEnabled(true);
-    expect(russianChange.changed, isTrue);
-    expect(
-      controller.trafficRulePreset,
-      TrafficRulePreset.russianServicesDirect,
-    );
+    final legacyRouteChange = controller.setRussiaRouteDataEnabled(true);
+    expect(legacyRouteChange.changed, isTrue);
+    expect(controller.trafficRulePreset, TrafficRulePreset.chinaDirect);
     expect(controller.useRussiaRouteData, isTrue);
   });
 

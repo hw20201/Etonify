@@ -30,30 +30,32 @@ void main() {
           home: TrafficRulesPage(
             currentPreset: TrafficRulePreset.none,
             currentStatus: const RussiaRouteDataStatus.unavailable(),
-            currentRussiaDnsDirectResolver: 'udp://77.88.8.8',
             onPrepareRuleData: (_) => preparation.future,
             onPresetChanged: selected.add,
-            onRussiaDnsDirectResolverChanged: (_) {},
           ),
         ),
       );
       await tester.pump();
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+      await tester.tap(find.text('Китай напрямую'));
+      await tester.pump();
       expect(find.text('Подготавливаем правило…'), findsOneWidget);
       expect(find.byType(LinearProgressIndicator), findsOneWidget);
       expect(tester.widget<Switch>(find.byType(Switch)).onChanged, isNull);
-      await tester.tap(find.text('.RU без VPN'));
-      await tester.pump();
       expect(selected, isEmpty);
       preparation.complete(
         const RussiaRouteDataStatus(
-          available: true,
-          sourceName: 'bundled',
-          versionTag: 'test',
+          available: false,
+          sourceName: 'aliothlab/rule-set',
+          versionTag: 'latest',
+          chinaGeositePath: '/rules/geosite-cn.srs',
+          chinaGeoipPath: '/rules/geoip-cn.srs',
         ),
       );
       await tester.pumpAndSettle();
       expect(find.byType(LinearProgressIndicator), findsNothing);
       expect(tester.widget<Switch>(find.byType(Switch)).onChanged, isNotNull);
+      expect(selected, [TrafficRulePreset.chinaDirect]);
     },
   );
 
@@ -392,7 +394,7 @@ void main() {
     await tester.tap(find.text('Правила трафика'));
     await tester.pumpAndSettle();
 
-    expect(find.text('.RU без VPN'), findsOneWidget);
+    expect(find.text('Китай напрямую'), findsOneWidget);
     expect(find.text('Нейросети через VPN'), findsOneWidget);
     expect(find.text('Социальные сети через VPN'), findsOneWidget);
     expect(find.text('Правила от разработчика'), findsNothing);
@@ -402,7 +404,7 @@ void main() {
       ),
       findsNothing,
     );
-    expect(find.text('🇷🇺'), findsOneWidget);
+    expect(find.byIcon(Icons.public_rounded), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('traffic rule card opens details and developer profile', (
@@ -416,12 +418,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ОПИСАНИЕ'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('DNS ДЛЯ .RU БЕЗ VPN'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('DNS ДЛЯ .RU БЕЗ VPN'), findsOneWidget);
     expect(find.text('Применить правило'), findsOneWidget);
 
     await tester.scrollUntilVisible(

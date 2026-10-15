@@ -1,19 +1,22 @@
 enum TrafficRulePreset {
   none,
-  russianServicesDirect,
+  chinaDirect,
   aiViaVpn,
   socialViaVpn;
 
   String get storageValue => switch (this) {
     TrafficRulePreset.none => 'none',
-    TrafficRulePreset.russianServicesDirect => 'russian_services_direct',
+    TrafficRulePreset.chinaDirect => 'china_direct',
     TrafficRulePreset.aiViaVpn => 'ai_via_vpn',
     TrafficRulePreset.socialViaVpn => 'social_via_vpn',
   };
 
   static TrafficRulePreset fromStorage(Object? value) =>
       switch (value?.toString().trim()) {
-        'russian_services_direct' => TrafficRulePreset.russianServicesDirect,
+        // Keep existing users' enabled smart-routing choice, but move it to
+        // the requested China-direct policy instead of restoring Russia rules.
+        'russian_services_direct' ||
+        'china_direct' => TrafficRulePreset.chinaDirect,
         'ai_via_vpn' => TrafficRulePreset.aiViaVpn,
         'social_via_vpn' => TrafficRulePreset.socialViaVpn,
         _ => TrafficRulePreset.none,
@@ -42,16 +45,16 @@ class TrafficRulePresetDefinition {
   bool get isVerified => preset != TrafficRulePreset.none;
 }
 
-enum TrafficRuleDataKind { none, runet, ai, social }
+enum TrafficRuleDataKind { none, china, ai, social }
 
 const trafficRulePresetDefinitions =
     <TrafficRulePreset, TrafficRulePresetDefinition>{
-      TrafficRulePreset.russianServicesDirect: TrafficRulePresetDefinition(
-        preset: TrafficRulePreset.russianServicesDirect,
+      TrafficRulePreset.chinaDirect: TrafficRulePresetDefinition(
+        preset: TrafficRulePreset.chinaDirect,
         defaultRoute: TrafficRuleDefaultRoute.proxy,
-        routeDataKind: TrafficRuleDataKind.runet,
-        proxyCategoryCount: 2,
-        directCategoryCount: 5,
+        routeDataKind: TrafficRuleDataKind.china,
+        proxyCategoryCount: 0,
+        directCategoryCount: 2,
         blockedCategoryCount: 0,
       ),
       TrafficRulePreset.aiViaVpn: TrafficRulePresetDefinition(

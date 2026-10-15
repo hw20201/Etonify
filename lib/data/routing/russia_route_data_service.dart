@@ -31,6 +31,10 @@ Future<Map<String, Uint8List>> extractRussiaRouteArchiveForTest(
   Uint8List bytes,
 ) async => (await _prepareRoutePackageArchiveInBackground(bytes)).files;
 
+@visibleForTesting
+bool isChinaRouteRuleSetValidForTest(Uint8List bytes) =>
+    _isUsableSrsBytes(bytes);
+
 DateTime? parseRussiaRouteVersionTimestamp(String value) {
   final match = RegExp(r'\d{12}').firstMatch(value.trim());
   if (match == null) return null;
@@ -71,6 +75,8 @@ class RussiaRouteDataStatus {
     this.curatedDirectServicesPath,
     this.aiServicesPath,
     this.socialServicesPath,
+    this.chinaGeositePath,
+    this.chinaGeoipPath,
     this.installedAtMillis,
     this.lastUpdateCheckAtMillis,
     this.domainListCommunityUpdatedAtMillis,
@@ -99,6 +105,8 @@ class RussiaRouteDataStatus {
       curatedDirectServicesPath = null,
       aiServicesPath = null,
       socialServicesPath = null,
+      chinaGeositePath = null,
+      chinaGeoipPath = null,
       installedAtMillis = null,
       lastUpdateCheckAtMillis = null,
       domainListCommunityUpdatedAtMillis = null,
@@ -125,12 +133,18 @@ class RussiaRouteDataStatus {
   final String? curatedDirectServicesPath;
   final String? aiServicesPath;
   final String? socialServicesPath;
+  final String? chinaGeositePath;
+  final String? chinaGeoipPath;
   final int? installedAtMillis;
   final int? lastUpdateCheckAtMillis;
   final int? domainListCommunityUpdatedAtMillis;
   final int domainListCommunityCategoryCount;
   final int domainListCommunityDomainCount;
   final Map<String, RussiaRouteCategoryMetadata> domainListCommunityMetadata;
+
+  bool get chinaRouteDataAvailable =>
+      chinaGeositePath?.isNotEmpty == true &&
+      chinaGeoipPath?.isNotEmpty == true;
 
   DateTime? get installedAt => installedAtMillis == null
       ? null
@@ -294,6 +308,15 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
       'https://raw.githubusercontent.com/v2fly/domain-list-community/master/data';
   static const _maxDomainListCategoryBytes = 2 * 1024 * 1024;
 
+  static const chinaRouteDataSourceName = 'aliothlab/rule-set';
+  static const chinaRouteDataSourceUrl =
+      'https://github.com/aliothlab/rule-set';
+  static const _chinaGeositeUrl =
+      'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geosite-cn.srs';
+  static const _chinaGeoipUrl =
+      'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geoip-cn.srs';
+  static const _maxChinaRuleSetBytes = 4 * 1024 * 1024;
+
   static const _assetGeositeRuBlocked =
       'assets/route_data/russia/geosite-ru-blocked.srs';
   static const _assetGeositeRuAvailableOnlyInside =
@@ -342,13 +365,15 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
   ];
 
   Future<RussiaRouteDataStatus>? _updateInFlight;
+  Future<RussiaRouteDataStatus>? _chinaUpdateInFlight;
   @override
   final ValueNotifier<RussiaRouteUpdateProgress?> progress = ValueNotifier(
     null,
   );
 
   @override
-  bool get isUpdating => _updateInFlight != null;
+  bool get isUpdating =>
+      _updateInFlight != null || _chinaUpdateInFlight != null;
 
   void _emitProgress(
     RussiaRouteUpdateStage stage, {
@@ -392,6 +417,8 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
     final curatedDirectServicesFile = File(paths.curatedDirectServicesPath);
     final aiServicesFile = File(paths.aiServicesPath);
     final socialServicesFile = File(paths.socialServicesPath);
+    final chinaGeositeFile = File(paths.chinaGeositePath);
+    final chinaGeoipFile = File(paths.chinaGeoipPath);
     if (!metadataFile.existsSync() ||
         !_hasUsableRuleSet(geositeBlockedFile) ||
         !_hasUsableRuleSet(geositeAvailableOnlyInsideFile) ||
@@ -399,6 +426,17 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
         !_hasUsableRuleSet(geoipBlockedFile) ||
         !_hasUsableRuleSet(geoipWhitelistFile) ||
         !_hasUsableRuleSet(geoipRuFile)) {
+      if (_hasUsableRuleSet(chinaGeositeFile) &&
+          _hasUsableRuleSet(chinaGeoipFile)) {
+        return RussiaRouteDataStatus(
+          available: false,
+          sourceName: chinaRouteDataSourceName,
+          versionTag: 'latest',
+          sourceKind: sourceKindLive,
+          chinaGeositePath: chinaGeositeFile.path,
+          chinaGeoipPath: chinaGeoipFile.path,
+        );
+      }
       return const RussiaRouteDataStatus.unavailable();
     }
     try {
@@ -432,6 +470,12 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
             : null,
         socialServicesPath: _hasUsableRuleSet(socialServicesFile)
             ? socialServicesFile.path
+            : null,
+        chinaGeositePath: _hasUsableRuleSet(File(paths.chinaGeositePath))
+            ? paths.chinaGeositePath
+            : null,
+        chinaGeoipPath: _hasUsableRuleSet(File(paths.chinaGeoipPath))
+            ? paths.chinaGeoipPath
             : null,
         installedAtMillis: int.tryParse(
           metadata['installedAtMillis']?.toString() ?? '',
@@ -491,6 +535,8 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
       ),
       _RussiaRouteDataFilePath('ai-services.srs', paths.aiServicesPath),
       _RussiaRouteDataFilePath('social-services.srs', paths.socialServicesPath),
+      _RussiaRouteDataFilePath('geosite-cn.srs', paths.chinaGeositePath),
+      _RussiaRouteDataFilePath('geoip-cn.srs', paths.chinaGeoipPath),
     ];
     final installed = <RussiaRouteDataFile>[];
     for (final candidate in candidates) {
@@ -579,6 +625,48 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
     final status = await loadStatus();
     _emitProgress(RussiaRouteUpdateStage.complete);
     return status;
+  }
+
+  Future<RussiaRouteDataStatus> ensureChinaRouteData({bool force = false}) {
+    final inFlight = _chinaUpdateInFlight;
+    if (inFlight != null) return inFlight;
+    final future = _ensureChinaRouteData(force: force);
+    _chinaUpdateInFlight = future;
+    return future.whenComplete(() {
+      if (identical(_chinaUpdateInFlight, future)) {
+        _chinaUpdateInFlight = null;
+      }
+    });
+  }
+
+  Future<RussiaRouteDataStatus> _ensureChinaRouteData({
+    required bool force,
+  }) async {
+    final status = await loadStatus();
+    final paths = await _storagePaths();
+    if (!force && status.chinaRouteDataAvailable) {
+      final modifiedAt = await File(paths.chinaGeositePath).lastModified();
+      if (DateTime.now().difference(modifiedAt) < const Duration(hours: 24)) {
+        return status;
+      }
+    }
+
+    final geositeBytes = await _downloadBytes(
+      Uri.parse(_chinaGeositeUrl),
+      maxBytes: _maxChinaRuleSetBytes,
+    );
+    final geoipBytes = await _downloadBytes(
+      Uri.parse(_chinaGeoipUrl),
+      maxBytes: _maxChinaRuleSetBytes,
+    );
+    if (!_isUsableSrsBytes(geositeBytes) || !_isUsableSrsBytes(geoipBytes)) {
+      throw const FormatException(
+        'Downloaded China route data is not valid SRS',
+      );
+    }
+    await _writeAtomically(paths.chinaGeositePath, geositeBytes);
+    await _writeAtomically(paths.chinaGeoipPath, geoipBytes);
+    return loadStatus();
   }
 
   Future<RussiaRouteDataStatus> deleteInstalled() async {
@@ -1341,6 +1429,8 @@ class RussiaRouteDataService implements RussiaRouteUpdateActivity {
           '${base.path}/rule-set-geosite/ru-direct-services.srs',
       aiServicesPath: '${base.path}/rule-set-geosite/ai-services.srs',
       socialServicesPath: '${base.path}/rule-set-geosite/social-services.srs',
+      chinaGeositePath: '${base.path}/rule-set-china/geosite-cn.srs',
+      chinaGeoipPath: '${base.path}/rule-set-china/geoip-cn.srs',
       domainListCommunitySourceDirectoryPath:
           '${base.path}/domain-list-community',
       metadataPath: '${base.path}/manifest.json',
@@ -1391,6 +1481,8 @@ class _RussiaRouteStoragePaths {
     required this.curatedDirectServicesPath,
     required this.aiServicesPath,
     required this.socialServicesPath,
+    required this.chinaGeositePath,
+    required this.chinaGeoipPath,
     required this.domainListCommunitySourceDirectoryPath,
     required this.metadataPath,
   });
@@ -1405,6 +1497,8 @@ class _RussiaRouteStoragePaths {
   final String curatedDirectServicesPath;
   final String aiServicesPath;
   final String socialServicesPath;
+  final String chinaGeositePath;
+  final String chinaGeoipPath;
   final String domainListCommunitySourceDirectoryPath;
   final String metadataPath;
 }
@@ -1888,3 +1982,9 @@ const int _srsVersion2 = 2;
 const int _ruleItemDomain = 2;
 const int _ruleItemFinal = 0xFF;
 const String _rootLabelMarker = '\n';
+
+bool _isUsableSrsBytes(Uint8List bytes) =>
+    bytes.length > _srsMagicBytes.length &&
+    bytes[0] == _srsMagicBytes[0] &&
+    bytes[1] == _srsMagicBytes[1] &&
+    bytes[2] == _srsMagicBytes[2];

@@ -41,7 +41,7 @@ String _trafficRulePresetTitle(
 ) {
   return switch (preset) {
     TrafficRulePreset.none => l10n.trafficRulesNone,
-    TrafficRulePreset.russianServicesDirect => l10n.trafficRulesRussianTitle,
+    TrafficRulePreset.chinaDirect => l10n.trafficRulesChinaTitle,
     TrafficRulePreset.aiViaVpn => l10n.trafficRulesAiTitle,
     TrafficRulePreset.socialViaVpn => l10n.trafficRulesSocialTitle,
   };
@@ -114,12 +114,8 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
             return TrafficRulesPage(
               currentPreset: liveSettings.trafficRulePreset,
               currentStatus: liveStatus,
-              currentRussiaDnsDirectResolver:
-                  liveSettings.russiaDnsDirectResolver,
               onPrepareRuleData: commands.prepareTrafficRuleData,
               onPresetChanged: commands.setTrafficRulePreset,
-              onRussiaDnsDirectResolverChanged:
-                  commands.setRussiaDnsDirectResolver,
             );
           },
         ),

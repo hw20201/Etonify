@@ -1,36 +1,32 @@
-name: Etonify · Android release
+name: Etonify · Android arm64 builds
 
 on:
+  push:
+    branches:
+      - master
+    tags:
+      - "v*"
   workflow_dispatch:
-    inputs:
-      build_name:
-        description: "Optional versionName override, for example 0.1.0 or v0.1.0"
-        required: false
-        type: string
-      build_number:
-        description: "Optional versionCode override, for example 1"
-        required: false
-        type: string
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: android-release-${{ github.ref }}
-  cancel-in-progress: false
+  group: android-arm64-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   FLUTTER_VERSION: "3.47.5"
   JAVA_VERSION: "21"
-  KEYSTORE_PATH: "android/app/etonify-release.jks"
-  BUILD_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.build_name || '' }}
-  BUILD_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.build_number || '' }}
 
 jobs:
-  build-release-apk:
-    name: Build signed APK matrix
+  build-arm64-apk:
+    if: github.event_name != 'push' || github.ref == 'refs/heads/master'
+    name: Build arm64 APK artifact
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
@@ -40,57 +36,6 @@ jobs:
         run: |
           git submodule update --init --depth 1 -- etonify-core
           python3 scripts/verify_libbox.py
-
-      - name: Resolve release version
-        shell: bash
-        run: |
-          raw="${BUILD_NAME}"
-          if [ -z "$raw" ]; then
-            if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-              raw="${GITHUB_REF_NAME}"
-            else
-              raw="$(awk -F': ' '/^version:/ {print $2; exit}' pubspec.yaml | cut -d+ -f1)"
-            fi
-          fi
-          raw="${raw#v}"
-          if ! [[ "$raw" =~ ^[0-9]+(\.[0-9]+){1,3}([._-][0-9A-Za-z]+)*$ ]]; then
-            echo "::error title=Invalid release version::Use 0.1.0 or v0.1.0, got '${raw}'"
-            exit 1
-          fi
-          echo "RELEASE_VERSION=${raw}" >> "$GITHUB_ENV"
-          echo "TAG_NAME=${raw}" >> "$GITHUB_ENV"
-          echo "RELEASE_TITLE=v${raw}" >> "$GITHUB_ENV"
-          echo "Resolved release: tag=${raw}, title=v${raw}"
-
-      - name: Validate project version metadata
-        shell: bash
-        run: |
-          pubspec_full="$(awk -F': ' '/^version:/ {print $2; exit}' pubspec.yaml)"
-          pubspec_version="${pubspec_full%%+*}"
-          pubspec_code=""
-          if [[ "$pubspec_full" == *+* ]]; then
-            pubspec_code="${pubspec_full#*+}"
-          fi
-          if [ "$pubspec_version" != "$RELEASE_VERSION" ]; then
-            echo "::error title=Version mismatch::pubspec.yaml has ${pubspec_version}, release input resolved to ${RELEASE_VERSION}"
-            exit 1
-          fi
-          if [ -n "$BUILD_NUMBER" ] && [ -n "$pubspec_code" ] && [ "$BUILD_NUMBER" != "$pubspec_code" ]; then
-            echo "::error title=Build number mismatch::pubspec.yaml has +${pubspec_code}, workflow build_number is ${BUILD_NUMBER}"
-            exit 1
-          fi
-          if [ -f android/local.properties ]; then
-            local_name="$(awk -F= '/^flutter.versionName=/ {print $2; exit}' android/local.properties)"
-            local_code="$(awk -F= '/^flutter.versionCode=/ {print $2; exit}' android/local.properties)"
-            if [ -n "$local_name" ] && [ "$local_name" != "$RELEASE_VERSION" ]; then
-              echo "::error title=Android local.properties mismatch::flutter.versionName=${local_name}, release=${RELEASE_VERSION}"
-              exit 1
-            fi
-            if [ -n "$BUILD_NUMBER" ] && [ -n "$local_code" ] && [ "$local_code" != "$BUILD_NUMBER" ]; then
-              echo "::error title=Android local.properties mismatch::flutter.versionCode=${local_code}, build_number=${BUILD_NUMBER}"
-              exit 1
-            fi
-          fi
 
       - name: Set up JDK
         uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
@@ -105,186 +50,155 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Show tool versions
+      - name: Install dependencies and generate bindings
         run: |
-          java -version
-          flutter --version
-          dart --version
+          flutter pub get
+          flutter gen-l10n
+          dart run pigeon --input pigeons/singbox_api.dart
 
-      - name: Validate Android signing secrets
+      - name: Analyze and test
+        run: |
+          flutter analyze --fatal-infos
+          flutter test
+
+      - name: Build arm64 Release APK
         shell: bash
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "true"
+        run: |
+          set -euo pipefail
+          flutter build apk --release --target-platform android-arm64 --split-per-abi
+          apk="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
+          output="etonify-arm64-v8a-${GITHUB_SHA::7}.apk"
+          mkdir -p build/release-apk
+          cp "$apk" "build/release-apk/${output}"
+          ls -lah build/release-apk/*.apk
+
+      - name: Upload arm64 APK artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: etonify-android-arm64-${{ github.sha }}
+          path: build/release-apk/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  draft-tag-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    name: Build signed tag APK and create draft Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate version tag
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if ! [[ "$version" =~ ^[0-9]+(\.[0-9]+){1,3}([._-][0-9A-Za-z]+)*$ ]]; then
+            echo "::error title=Invalid version tag::Use v1.2.3 (received ${GITHUB_REF_NAME})"
+            exit 1
+          fi
+          echo "RELEASE_VERSION=${version}" >> "$GITHUB_ENV"
+
+      - name: Validate existing long-term Android signing secrets
+        shell: bash
+        env:
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
         run: |
           missing=0
-          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+          for name in ANDROID_RELEASE_KEYSTORE_BASE64 ANDROID_RELEASE_KEYSTORE_PASSWORD ANDROID_RELEASE_KEY_ALIAS ANDROID_RELEASE_KEY_PASSWORD; do
             if [ -z "${!name}" ]; then
-              echo "::error title=Missing secret::$name is not configured in repository secrets"
+              echo "::error title=Signing secret required::${name} is not configured. This workflow only reads the rotated ANDROID_RELEASE_* signing Secrets; it will not use legacy ANDROID_* Secrets or generate a key."
               missing=1
             fi
           done
           exit "$missing"
 
-      - name: Restore Android signing files
+      - name: Restore long-term Android signing files
         shell: bash
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
           mkdir -p android/app
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "${KEYSTORE_PATH}"
+          printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > android/app/etonify-release.jks
           cat > android/key.properties <<EOF
-          storePassword=${ANDROID_KEYSTORE_PASSWORD}
-          keyPassword=${ANDROID_KEY_PASSWORD}
-          keyAlias=${ANDROID_KEY_ALIAS}
+          storePassword=${ANDROID_RELEASE_KEYSTORE_PASSWORD}
+          keyPassword=${ANDROID_RELEASE_KEY_PASSWORD}
+          keyAlias=${ANDROID_RELEASE_KEY_ALIAS}
           storeFile=app/etonify-release.jks
           EOF
-          chmod 600 "${KEYSTORE_PATH}" android/key.properties
+          chmod 600 android/app/etonify-release.jks android/key.properties
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Generate localization
-        run: flutter gen-l10n
-
-      - name: Generate Pigeon bindings
-        run: dart run pigeon --input pigeons/singbox_api.dart
-
-      - name: Analyze
-        run: flutter analyze
-
-      - name: Test
-        run: flutter test
-
-      - name: Build obfuscated universal and ABI APKs
-        shell: bash
+      - name: Verify pinned libbox binary
         run: |
-          mkdir -p build/release-apks
+          git submodule update --init --depth 1 -- etonify-core
+          python3 scripts/verify_libbox.py
 
-          common_args=(
-            --release
-            --obfuscate
-            --build-name "${RELEASE_VERSION}"
-            --split-debug-info=build/debug-info/android
-            --target-platform android-arm,android-arm64
-          )
-          if [ -n "${BUILD_NUMBER}" ]; then
-            common_args+=(--build-number "${BUILD_NUMBER}")
-          fi
+      - name: Set up JDK
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
 
-          flutter build apk "${common_args[@]}"
-          cp build/app/outputs/flutter-apk/app-release.apk \
-            "build/release-apks/etonify-v${RELEASE_VERSION}-universal.apk"
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
 
-          flutter build apk "${common_args[@]}" --split-per-abi
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-            "build/release-apks/etonify-v${RELEASE_VERSION}-arm64-v8a.apk"
-          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
-            "build/release-apks/etonify-v${RELEASE_VERSION}-armeabi-v7a.apk"
-
-      - name: List APK outputs
-        run: ls -lah build/release-apks/*.apk
-
-      - name: Generate updater manifest
-        shell: bash
+      - name: Install dependencies and generate bindings
         run: |
-          apk="build/release-apks/etonify-v${RELEASE_VERSION}-universal.apk"
-          analyzer="${ANDROID_HOME}/cmdline-tools/latest/bin/apkanalyzer"
-          if [ ! -x "$analyzer" ]; then
-            analyzer="$(command -v apkanalyzer || true)"
-          fi
-          if [ -z "$analyzer" ] || [ ! -x "$analyzer" ]; then
-            echo "::error title=Missing apkanalyzer::Cannot read APK compatibility metadata"
-            exit 1
-          fi
-          min_sdk="$($analyzer manifest min-sdk "$apk")"
-          version_code="$($analyzer manifest version-code "$apk")"
-          python3 - "$RELEASE_VERSION" "$version_code" "$min_sdk" <<'PY'
-          import hashlib
-          import json
-          import sys
-          from pathlib import Path
+          flutter pub get
+          flutter gen-l10n
+          dart run pigeon --input pigeons/singbox_api.dart
 
-          version, build_number, min_sdk = sys.argv[1:]
-          assets = []
-          for apk in sorted(Path("build/release-apks").glob("*.apk")):
-              assets.append({
-                  "name": apk.name,
-                  "sizeBytes": apk.stat().st_size,
-                  "sha256": hashlib.sha256(apk.read_bytes()).hexdigest(),
-              })
-          manifest = {
-              "schemaVersion": 1,
-              "version": version,
-              "buildNumber": int(build_number),
-              "minSdk": int(min_sdk),
-              "packageName": "com.etonify.meow_client",
-              "assets": assets,
-          }
-          Path("build/release-apks/etonify-update.json").write_text(
-              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-              encoding="utf-8",
-          )
-          PY
-          cat build/release-apks/etonify-update.json
+      - name: Analyze and test
+        run: |
+          flutter analyze --fatal-infos
+          flutter test
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: etonify-release-apks-${{ github.run_number }}
-          path: |
-            build/release-apks/*.apk
-            build/release-apks/etonify-update.json
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload Dart debug symbols
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: etonify-dart-debug-info-${{ github.run_number }}
-          path: build/debug-info/android/**
-          if-no-files-found: error
-          retention-days: 30
+      - name: Build signed arm64 Release APK
+        shell: bash
+        env:
+          MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"
+        run: |
+          set -euo pipefail
+          flutter build apk --release --build-name "${RELEASE_VERSION}" --build-number "${GITHUB_RUN_NUMBER}" --target-platform android-arm64 --split-per-abi
+          apk="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
+          output="etonify-v${RELEASE_VERSION}-arm64-v8a.apk"
+          mkdir -p build/release-apk
+          cp "$apk" "build/release-apk/${output}"
+          ls -lah build/release-apk/*.apk
 
       - name: Create or update draft GitHub Release
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           notes_file="build/release-notes.md"
-          if [ -f CHANGELOG.md ]; then
-            awk -v version="$RELEASE_VERSION" '
-              index($0, "## [" version "]") == 1 { found=1; next }
-              found && index($0, "## [") == 1 { exit }
-              found { print }
-            ' CHANGELOG.md > "$notes_file"
-          else
-            : > "$notes_file"
-          fi
-          cat >> "$notes_file" <<EOF
-
-          ---
-
-          Signed Android APKs built from ${GITHUB_SHA}.
-          Dart obfuscation is enabled. Debug symbols are attached as a separate workflow artifact.
-
-          Assets:
-          - etonify-v${RELEASE_VERSION}-universal.apk
-          - etonify-v${RELEASE_VERSION}-arm64-v8a.apk
-          - etonify-v${RELEASE_VERSION}-armeabi-v7a.apk
+          cat > "$notes_file" <<EOF
+          Signed Android arm64 APK built from ${GITHUB_SHA}.
+          This Release is a draft and has not been published.
           EOF
-
-          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            gh release edit "$TAG_NAME" --title "$RELEASE_TITLE" --notes-file "$notes_file"
-            gh release upload "$TAG_NAME" build/release-apks/*.apk build/release-apks/etonify-update.json --clobber
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release edit "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes-file "$notes_file" --draft
+            gh release upload "${GITHUB_REF_NAME}" build/release-apk/*.apk --clobber
           else
-            gh release create "$TAG_NAME" build/release-apks/*.apk build/release-apks/etonify-update.json \
+            gh release create "${GITHUB_REF_NAME}" build/release-apk/*.apk \
               --draft \
-              --title "$RELEASE_TITLE" \
+              --title "${GITHUB_REF_NAME}" \
               --notes-file "$notes_file"
           fi

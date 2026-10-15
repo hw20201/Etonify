@@ -336,6 +336,8 @@ class SingboxConfigBuildInput {
     required this.russiaCuratedDirectServicesPath,
     required this.russiaAiServicesPath,
     required this.russiaSocialServicesPath,
+    this.chinaGeositePath,
+    this.chinaGeoipPath,
     this.trafficRulePreset = TrafficRulePreset.none,
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
@@ -392,6 +394,8 @@ class SingboxConfigBuildInput {
   final String? russiaCuratedDirectServicesPath;
   final String? russiaAiServicesPath;
   final String? russiaSocialServicesPath;
+  final String? chinaGeositePath;
+  final String? chinaGeoipPath;
   final TrafficRulePreset trafficRulePreset;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
@@ -1027,6 +1031,8 @@ SingboxConfigBuildResult buildSingboxConfig(SingboxConfigBuildInput input) {
     russiaCuratedDirectServicesPath: input.russiaCuratedDirectServicesPath,
     russiaAiServicesPath: input.russiaAiServicesPath,
     russiaSocialServicesPath: input.russiaSocialServicesPath,
+    chinaGeositePath: input.chinaGeositePath,
+    chinaGeoipPath: input.chinaGeoipPath,
     trafficRulePreset: input.trafficRulePreset,
     bypassLocalNetwork: input.bypassLocalNetwork,
     splitRoutingMode: input.splitRoutingMode,

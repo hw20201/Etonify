@@ -2246,16 +2246,12 @@ void main() {
       ),
     );
     expect(
-      routeRules,
-      contains(
-        allOf([
-          containsPair('rule_set', [
-            'ru-geosite-ru-blocked',
-            'ru-geoip-ru-blocked',
-          ]),
-          containsPair('outbound', 'select'),
-        ]),
+      routeRules.any(
+        (rule) =>
+            rule['rule_set'] is String &&
+            (rule['rule_set'] as String).startsWith('ru-'),
       ),
+      isFalse,
     );
   });
 
@@ -3281,7 +3277,7 @@ void main() {
     expect(tunInbound.containsKey('exclude_package'), isFalse);
   });
 
-  test('split, local, adblock and Russia route rules keep stable priority', () {
+  test('split, local, adblock and China route rules keep stable priority', () {
     const subscription = Subscription(
       id: 'route-priority',
       name: 'Route priority',
@@ -3305,7 +3301,9 @@ void main() {
       vpnInboundEnabled: true,
       splitRoutingMode: SplitRoutingMode.proxySelected,
       splitRoutingPackages: const ['com.example.proxy'],
-      useRussiaRouteData: true,
+      trafficRulePreset: TrafficRulePreset.chinaDirect,
+      chinaGeositePath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
+      chinaGeoipPath: _russiaRuleSetPath('geoip-ru-blocked.srs'),
       adBlockEnabled: true,
       adBlockBlockRuleSetPath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
       adBlockAllowRuleSetPath: _russiaRuleSetPath(
@@ -3321,63 +3319,36 @@ void main() {
     final adBlockIndex = routeRules.indexWhere(
       (rule) => rule['rule_set'] == 'adblock-block',
     );
-    final russiaSuffixIndex = routeRules.indexWhere(
-      (rule) => rule.containsKey('domain_suffix'),
+    final chinaDomainIndex = routeRules.indexWhere(
+      (rule) => rule['rule_set'] == 'cn-geosite-cn',
     );
-    final russiaDirectIndex = routeRules.indexWhere(
-      (rule) => rule['rule_set'] == 'ru-geosite-ru-available-only-inside',
-    );
-    final russiaBlockedIndex = routeRules.indexWhere(
-      (rule) =>
-          rule['rule_set'] is List &&
-          (rule['rule_set'] as List).contains('ru-geosite-ru-blocked'),
-    );
-    final russiaGeoipDirectIndex = routeRules.indexWhere(
-      (rule) =>
-          rule['rule_set'] is List &&
-          (rule['rule_set'] as List).contains('ru-geoip-ru'),
+    final chinaIpIndex = routeRules.indexWhere(
+      (rule) => rule['rule_set'] == 'cn-geoip-cn',
     );
 
     expect(routeRules.any((rule) => rule.containsKey('package_name')), isFalse);
     expect(privateIndex, greaterThanOrEqualTo(0));
     expect(adBlockIndex, greaterThan(privateIndex));
-    expect(russiaSuffixIndex, greaterThan(adBlockIndex));
-    expect(russiaBlockedIndex, greaterThan(adBlockIndex));
-    expect(russiaBlockedIndex, lessThan(russiaSuffixIndex));
-    expect(russiaDirectIndex, greaterThan(adBlockIndex));
-    expect(russiaGeoipDirectIndex, greaterThan(russiaBlockedIndex));
+    expect(chinaDomainIndex, greaterThan(adBlockIndex));
+    expect(chinaIpIndex, greaterThan(adBlockIndex));
+    expect(
+      routeRules.any((rule) => rule.containsKey('domain_suffix')),
+      isFalse,
+    );
 
     final dns = (config['dns'] as Map).cast<String, dynamic>();
     final dnsServers = (dns['servers'] as List).cast<Map<dynamic, dynamic>>();
     expect(
       dnsServers.any((server) => server['tag'] == 'dns-ru-direct'),
-      isTrue,
+      isFalse,
     );
     final dnsRules = (dns['rules'] as List).cast<Map<dynamic, dynamic>>();
     expect(
       dnsRules.first,
       allOf([
-        containsPair('rule_set', 'ru-geosite-ru-blocked'),
-        containsPair('server', 'dns-remote'),
+        containsPair('rule_set', 'cn-geosite-cn'),
+        containsPair('server', 'dns-direct'),
       ]),
-    );
-    expect(
-      dnsRules,
-      contains(
-        allOf([
-          containsPair('domain_suffix', ['ru', 'su', 'рф']),
-          containsPair('server', 'dns-ru-direct'),
-        ]),
-      ),
-    );
-    expect(
-      dnsRules,
-      contains(
-        allOf([
-          containsPair('rule_set', 'ru-geosite-category-ru'),
-          containsPair('server', 'dns-ru-direct'),
-        ]),
-      ),
     );
   });
 
@@ -3675,7 +3646,7 @@ void main() {
     ]);
   });
 
-  test('invalid Russia route paths do not activate route rule sets', () {
+  test('missing China rule paths do not activate route rule sets', () {
     const subscription = Subscription(
       id: 'invalid-russia',
       name: 'Invalid Russia',
@@ -3714,7 +3685,10 @@ void main() {
       urlTestUnavailableCheckIntervalSeconds: 30,
       blockLeaks: false,
       adBlockEnabled: false,
-      useRussiaRouteData: true,
+      useRussiaRouteData: false,
+      trafficRulePreset: TrafficRulePreset.chinaDirect,
+      chinaGeositePath: '/definitely/missing/geosite-cn.srs',
+      chinaGeoipPath: '/definitely/missing/geoip-cn.srs',
       russiaGeositeRuBlockedPath: '/definitely/missing/geosite.srs',
       russiaGeositeRuAvailableOnlyInsidePath: '/definitely/missing/inside.srs',
       russiaGeositeCategoryRuPath: '/definitely/missing/category-ru.srs',
@@ -3738,11 +3712,11 @@ void main() {
     final routeRules = (route['rules'] as List).cast<Map<dynamic, dynamic>>();
     expect(route.containsKey('rule_set'), isFalse);
     expect(
-      routeRules.any((rule) => rule['rule_set'] == 'ru-direct-services'),
+      routeRules.any((rule) => rule['rule_set'] == 'cn-geosite-cn'),
       isFalse,
     );
     expect(
-      routeRules.any((rule) => rule['rule_set'] == 'ru-geosite-ru-blocked'),
+      routeRules.any((rule) => rule['rule_set'] == 'cn-geoip-cn'),
       isFalse,
     );
   });
@@ -3944,10 +3918,10 @@ void main() {
     },
   );
 
-  test('Russia routes use configured direct RU DNS resolver', () {
+  test('China domains use the configured direct DNS resolver', () {
     const subscription = Subscription(
-      id: 'ru-dns-sub',
-      name: 'RU DNS',
+      id: 'cn-dns-sub',
+      name: 'China DNS',
       url: 'https://example.com/sub',
       outbounds: [
         Outbound(
@@ -3966,17 +3940,26 @@ void main() {
 
     final config = _defaultBuilder(
       subscription,
-      useRussiaRouteData: true,
-      russiaDnsDirectResolver: '77.88.8.1',
+      trafficRulePreset: TrafficRulePreset.chinaDirect,
+      chinaGeositePath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
+      chinaGeoipPath: _russiaRuleSetPath('geoip-ru-blocked.srs'),
+      dnsDirectResolver: '77.88.8.1',
     ).build();
 
-    final servers = ((config['dns'] as Map)['servers'] as List)
-        .cast<Map<String, dynamic>>();
-    final ruDirect = servers.firstWhere(
-      (server) => server['tag'] == 'dns-ru-direct',
+    final dns = (config['dns'] as Map).cast<String, dynamic>();
+    final servers = (dns['servers'] as List).cast<Map<String, dynamic>>();
+    final direct = servers.firstWhere(
+      (server) => server['tag'] == 'dns-direct',
     );
-    expect(ruDirect['type'], 'udp');
-    expect(ruDirect['server'], '77.88.8.1');
+    expect(direct['type'], 'udp');
+    expect(direct['server'], '77.88.8.1');
+    expect(
+      (dns['rules'] as List).cast<Map<dynamic, dynamic>>().first,
+      allOf([
+        containsPair('rule_set', 'cn-geosite-cn'),
+        containsPair('server', 'dns-direct'),
+      ]),
+    );
   });
 
   test(
@@ -4240,6 +4223,8 @@ SingboxConfigBuilder _defaultBuilder(
   String russiaDnsDirectResolver = defaultRussiaDnsDirectResolver,
   String? russiaAiServicesPath,
   String? russiaSocialServicesPath,
+  String? chinaGeositePath,
+  String? chinaGeoipPath,
   LibboxCapabilities capabilities = LibboxCapabilities.bundledLegacy,
 }) {
   return SingboxConfigBuilder(
@@ -4296,6 +4281,8 @@ SingboxConfigBuilder _defaultBuilder(
         ? russiaAiServicesPath ?? _russiaRuleSetPath('geosite-ru-blocked.srs')
         : russiaAiServicesPath,
     russiaSocialServicesPath: russiaSocialServicesPath,
+    chinaGeositePath: chinaGeositePath,
+    chinaGeoipPath: chinaGeoipPath,
     trafficRulePreset: trafficRulePreset,
     bypassLocalNetwork: true,
     splitRoutingMode: splitRoutingMode,

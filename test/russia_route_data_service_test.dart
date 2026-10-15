@@ -7,6 +7,27 @@ import 'package:meow_client/data/routing/russia_route_data_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('China route data is recognized without a Russia bundle', () async {
+    await _withIsolatedRouteStorage(() async {
+      final directory = Directory(
+        '${Directory.systemTemp.path}/route-data/russia-v2ray-rules-dat/rule-set-china',
+      );
+      await directory.create(recursive: true);
+      for (final fileName in ['geosite-cn.srs', 'geoip-cn.srs']) {
+        await File(
+          '${directory.path}/$fileName',
+        ).writeAsBytes([0x53, 0x52, 0x53, 0x02, 0x00]);
+      }
+
+      final status = await RussiaRouteDataService.instance.loadStatus();
+
+      expect(status.available, isFalse);
+      expect(status.chinaRouteDataAvailable, isTrue);
+      expect(status.chinaGeositePath, contains('geosite-cn.srs'));
+      expect(status.chinaGeoipPath, contains('geoip-cn.srs'));
+    });
+  });
+
   test('Russia route status only needs daily update after 24 hours', () {
     final now = DateTime.now().millisecondsSinceEpoch;
     final fresh = RussiaRouteDataStatus(
