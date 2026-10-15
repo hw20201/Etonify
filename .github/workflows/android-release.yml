@@ -193,7 +193,7 @@ jobs:
           MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"
         run: |
           set -euo pipefail
-          flutter build apk --release --build-name "${RELEASE_VERSION}" --build-number "${GITHUB_RUN_NUMBER}" --target-platform android-arm64 --split-per-abi
+          flutter build apk --release --build-name "${RELEASE_VERSION}" --target-platform android-arm64 --split-per-abi
           apk="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
           output="etonify-v${RELEASE_VERSION}-arm64-v8a.apk"
           mkdir -p build/release-apk
