@@ -22,16 +22,19 @@ void main() {
     expect(workflow, contains('draft-tag-release:'));
     expect(workflow, contains("startsWith(github.ref, 'refs/tags/v')"));
     expect(workflow, contains('MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"'));
-    expect(workflow, contains('ANDROID_RELEASE_KEYSTORE_BASE64'));
-    expect(workflow, contains('ANDROID_RELEASE_KEYSTORE_PASSWORD'));
-    expect(workflow, contains('ANDROID_RELEASE_KEY_ALIAS'));
-    expect(workflow, contains('ANDROID_RELEASE_KEY_PASSWORD'));
-    expect(workflow, contains('will not use legacy ANDROID_* Secrets'));
+    expect(workflow, contains('secrets.ANDROID_KEYSTORE_BASE64'));
+    expect(workflow, contains('secrets.ANDROID_KEYSTORE_PASSWORD'));
+    expect(workflow, contains('secrets.ANDROID_KEY_ALIAS'));
+    expect(workflow, contains('secrets.ANDROID_KEY_PASSWORD'));
+    expect(workflow, isNot(contains('ANDROID_RELEASE_')));
     expect(workflow, contains('storeFile=app/etonify-release.jks'));
     expect(workflow, contains('gh release create'));
     expect(workflow, contains('gh release upload'));
     expect(workflow, contains('--draft'));
-    expect(workflow, isNot(contains('secrets.ANDROID_KEYSTORE_BASE64')));
+    expect(
+      workflow,
+      contains('Add the repository Secret with this exact name'),
+    );
     expect(workflow, isNot(contains('x86')));
     expect(
       workflow,
