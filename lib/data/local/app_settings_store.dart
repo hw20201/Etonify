@@ -5,7 +5,8 @@ import 'package:meow_client/models/core_settings.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:meow_client/core/platform/android_files_dir.dart';
 import 'package:meow_client/data/local/hive_storage_diagnostics.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 import 'package:meow_client/logging/app_log_store.dart';
 
@@ -202,8 +203,8 @@ class AppSettingsState {
     required this.locationLookupConcurrency,
     required this.blockLeaks,
     required this.adBlockEnabled,
-    required this.useRussiaRouteData,
-    this.trafficRulePreset = TrafficRulePreset.none,
+    this.routingMode = TrafficRoutingMode.rules,
+    this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
     required this.splitRoutingPackages,
@@ -278,8 +279,8 @@ class AppSettingsState {
   final int locationLookupConcurrency;
   final bool blockLeaks;
   final bool adBlockEnabled;
-  final bool useRussiaRouteData;
-  final TrafficRulePreset trafficRulePreset;
+  final TrafficRoutingMode routingMode;
+  final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
   final List<String> splitRoutingPackages;
@@ -354,8 +355,8 @@ class AppSettingsState {
     int? locationLookupConcurrency,
     bool? blockLeaks,
     bool? adBlockEnabled,
-    bool? useRussiaRouteData,
-    TrafficRulePreset? trafficRulePreset,
+    TrafficRoutingMode? routingMode,
+    List<CustomRoutingRule>? customRoutingRules,
     bool? bypassLocalNetwork,
     SplitRoutingMode? splitRoutingMode,
     List<String>? splitRoutingPackages,
@@ -454,8 +455,8 @@ class AppSettingsState {
           locationLookupConcurrency ?? this.locationLookupConcurrency,
       blockLeaks: blockLeaks ?? this.blockLeaks,
       adBlockEnabled: adBlockEnabled ?? this.adBlockEnabled,
-      useRussiaRouteData: useRussiaRouteData ?? this.useRussiaRouteData,
-      trafficRulePreset: trafficRulePreset ?? this.trafficRulePreset,
+      routingMode: routingMode ?? this.routingMode,
+      customRoutingRules: customRoutingRules ?? this.customRoutingRules,
       bypassLocalNetwork: bypassLocalNetwork ?? this.bypassLocalNetwork,
       splitRoutingMode: splitRoutingMode ?? this.splitRoutingMode,
       splitRoutingPackages: splitRoutingPackages ?? this.splitRoutingPackages,
@@ -591,8 +592,8 @@ abstract class AppSettingsStore {
   static const _locationLookupConcurrencyKey = 'location_lookup_concurrency';
   static const _blockLeaksKey = 'block_leaks';
   static const _adBlockEnabledKey = 'ad_block_enabled';
-  static const _useRussiaRouteDataKey = 'use_russia_route_data';
-  static const _trafficRulePresetKey = 'traffic_rule_preset';
+  static const _trafficRoutingModeKey = 'traffic_routing_mode';
+  static const _customRoutingRulesKey = 'custom_routing_rules';
   static const _bypassLocalNetworkKey = 'bypass_local_network';
   static const _splitRoutingModeKey = 'split_routing_mode';
   static const _splitRoutingPackagesKey = 'split_routing_packages';
@@ -660,8 +661,8 @@ abstract class AppSettingsStore {
     _locationLookupConcurrencyKey,
     _blockLeaksKey,
     _adBlockEnabledKey,
-    _useRussiaRouteDataKey,
-    _trafficRulePresetKey,
+    _trafficRoutingModeKey,
+    _customRoutingRulesKey,
     _bypassLocalNetworkKey,
     _splitRoutingModeKey,
     _splitRoutingPackagesKey,
@@ -968,12 +969,9 @@ abstract class AppSettingsStore {
           : locationLookupConcurrency,
       blockLeaks: boolValue(_blockLeaksKey, defaultValue: false),
       adBlockEnabled: boolValue(_adBlockEnabledKey, defaultValue: false),
-      useRussiaRouteData: boolValue(
-        _useRussiaRouteDataKey,
-        defaultValue: false,
-      ),
-      trafficRulePreset: TrafficRulePreset.fromStorage(
-        map[_trafficRulePresetKey],
+      routingMode: TrafficRoutingMode.fromStorage(map[_trafficRoutingModeKey]),
+      customRoutingRules: CustomRoutingRule.decodeStorage(
+        map[_customRoutingRulesKey],
       ),
       bypassLocalNetwork: boolValue(_bypassLocalNetworkKey, defaultValue: true),
       splitRoutingMode: switch (map[_splitRoutingModeKey]) {
@@ -1098,8 +1096,12 @@ abstract class AppSettingsStore {
       _locationLookupConcurrencyKey: state.locationLookupConcurrency.toString(),
       _blockLeaksKey: state.blockLeaks ? '1' : '0',
       _adBlockEnabledKey: state.adBlockEnabled ? '1' : '0',
-      _useRussiaRouteDataKey: state.useRussiaRouteData ? '1' : '0',
-      _trafficRulePresetKey: state.trafficRulePreset.storageValue,
+      _trafficRoutingModeKey: state.routingMode.storageValue,
+      _customRoutingRulesKey: jsonEncode(
+        CustomRoutingRule.normalizeCustomRoutingRules(
+          state.customRoutingRules,
+        ).map((rule) => rule.toJson()).toList(growable: false),
+      ),
       _bypassLocalNetworkKey: state.bypassLocalNetwork ? '1' : '0',
       _splitRoutingModeKey: switch (state.splitRoutingMode) {
         SplitRoutingMode.disabled => 'disabled',
@@ -1370,8 +1372,8 @@ class MemoryAppSettingsStore extends AppSettingsStore {
             locationLookupConcurrency: 2,
             blockLeaks: false,
             adBlockEnabled: false,
-            useRussiaRouteData: false,
-            trafficRulePreset: TrafficRulePreset.none,
+            routingMode: TrafficRoutingMode.rules,
+            customRoutingRules: <CustomRoutingRule>[],
             bypassLocalNetwork: true,
             splitRoutingMode: SplitRoutingMode.disabled,
             splitRoutingPackages: <String>[],

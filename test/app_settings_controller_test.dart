@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meow_client/app/app_settings_controller.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 import 'package:meow_client/features/settings/settings_dns_page.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
@@ -393,21 +394,35 @@ void main() {
     expect(controller.dnsSecureOnly, isFalse);
   });
 
-  test('traffic rules keep exactly one active preset and restart VPN', () {
+  test('routing mode and custom domain/IP rules update the runtime config', () {
     final controller = AppSettingsController();
 
-    final aiChange = controller.setTrafficRulePreset(
-      TrafficRulePreset.aiViaVpn,
-    );
-    expect(aiChange.changed, isTrue);
-    expect(aiChange.forceFullServiceRestart, isTrue);
-    expect(controller.trafficRulePreset, TrafficRulePreset.aiViaVpn);
-    expect(controller.useRussiaRouteData, isFalse);
+    final globalChange = controller.setRoutingMode(TrafficRoutingMode.global);
+    expect(globalChange.changed, isTrue);
+    expect(controller.routingMode, TrafficRoutingMode.global);
 
-    final legacyRouteChange = controller.setRussiaRouteDataEnabled(true);
-    expect(legacyRouteChange.changed, isTrue);
-    expect(controller.trafficRulePreset, TrafficRulePreset.chinaDirect);
-    expect(controller.useRussiaRouteData, isTrue);
+    final rules = [
+      CustomRoutingRule.create(
+        type: CustomRouteRuleType.domain,
+        value: '*.example.com',
+        action: CustomRouteAction.proxy,
+      ),
+      CustomRoutingRule.create(
+        type: CustomRouteRuleType.ip,
+        value: '203.0.113.0/24',
+        action: CustomRouteAction.direct,
+      ),
+    ];
+    final rulesChange = controller.setCustomRoutingRules(rules);
+    expect(rulesChange.changed, isTrue);
+    expect(controller.customRoutingRules, rules);
+
+    final noOp = controller.setCustomRoutingRules(rules);
+    expect(noOp.changed, isFalse);
+
+    final rulesModeChange = controller.setRoutingMode(TrafficRoutingMode.rules);
+    expect(rulesModeChange.changed, isTrue);
+    expect(controller.routingMode, TrafficRoutingMode.rules);
   });
 
   test('autoCheckServers toggle changes state without restarting VPN', () {

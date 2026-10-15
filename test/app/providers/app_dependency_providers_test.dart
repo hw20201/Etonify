@@ -24,8 +24,8 @@ void main() {
     );
     expect(
       identical(
-        container.read(russiaRouteDataServiceProvider),
-        container.read(russiaRouteDataServiceProvider),
+        container.read(chinaRouteDataServiceProvider),
+        container.read(chinaRouteDataServiceProvider),
       ),
       isTrue,
     );

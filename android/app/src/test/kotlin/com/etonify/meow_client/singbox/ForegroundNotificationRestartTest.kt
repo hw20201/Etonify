@@ -60,7 +60,7 @@ class ForegroundNotificationRestartTest {
         assertEquals("My server", restarted.extras.getCharSequence(Notification.EXTRA_TITLE))
         assertTrue(restarted.actions.any { it.title == "Check ping" })
         assertTrue(restarted.actions.any { it.title == "Stop VPN" })
-        assertFalse(restarted.extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("42 мс"))
+        assertFalse(restarted.extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("42 ms"))
         val prefs = service.getSharedPreferences("meow_foreground_notification", 0)
         assertEquals("both", prefs.getString("traffic_display_mode", ""))
         assertEquals(7, prefs.getInt("traffic_refresh_seconds", 0))
@@ -79,7 +79,7 @@ class ForegroundNotificationRestartTest {
     fun `quick-tile startup derives the current ping target without Flutter`() {
         val notification = MeowForegroundNotification(service, 42)
         val built = notification.buildForForeground("Connected")
-        assertTrue(built.actions.any { it.title == "Проверить пинг" })
+        assertTrue(built.actions.any { it.title == "Refresh latency" })
         assertEquals("node-new", targetOf(notification))
     }
 
@@ -89,7 +89,7 @@ class ForegroundNotificationRestartTest {
         notification.buildForForeground("Connected")
         notification.onUrlTestResult("node-new", 27L, System.currentTimeMillis() / 1000L, "available")
         val built = notification.buildForForeground("Connected")
-        assertTrue(built.extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("27 мс"))
+        assertTrue(built.extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("27 ms"))
     }
 
     @Test
@@ -98,7 +98,7 @@ class ForegroundNotificationRestartTest {
         notification.buildForForeground("Connected")
         notification.onUrlTestResult("node-new", 27L, System.currentTimeMillis() / 1000L - 30L, "available")
         val built = notification.buildForForeground("Connected")
-        assertFalse(built.extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("27 мс"))
+        assertFalse(built.extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("27 ms"))
     }
 
     @Test
@@ -118,7 +118,7 @@ class ForegroundNotificationRestartTest {
         assertEquals(1, requests.size)
         notification.onUrlTestResult("node-old", 27L, System.currentTimeMillis() / 1000L, "available",
             runtimeGeneration = 7L, networkGeneration = 3L, revision = 18L, sessionId = 9L, selectionEpoch = 0L)
-        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("27 мс"))
+        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("27 ms"))
         assertTrue(notification.requestLatencyRefresh())
         assertEquals("node-old" to true, requests.last())
     }
@@ -173,7 +173,7 @@ class ForegroundNotificationRestartTest {
         assertTrue(ReflectionHelpers.getField<Boolean>(notification, "latencyActionInFlight"))
         notification.onUrlTestResult("node-new", 31L, System.currentTimeMillis() / 1000L, "available",
             runtimeGeneration = 7L, networkGeneration = 3L, revision = 18L, sessionId = 9L, selectionEpoch = 0L)
-        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("31 мс"))
+        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("31 ms"))
     }
 
     @Test
@@ -187,10 +187,10 @@ class ForegroundNotificationRestartTest {
         notification.updateSelectedOutbounds(mapOf("select" to "node-new"), 7L, 4L)
         val now = System.currentTimeMillis() / 1000L
         notification.onUrlTestResult("node-new", 91L, now, "available", runtimeGeneration = 7L, networkGeneration = 3L)
-        assertFalse(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("91 мс"))
+        assertFalse(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("91 ms"))
         notification.onUrlTestResult("node-new", 28L, now, "available", runtimeGeneration = 7L, networkGeneration = 4L,
             revision = 19L, sessionId = 10L, selectionEpoch = 0L)
-        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("28 мс"))
+        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("28 ms"))
     }
 
     @Test
@@ -208,7 +208,7 @@ class ForegroundNotificationRestartTest {
         assertFalse(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("9"))
         notification.onUrlTestResult("node-new", 28L, now, "available", 7L, 3L,
             revision = 19L, sessionId = 10L, selectionEpoch = 2L)
-        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("28 мс"))
+        assertTrue(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("28 ms"))
     }
 
     @Test
@@ -351,7 +351,7 @@ class ForegroundNotificationRestartTest {
         ReflectionHelpers.setField(notification, "latencyActionInFlight", true)
         notification.updateSelectedOutbounds(mapOf("select" to "node-old"))
         assertFalse(ReflectionHelpers.getField<Boolean>(notification, "latencyActionInFlight"))
-        assertFalse(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("42 мс"))
+        assertFalse(notification.buildForForeground("Connected").extras.getCharSequence(Notification.EXTRA_TEXT).toString().contains("42 ms"))
     }
 
     @Test

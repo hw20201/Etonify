@@ -3,7 +3,7 @@ import 'package:meow_client/app/app_settings_controller.dart';
 import 'package:meow_client/app/providers/app_dependency_providers.dart';
 import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
 
 class AppSettingsSnapshot {
   const AppSettingsSnapshot({required this.controller, this.revision = 0});
@@ -74,22 +74,22 @@ final adBlockStatusProvider =
       name: 'adBlockStatusProvider',
     );
 
-class RussiaRouteDataStatusNotifier extends Notifier<RussiaRouteDataStatus> {
-  RussiaRouteDataStatusNotifier([this._initialValue]);
+class ChinaRouteDataStatusNotifier extends Notifier<ChinaRouteDataStatus> {
+  ChinaRouteDataStatusNotifier([this._initialValue]);
 
-  final RussiaRouteDataStatus? _initialValue;
+  final ChinaRouteDataStatus? _initialValue;
 
   @override
-  RussiaRouteDataStatus build() =>
-      _initialValue ?? const RussiaRouteDataStatus.unavailable();
+  ChinaRouteDataStatus build() =>
+      _initialValue ?? const ChinaRouteDataStatus.unavailable();
 
-  void update(RussiaRouteDataStatus status) => state = status;
+  void update(ChinaRouteDataStatus status) => state = status;
 }
 
-final russiaRouteDataStatusProvider =
-    NotifierProvider<RussiaRouteDataStatusNotifier, RussiaRouteDataStatus>(
-      RussiaRouteDataStatusNotifier.new,
-      name: 'russiaRouteDataStatusProvider',
+final chinaRouteDataStatusProvider =
+    NotifierProvider<ChinaRouteDataStatusNotifier, ChinaRouteDataStatus>(
+      ChinaRouteDataStatusNotifier.new,
+      name: 'chinaRouteDataStatusProvider',
     );
 
 class InstalledAppsCacheNotifier extends Notifier<List<Map<String, dynamic>>> {

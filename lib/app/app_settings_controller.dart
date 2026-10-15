@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:meow_client/models/core_settings.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 
 const int appSettingsDefaultUrlTestTimeoutSeconds = 15;
@@ -36,7 +37,8 @@ class AppSettingsImpactRegistry {
     'proxy credentials changed',
     'block leaks changed',
     'adblock changed',
-    'traffic rule preset changed',
+    'traffic routing mode changed',
+    'custom routing rules changed',
     'bypass local network changed',
     'split routing mode changed',
     'split routing packages changed',
@@ -168,8 +170,8 @@ class AppSettingsController {
   int locationLookupConcurrency = appSettingsStandardLocationLookupConcurrency;
   bool blockLeaks = false;
   bool adBlockEnabled = false;
-  bool useRussiaRouteData = false;
-  TrafficRulePreset trafficRulePreset = TrafficRulePreset.none;
+  TrafficRoutingMode routingMode = TrafficRoutingMode.rules;
+  List<CustomRoutingRule> customRoutingRules = const <CustomRoutingRule>[];
   bool bypassLocalNetwork = true;
   SplitRoutingMode splitRoutingMode = SplitRoutingMode.disabled;
   List<String> splitRoutingPackages = const <String>[];
@@ -264,8 +266,8 @@ class AppSettingsController {
       locationLookupConcurrency: locationLookupConcurrency,
       blockLeaks: blockLeaks,
       adBlockEnabled: adBlockEnabled,
-      useRussiaRouteData: useRussiaRouteData,
-      trafficRulePreset: trafficRulePreset,
+      routingMode: routingMode,
+      customRoutingRules: customRoutingRules,
       bypassLocalNetwork: bypassLocalNetwork,
       splitRoutingMode: splitRoutingMode,
       splitRoutingPackages: splitRoutingPackages,
@@ -359,14 +361,10 @@ class AppSettingsController {
         .toInt();
     blockLeaks = state.blockLeaks;
     adBlockEnabled = state.adBlockEnabled;
-    trafficRulePreset =
-        state.trafficRulePreset == TrafficRulePreset.none &&
-            state.useRussiaRouteData
-        ? TrafficRulePreset.chinaDirect
-        : state.trafficRulePreset;
-    // Kept only for the legacy config builder/bootstrap call while profiles
-    // migrate. The persisted source of truth is now trafficRulePreset.
-    useRussiaRouteData = trafficRulePreset == TrafficRulePreset.chinaDirect;
+    routingMode = state.routingMode;
+    customRoutingRules = CustomRoutingRule.normalizeCustomRoutingRules(
+      state.customRoutingRules,
+    );
     bypassLocalNetwork = state.bypassLocalNetwork;
     splitRoutingMode = state.splitRoutingMode;
     splitRoutingPackages = List<String>.from(state.splitRoutingPackages);
@@ -932,21 +930,31 @@ class AppSettingsController {
     );
   }
 
-  AppSettingsChange setRussiaRouteDataEnabled(bool value) {
-    return setTrafficRulePreset(
-      value ? TrafficRulePreset.chinaDirect : TrafficRulePreset.none,
+  AppSettingsChange setRoutingMode(TrafficRoutingMode value) {
+    if (routingMode == value) {
+      return const AppSettingsChange.none();
+    }
+    routingMode = value;
+    return const AppSettingsChange(
+      changed: true,
+      configReason: 'traffic routing mode changed',
     );
   }
 
-  AppSettingsChange setTrafficRulePreset(TrafficRulePreset value) {
-    if (trafficRulePreset == value) {
-      return const AppSettingsChange.none();
-    }
-    trafficRulePreset = value;
-    useRussiaRouteData = value == TrafficRulePreset.chinaDirect;
+  AppSettingsChange setCustomRoutingRules(List<CustomRoutingRule> value) {
+    final normalized = CustomRoutingRule.normalizeCustomRoutingRules(value);
+    final unchanged =
+        customRoutingRules.length == normalized.length &&
+        List<int>.generate(customRoutingRules.length, (index) => index).every(
+          (index) =>
+              customRoutingRules[index].key == normalized[index].key &&
+              customRoutingRules[index].action == normalized[index].action,
+        );
+    if (unchanged) return const AppSettingsChange.none();
+    customRoutingRules = normalized;
     return const AppSettingsChange(
       changed: true,
-      configReason: 'traffic rule preset changed',
+      configReason: 'custom routing rules changed',
     );
   }
 

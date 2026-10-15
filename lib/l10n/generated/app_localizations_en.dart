@@ -2556,134 +2556,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Route private and LAN addresses directly';
 
   @override
-  String get russiaRoutesTitle => 'Smart routing';
-
-  @override
-  String get russiaRoutesRunetFreedomBadge => 'runetfreedom';
-
-  @override
-  String get russiaRoutesDomainListBadge => 'domain-list-community';
-
-  @override
-  String get russiaRoutesSubtitle =>
-      'Russian services go direct while blocked resources stay on VPN.';
-
-  @override
-  String get russiaRoutesInstallAction => 'Download rules';
-
-  @override
-  String get russiaRoutesReinstallAction => 'Update';
-
-  @override
-  String get russiaRoutesUpdateAction => 'Check now';
-
-  @override
-  String russiaRoutesUpdateAvailable(String version) {
-    return 'A new rules version is available: $version';
-  }
-
-  @override
-  String get russiaRoutesLatest => 'The latest rules version is installed.';
-
-  @override
-  String get russiaRoutesEnableTitle => 'Enable smart routing';
-
-  @override
-  String get russiaRoutesEnabledSubtitle =>
-      'Apply the prepared rules to the VPN connection.';
-
-  @override
-  String get russiaRoutesMissingSubtitle =>
-      'The bundled database works offline and is connected when enabled.';
-
-  @override
-  String get russiaRoutesPreparingStatus => 'Updating rules...';
-
-  @override
-  String get russiaRoutesPreparingHint =>
-      'Downloading the latest database, verifying SRS files, and safely replacing local rules.';
-
-  @override
-  String get russiaRoutesStageChecking => 'Checking rule version…';
-
-  @override
-  String get russiaRoutesStageDownloading => 'Downloading rule archive…';
-
-  @override
-  String get russiaRoutesStageVerifying => 'Verifying archive integrity…';
-
-  @override
-  String get russiaRoutesStageExtracting => 'Extracting SRS files…';
-
-  @override
-  String get russiaRoutesStageCategories => 'Updating service lists…';
-
-  @override
-  String get russiaRoutesStageCompiling => 'Compiling local rules…';
-
-  @override
-  String get russiaRoutesStageActivating => 'Replacing rules safely…';
-
-  @override
-  String get russiaRoutesStageComplete => 'Rules updated';
-
-  @override
-  String russiaRoutesDownloadProgress(String completed, String total) {
-    return 'Downloaded $completed of $total.';
-  }
-
-  @override
-  String russiaRoutesItemsProgress(int completed, int total) {
-    return 'Processed lists: $completed of $total.';
-  }
-
-  @override
-  String russiaRoutesItemsProcessed(int completed) {
-    return 'Processed lists: $completed.';
-  }
-
-  @override
-  String get russiaRoutesMissingStatus => 'Rules are not installed yet';
-
-  @override
-  String get russiaRoutesMissingHint =>
-      'The bundled database is connected first, then a fresh version is checked and downloaded in the background.';
-
-  @override
-  String get russiaRoutesReadyHint =>
-      'Rules are stored locally. New versions are checked on startup, at most once a day.';
-
-  @override
-  String russiaRoutesReadyStatus(String versionTag) {
-    return 'Ready · $versionTag';
-  }
-
-  @override
-  String get russiaRoutesLiveSource => 'runetfreedom';
-
-  @override
-  String get russiaRoutesBundledSource => 'bundled database';
-
-  @override
-  String russiaRoutesSourceMeta(
-    String source,
-    String verifiedAt,
-    int fileCount,
-  ) {
-    return 'Source: $source · $verifiedAt · files: $fileCount';
-  }
-
-  @override
-  String russiaRoutesMeta(
-    String installedAt,
-    String domainListUpdatedAt,
-    int categoryCount,
-    int domainCount,
-  ) {
-    return 'runetfreedom: $installedAt · domain-list-community: $domainListUpdatedAt · categories: $categoryCount · domains: $domainCount';
-  }
-
-  @override
   String get adBlockTitle => 'Ad blocking';
 
   @override
@@ -3116,150 +2988,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get vpnStartFailed => 'Failed to start VPN.';
 
   @override
-  String get trafficRulesTitle => 'Traffic rules';
-
-  @override
-  String get trafficRulesSettingsTitle => 'Traffic rules';
-
-  @override
-  String get trafficRulesSettingsSubtitle =>
-      'Choose one verified rule for domains and IP routes.';
-
-  @override
-  String get trafficRulesCurrentLabel => 'Active rule';
-
-  @override
-  String get trafficRulesNone => 'Not selected';
-
-  @override
-  String get trafficRulesUsePresetTitle => 'Use traffic rules';
-
-  @override
-  String get trafficRulesUsePresetSubtitle =>
-      'Choose a ready-made preset for domain and IP routing.';
-
-  @override
-  String get trafficRulesUsePresetAction => 'Use preset';
-
-  @override
-  String get trafficRulesDisablePreset => 'Disable preset';
-
-  @override
-  String get trafficRulesQuickSelection => 'Quick selection';
-
-  @override
-  String get trafficRulesDeveloperSection => 'Developer rules';
-
-  @override
-  String get trafficRulesDeveloperSubtitle =>
-      'Verified presets with a detailed breakdown.';
-
-  @override
-  String get trafficRulesVerified => 'Verified';
-
-  @override
-  String get trafficRulesVerifiedInfo =>
-      'Verified by MeowTeam. Created by the official developer.';
-
-  @override
-  String get trafficRulesOnlyOne =>
-      'Only one traffic rule can be active at a time to avoid conflicts.';
-
-  @override
-  String get trafficRulesAvailableOffline =>
-      'After preparation, the rule works without an internet connection.';
-
-  @override
-  String get trafficRulesDataReady => 'Rule data is ready';
-
-  @override
-  String get trafficRulesDataMissing => 'Rule data has not been prepared yet';
-
-  @override
-  String get trafficRulesUpdateData => 'Update rule data';
-
-  @override
-  String get trafficRulesDeleteData => 'Delete rule data';
-
-  @override
-  String get trafficRulesChinaTitle => 'China direct';
-
-  @override
-  String get trafficRulesChinaSubtitle =>
-      'Chinese domains and IP ranges go direct; other traffic uses the VPN.';
-
-  @override
-  String get trafficRulesChinaSummary =>
-      'Chinese domains and IP ranges go direct; other traffic uses the VPN.';
-
-  @override
-  String get trafficRulesAiTitle => 'AI services through VPN';
-
-  @override
-  String get trafficRulesAiSubtitle =>
-      'Popular AI services are routed through the VPN; everything else is direct.';
-
-  @override
-  String get trafficRulesAiSummary =>
-      'AI services use VPN; other traffic is direct.';
-
-  @override
-  String get trafficRulesSocialTitle => 'Social networks through VPN';
-
-  @override
-  String get trafficRulesSocialSubtitle =>
-      'Popular social networks and messengers are routed through the VPN; everything else is direct.';
-
-  @override
-  String get trafficRulesSocialSummary =>
-      'Social networks and messengers use VPN; other traffic is direct.';
-
-  @override
-  String get trafficRulesDetails => 'Rule details';
-
-  @override
-  String get trafficRulesDescription => 'Description';
-
-  @override
-  String get trafficRulesAuthor => 'Author';
-
-  @override
-  String get trafficRulesRoutingDomains => 'Domain routing';
-
-  @override
-  String get trafficRulesSettings => 'Settings';
-
-  @override
-  String get trafficRulesDefaultRoute => 'Everything else';
-
-  @override
-  String get trafficRulesDirect => 'Direct';
-
-  @override
-  String get trafficRulesVpn => 'Through VPN';
-
-  @override
-  String get trafficRulesIncludes => 'Includes';
-
-  @override
-  String get trafficRulesLocalNetwork => 'Local network always stays direct';
-
-  @override
-  String get trafficRulesChoose => 'Choose rule';
-
-  @override
-  String get trafficRulesChosen => 'Selected';
-
-  @override
-  String get trafficRulesDisabled => 'Disabled';
-
-  @override
-  String get trafficRulesPreparing => 'Preparing rule data…';
-
-  @override
-  String get trafficRulesApplying => 'Applying rule…';
-
-  @override
   String get logsJumpToLatest => 'Jump to latest entries';
 
   @override
@@ -3270,10 +2998,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get proxyGroupNoAvailableServersMessage =>
       'No servers in this group are available. Try another group or check again.';
-
-  @override
-  String get trafficRulesPrepareFailed =>
-      'Could not prepare rule data. Check your connection and try again.';
 
   @override
   String get remoteDownloadConnectTimeout =>
@@ -3295,10 +3019,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The download stopped because the server sent no data for 7 seconds. Try again.';
 
   @override
-  String get routingRuleFilesTitle => 'Rule files';
+  String get routingRuleFilesTitle => 'China routing data';
 
   @override
-  String get routingRuleFilesSettingsTitle => 'Rule files';
+  String get routingRuleFilesSettingsTitle => 'China routing data';
 
   @override
   String routingRuleFilesSettingsReady(int count) {
@@ -3307,21 +3031,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get routingRuleFilesSettingsPreparing =>
-      'Bundled files are prepared when you open this screen';
+      'China domain and IP data will be prepared automatically';
 
   @override
-  String get routingRuleFilesReadyTitle => 'Rule files are ready';
+  String get routingRuleFilesReadyTitle => 'China routing data is ready';
 
   @override
   String get routingRuleFilesReadySubtitle =>
-      'SRS files are stored on this device and work offline.';
+      'The domain and IP rule sets are stored locally and work offline.';
 
   @override
-  String get routingRuleFilesPreparingTitle => 'Preparing bundled files';
+  String get routingRuleFilesPreparingTitle => 'Preparing China routing data';
 
   @override
   String get routingRuleFilesPreparingSubtitle =>
-      'Preparing local SRS files for traffic rules.';
+      'Downloading the current China domain and IP rule sets.';
 
   @override
   String get routingRuleFilesSourceTitle => 'Source';
@@ -3336,11 +3060,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routingRuleFilesTotalSizeTitle => 'Total size';
 
   @override
-  String get routingRuleFilesScopeTitle => 'Russia is the current priority';
+  String get routingRuleFilesScopeTitle => 'China domains and IP ranges';
 
   @override
   String get routingRuleFilesScopeSubtitle =>
-      'The current set focuses on Russian networks and services. More regions will be added in future updates.';
+      'China domains and IP ranges connect directly in Rules mode. All other unmatched traffic uses the selected proxy.';
 
   @override
   String get routingRuleFilesOpenSourceFailed =>
@@ -3381,11 +3105,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get routingRuleFilesEmptySubtitle =>
       'Open this screen again or tap Update files.';
-
-  @override
-  String trafficRulesRuleCount(int count) {
-    return '$count categories';
-  }
 
   @override
   String get coreIntegrationTitle => 'Core and configuration';
@@ -3507,7 +3226,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reduce WebRTC traffic bypassing the proxy';
 
   @override
-  String get routingBypassLocalSummary => 'Local addresses connect directly';
+  String get routingBypassLocalSummary =>
+      'Only applies in Rules mode; Global mode sends tunnel traffic through the selected proxy.';
 
   @override
   String get routingAdBlockSummary => 'Local domain filter';
@@ -3534,4 +3254,175 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get batteryOptimizationOpenFailed =>
       'Could not open battery settings. Open them from Android settings.';
+
+  @override
+  String get routingModeTitle => 'Traffic routing mode';
+
+  @override
+  String get routingModeRules => 'Rules';
+
+  @override
+  String get routingModeGlobal => 'Global';
+
+  @override
+  String get routingModeRulesDescription =>
+      'China domains and IP ranges go direct. Your custom rules take priority; all unmatched traffic uses the selected proxy.';
+
+  @override
+  String get routingModeGlobalDescription =>
+      'All traffic handled by Etonify uses the selected proxy. Domain/IP rules and local-network bypass are ignored; app-based split routing still applies.';
+
+  @override
+  String get routingModePreparingChinaData =>
+      'Preparing China domain and IP rules…';
+
+  @override
+  String get routingModeChinaDataFailedHint =>
+      'China rule data is unavailable. Rule mode remains active; unmatched traffic safely falls back to the proxy.';
+
+  @override
+  String get customRoutingRulesTitle => 'Custom domain and IP rules';
+
+  @override
+  String get customRoutingRulesDescription =>
+      'Custom rules take priority over China direct rules. Unmatched traffic uses the proxy. Rules are ignored in Global mode. Move rules to change their priority.';
+
+  @override
+  String get customRoutingRulesEmptyTitle => 'No custom rules yet';
+
+  @override
+  String get customRoutingRulesEmptySubtitle =>
+      'Add a domain or IP range and choose whether it should use the proxy or connect directly.';
+
+  @override
+  String customRoutingRulesCount(int count) {
+    return '$count rules';
+  }
+
+  @override
+  String customRoutingRulesLimit(int count) {
+    return 'You can add up to $count rules.';
+  }
+
+  @override
+  String get customRoutingRuleAdd => 'Add rule';
+
+  @override
+  String get customRoutingRuleAddTitle => 'Add routing rule';
+
+  @override
+  String get customRoutingRuleEditTitle => 'Edit routing rule';
+
+  @override
+  String get customRoutingRuleActions => 'Rule actions';
+
+  @override
+  String get customRoutingRuleType => 'Match type';
+
+  @override
+  String get customRoutingRuleDomain => 'Domain';
+
+  @override
+  String get customRoutingRuleIp => 'IP address or CIDR';
+
+  @override
+  String get customRoutingRuleDomainLabel => 'Domain name';
+
+  @override
+  String get customRoutingRuleIpLabel => 'IP address or CIDR';
+
+  @override
+  String get customRoutingRuleDomainHint => 'example.com or *.example.com';
+
+  @override
+  String get customRoutingRuleIpHint => '203.0.113.0/24 or 2001:db8::/32';
+
+  @override
+  String get customRoutingRuleTarget => 'Route';
+
+  @override
+  String get customRoutingRuleProxy => 'Use proxy';
+
+  @override
+  String get customRoutingRuleDirect => 'Connect directly';
+
+  @override
+  String get customRoutingRuleInvalidDomain =>
+      'Enter a valid domain name, such as example.com.';
+
+  @override
+  String get customRoutingRuleInvalidIp =>
+      'Enter a valid IPv4/IPv6 address or CIDR range.';
+
+  @override
+  String get customRoutingRuleInvalidValue => 'The rule value is invalid.';
+
+  @override
+  String get customRoutingRuleDuplicate =>
+      'A rule with this domain or IP already exists.';
+
+  @override
+  String get customRoutingRuleSave => 'Save';
+
+  @override
+  String get customRoutingRuleEdit => 'Edit';
+
+  @override
+  String get customRoutingRuleDelete => 'Delete';
+
+  @override
+  String get customRoutingRuleMoveUp => 'Move up (higher priority)';
+
+  @override
+  String get customRoutingRuleMoveDown => 'Move down (lower priority)';
+
+  @override
+  String get routingRuleFilesUpdateFailed =>
+      'Unable to prepare China rule data. Check your connection and try again.';
+
+  @override
+  String get routingRuleFilesPreparingHint =>
+      'Downloading and validating the China domain and IP rule sets…';
+
+  @override
+  String routingRuleFilesDownloadProgress(String completed, String total) {
+    return 'Downloaded $completed of $total.';
+  }
+
+  @override
+  String routingRuleFilesItemsProgress(int completed, int total) {
+    return 'Processed $completed of $total items.';
+  }
+
+  @override
+  String routingRuleFilesItemsProcessed(int completed) {
+    return 'Processed $completed items.';
+  }
+
+  @override
+  String get routingRuleFilesStageChecking => 'Checking China rule data…';
+
+  @override
+  String get routingRuleFilesStageDownloading => 'Downloading China rule data…';
+
+  @override
+  String get routingRuleFilesStageVerifying => 'Validating rule files…';
+
+  @override
+  String get routingRuleFilesStageExtracting => 'Preparing rule files…';
+
+  @override
+  String get routingRuleFilesStageCategories => 'Updating rule data…';
+
+  @override
+  String get routingRuleFilesStageCompiling => 'Checking local rules…';
+
+  @override
+  String get routingRuleFilesStageActivating => 'Activating rule data…';
+
+  @override
+  String get routingRuleFilesStageComplete => 'China rule data is ready';
+
+  @override
+  String get verifiedBadgeTooltip => 'Verified';
 }

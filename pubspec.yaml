@@ -86,12 +86,6 @@ flutter:
     - assets/images/logo.svg
     - assets/images/world_map.png
     - assets/images/team/
-    - assets/route_data/russia/geoip-ru-blocked.srs
-    - assets/route_data/russia/geoip-ru-whitelist.srs
-    - assets/route_data/russia/geoip-ru.srs
-    - assets/route_data/russia/geosite-category-ru.srs
-    - assets/route_data/russia/geosite-ru-blocked.srs
-    - assets/route_data/russia/geosite-ru-available-only-inside.srs
 
   # To add assets to your application, add an assets section, like this:
   # assets:

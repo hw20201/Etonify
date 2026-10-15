@@ -7,7 +7,8 @@ import 'package:crypto/crypto.dart';
 import 'package:meow_client/app/app_background_tasks.dart';
 import 'package:meow_client/app/runtime_lifecycle_controller.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/logging/app_log_store.dart';
 import 'package:meow_client/models/subscription.dart';
 import 'package:meow_client/models/core_settings.dart';
@@ -128,22 +129,13 @@ class SingboxConfigCoordinatorSnapshot {
     required this.adBlockEnabled,
     required this.adBlockBlockRuleSetPath,
     required this.adBlockAllowRuleSetPath,
-    required this.useRussiaRouteData,
     required this.routeDataAvailable,
     required this.routeDataSourceKind,
     required this.routeDataRelease,
-    required this.russiaGeositeRuBlockedPath,
-    required this.russiaGeositeRuAvailableOnlyInsidePath,
-    required this.russiaGeositeCategoryRuPath,
-    required this.russiaGeoipRuBlockedPath,
-    required this.russiaGeoipRuWhitelistPath,
-    required this.russiaGeoipRuPath,
-    required this.russiaCuratedDirectServicesPath,
-    required this.russiaAiServicesPath,
-    this.russiaSocialServicesPath,
     this.chinaGeositePath,
     this.chinaGeoipPath,
-    this.trafficRulePreset = TrafficRulePreset.none,
+    this.routingMode = TrafficRoutingMode.rules,
+    this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
     required this.splitRoutingPackages,
@@ -189,22 +181,13 @@ class SingboxConfigCoordinatorSnapshot {
   final bool adBlockEnabled;
   final String? adBlockBlockRuleSetPath;
   final String? adBlockAllowRuleSetPath;
-  final bool useRussiaRouteData;
   final bool routeDataAvailable;
   final String routeDataSourceKind;
   final String? routeDataRelease;
-  final String? russiaGeositeRuBlockedPath;
-  final String? russiaGeositeRuAvailableOnlyInsidePath;
-  final String? russiaGeositeCategoryRuPath;
-  final String? russiaGeoipRuBlockedPath;
-  final String? russiaGeoipRuWhitelistPath;
-  final String? russiaGeoipRuPath;
-  final String? russiaCuratedDirectServicesPath;
-  final String? russiaAiServicesPath;
-  final String? russiaSocialServicesPath;
   final String? chinaGeositePath;
   final String? chinaGeoipPath;
-  final TrafficRulePreset trafficRulePreset;
+  final TrafficRoutingMode routingMode;
+  final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
   final List<String> splitRoutingPackages;
@@ -219,15 +202,10 @@ class SingboxConfigCoordinatorSnapshot {
   final bool markAllServersRussia;
   final LibboxCapabilities capabilities;
 
-  bool get routeDataPathsValid => switch (trafficRulePreset) {
-    TrafficRulePreset.none => true,
-    TrafficRulePreset.chinaDirect =>
-      chinaGeositePath?.isNotEmpty == true &&
-          chinaGeoipPath?.isNotEmpty == true,
-    TrafficRulePreset.aiViaVpn => russiaAiServicesPath?.isNotEmpty == true,
-    TrafficRulePreset.socialViaVpn =>
-      russiaSocialServicesPath?.isNotEmpty == true,
-  };
+  bool get routeDataPathsValid =>
+      routingMode == TrafficRoutingMode.global ||
+      (chinaGeositePath?.isNotEmpty == true &&
+          chinaGeoipPath?.isNotEmpty == true);
 }
 
 typedef SingboxConfigCoordinatorSnapshotReader =
@@ -991,9 +969,9 @@ class SingboxConfigCoordinator {
     AppLogStore.info(
       'sing-box config diagnostics',
       'reason=$reason '
-          'useRussiaRouteData=${snapshot.useRussiaRouteData} '
-          'trafficRulePreset=${snapshot.trafficRulePreset.storageValue} '
-          'routeDataAvailable=${snapshot.routeDataAvailable} '
+          'routingMode=${snapshot.routingMode.storageValue} '
+          'customRoutingRules=${snapshot.customRoutingRules.length} '
+          'chinaRouteDataAvailable=${snapshot.routeDataAvailable} '
           'routeDataPathsValid=${snapshot.routeDataPathsValid} '
           'routeDataSource=${snapshot.routeDataSourceKind} '
           'routeDataRelease=${snapshot.routeDataRelease ?? ''} '
@@ -1130,20 +1108,10 @@ class SingboxConfigCoordinator {
       adBlockEnabled: snapshot.adBlockEnabled,
       adBlockBlockRuleSetPath: snapshot.adBlockBlockRuleSetPath,
       adBlockAllowRuleSetPath: snapshot.adBlockAllowRuleSetPath,
-      useRussiaRouteData: snapshot.useRussiaRouteData,
-      russiaGeositeRuBlockedPath: snapshot.russiaGeositeRuBlockedPath,
-      russiaGeositeRuAvailableOnlyInsidePath:
-          snapshot.russiaGeositeRuAvailableOnlyInsidePath,
-      russiaGeositeCategoryRuPath: snapshot.russiaGeositeCategoryRuPath,
-      russiaGeoipRuBlockedPath: snapshot.russiaGeoipRuBlockedPath,
-      russiaGeoipRuWhitelistPath: snapshot.russiaGeoipRuWhitelistPath,
-      russiaGeoipRuPath: snapshot.russiaGeoipRuPath,
-      russiaCuratedDirectServicesPath: snapshot.russiaCuratedDirectServicesPath,
-      russiaAiServicesPath: snapshot.russiaAiServicesPath,
-      russiaSocialServicesPath: snapshot.russiaSocialServicesPath,
       chinaGeositePath: snapshot.chinaGeositePath,
       chinaGeoipPath: snapshot.chinaGeoipPath,
-      trafficRulePreset: snapshot.trafficRulePreset,
+      routingMode: snapshot.routingMode,
+      customRoutingRules: snapshot.customRoutingRules,
       bypassLocalNetwork: snapshot.bypassLocalNetwork,
       splitRoutingMode: snapshot.splitRoutingMode,
       splitRoutingPackages: snapshot.splitRoutingPackages,

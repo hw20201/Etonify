@@ -7,7 +7,8 @@ import 'package:meow_client/core/lowest_proxy_groups.dart';
 import 'package:meow_client/core/outbound_location.dart';
 import 'package:meow_client/core/proxy_selection_catalog.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/subscription/outbound_schema.dart';
 import 'package:meow_client/data/subscription/outbound_support.dart';
 import 'package:meow_client/models/app_view_models.dart';
@@ -326,19 +327,10 @@ class SingboxConfigBuildInput {
     required this.adBlockEnabled,
     required this.adBlockBlockRuleSetPath,
     required this.adBlockAllowRuleSetPath,
-    required this.useRussiaRouteData,
-    required this.russiaGeositeRuBlockedPath,
-    required this.russiaGeositeRuAvailableOnlyInsidePath,
-    required this.russiaGeositeCategoryRuPath,
-    required this.russiaGeoipRuBlockedPath,
-    required this.russiaGeoipRuWhitelistPath,
-    required this.russiaGeoipRuPath,
-    required this.russiaCuratedDirectServicesPath,
-    required this.russiaAiServicesPath,
-    required this.russiaSocialServicesPath,
     this.chinaGeositePath,
     this.chinaGeoipPath,
-    this.trafficRulePreset = TrafficRulePreset.none,
+    this.routingMode = TrafficRoutingMode.rules,
+    this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
     required this.splitRoutingPackages,
@@ -384,19 +376,10 @@ class SingboxConfigBuildInput {
   final bool adBlockEnabled;
   final String? adBlockBlockRuleSetPath;
   final String? adBlockAllowRuleSetPath;
-  final bool useRussiaRouteData;
-  final String? russiaGeositeRuBlockedPath;
-  final String? russiaGeositeRuAvailableOnlyInsidePath;
-  final String? russiaGeositeCategoryRuPath;
-  final String? russiaGeoipRuBlockedPath;
-  final String? russiaGeoipRuWhitelistPath;
-  final String? russiaGeoipRuPath;
-  final String? russiaCuratedDirectServicesPath;
-  final String? russiaAiServicesPath;
-  final String? russiaSocialServicesPath;
   final String? chinaGeositePath;
   final String? chinaGeoipPath;
-  final TrafficRulePreset trafficRulePreset;
+  final TrafficRoutingMode routingMode;
+  final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
   final List<String> splitRoutingPackages;
@@ -1020,20 +1003,10 @@ SingboxConfigBuildResult buildSingboxConfig(SingboxConfigBuildInput input) {
     adBlockEnabled: input.adBlockEnabled,
     adBlockBlockRuleSetPath: input.adBlockBlockRuleSetPath,
     adBlockAllowRuleSetPath: input.adBlockAllowRuleSetPath,
-    useRussiaRouteData: input.useRussiaRouteData,
-    russiaGeositeRuBlockedPath: input.russiaGeositeRuBlockedPath,
-    russiaGeositeRuAvailableOnlyInsidePath:
-        input.russiaGeositeRuAvailableOnlyInsidePath,
-    russiaGeositeCategoryRuPath: input.russiaGeositeCategoryRuPath,
-    russiaGeoipRuBlockedPath: input.russiaGeoipRuBlockedPath,
-    russiaGeoipRuWhitelistPath: input.russiaGeoipRuWhitelistPath,
-    russiaGeoipRuPath: input.russiaGeoipRuPath,
-    russiaCuratedDirectServicesPath: input.russiaCuratedDirectServicesPath,
-    russiaAiServicesPath: input.russiaAiServicesPath,
-    russiaSocialServicesPath: input.russiaSocialServicesPath,
     chinaGeositePath: input.chinaGeositePath,
     chinaGeoipPath: input.chinaGeoipPath,
-    trafficRulePreset: input.trafficRulePreset,
+    routingMode: input.routingMode,
+    customRoutingRules: input.customRoutingRules,
     bypassLocalNetwork: input.bypassLocalNetwork,
     splitRoutingMode: input.splitRoutingMode,
     splitRoutingPackages: input.splitRoutingPackages,

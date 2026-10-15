@@ -5,16 +5,13 @@ import 'package:gap/gap.dart';
 import 'package:meow_client/core/formatting.dart';
 import 'package:meow_client/core/network/remote_download_error_message.dart';
 import 'package:meow_client/core/widgets/app_notice.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Shows the on-device sing-box rule-set files separately from preset choice.
-///
-/// Rule selection stays lightweight: this screen owns preparing and refreshing
-/// the bundled `.srs` files, while [TrafficRulesPage] only applies one preset.
+/// Shows the locally installed China domain and IP rule sets used by rule mode.
 class RoutingRuleFilesPage extends StatefulWidget {
   const RoutingRuleFilesPage({
     super.key,
@@ -23,9 +20,9 @@ class RoutingRuleFilesPage extends StatefulWidget {
     this.activity,
   });
 
-  final RussiaRouteDataStatus currentStatus;
-  final Future<RussiaRouteDataStatus> Function() onRefresh;
-  final RussiaRouteUpdateActivity? activity;
+  final ChinaRouteDataStatus currentStatus;
+  final Future<ChinaRouteDataStatus> Function() onRefresh;
+  final ChinaRouteUpdateActivity? activity;
 
   @override
   State<RoutingRuleFilesPage> createState() => _RoutingRuleFilesPageState();
@@ -33,18 +30,18 @@ class RoutingRuleFilesPage extends StatefulWidget {
 
 class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
   static final Uri _sourceUri = Uri.parse(
-    RussiaRouteDataService.sourceRepositoryUrl,
+    ChinaRouteDataService.chinaRouteDataSourceUrl,
   );
 
-  late RussiaRouteDataStatus _status;
-  List<RussiaRouteDataFile> _files = const <RussiaRouteDataFile>[];
-  RussiaRouteUpdateProgress? _progress;
+  late ChinaRouteDataStatus _status;
+  List<ChinaRouteDataFile> _files = const <ChinaRouteDataFile>[];
+  ChinaRouteUpdateProgress? _progress;
   DateTime? _operationStartedAt;
   Timer? _etaTicker;
   bool _busy = false;
   bool _refreshingHere = false;
-  RussiaRouteUpdateActivity get _activity =>
-      widget.activity ?? RussiaRouteDataService.instance;
+  ChinaRouteUpdateActivity get _activity =>
+      widget.activity ?? ChinaRouteDataService.instance;
 
   @override
   void initState() {
@@ -55,7 +52,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
     _progress = service.progress.value;
     service.progress.addListener(_handleProgress);
     unawaited(_loadFiles());
-    if (!_status.available && !_busy) {
+    if (!_status.chinaRouteDataAvailable && !_busy) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           unawaited(_refresh(initialPreparation: true));
@@ -68,7 +65,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
   void didUpdateWidget(covariant RoutingRuleFilesPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.activity, widget.activity)) {
-      (oldWidget.activity ?? RussiaRouteDataService.instance).progress
+      (oldWidget.activity ?? ChinaRouteDataService.instance).progress
           .removeListener(_handleProgress);
       _activity.progress.addListener(_handleProgress);
       _handleProgress();
@@ -103,7 +100,12 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
   }
 
   Future<void> _loadFiles() async {
-    final files = await RussiaRouteDataService.instance.listInstalledFiles();
+    final files = (await ChinaRouteDataService.instance.listInstalledFiles())
+        .where(
+          (file) =>
+              file.name == 'geosite-cn.srs' || file.name == 'geoip-cn.srs',
+        )
+        .toList(growable: false);
     if (!mounted) return;
     setState(() => _files = files);
   }
@@ -145,7 +147,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
         AppNotice.show(
           context,
           remoteDownloadErrorMessage(AppLocalizations.of(context), error) ??
-              AppLocalizations.of(context).trafficRulesPrepareFailed,
+              AppLocalizations.of(context).routingRuleFilesUpdateFailed,
           tone: AppNoticeTone.error,
         );
       }
@@ -165,10 +167,10 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
 
   String _progressText(AppLocalizations l10n) {
     final progress = _progress;
-    if (progress == null) return l10n.russiaRoutesPreparingHint;
+    if (progress == null) return l10n.routingRuleFilesPreparingHint;
     final isRetrying = progress.isRetryingWithoutVpn;
     if (progress.totalBytes > 0) {
-      final text = l10n.russiaRoutesDownloadProgress(
+      final text = l10n.routingRuleFilesDownloadProgress(
         formatRuleSetBytes(progress.completedBytes),
         formatRuleSetBytes(progress.totalBytes),
       );
@@ -177,7 +179,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
           : text;
     }
     if (progress.totalItems > 0) {
-      final text = l10n.russiaRoutesItemsProgress(
+      final text = l10n.routingRuleFilesItemsProgress(
         progress.completedItems,
         progress.totalItems,
       );
@@ -186,16 +188,16 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
           : text;
     }
     if (progress.completedItems > 0) {
-      final text = l10n.russiaRoutesItemsProcessed(progress.completedItems);
+      final text = l10n.routingRuleFilesItemsProcessed(progress.completedItems);
       return isRetrying
           ? '${l10n.remoteDownloadRetryWithoutVpn} • $text'
           : text;
     }
     if (isRetrying ||
-        progress.stage == RussiaRouteUpdateStage.retryingWithoutVpn) {
+        progress.stage == ChinaRouteUpdateStage.retryingWithoutVpn) {
       return l10n.remoteDownloadRetryWithoutVpnHint;
     }
-    return l10n.russiaRoutesPreparingHint;
+    return l10n.routingRuleFilesPreparingHint;
   }
 
   String? _etaText(AppLocalizations l10n) {
@@ -251,7 +253,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
                   title: Text(
                     _busy
                         ? _stageLabel(l10n, _progress?.stage)
-                        : _status.available
+                        : _status.chinaRouteDataAvailable
                         ? l10n.routingRuleFilesReadyTitle
                         : l10n.routingRuleFilesPreparingTitle,
                   ),
@@ -263,7 +265,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
                         Text(
                           _busy
                               ? _progressText(l10n)
-                              : _status.available
+                              : _status.chinaRouteDataAvailable
                               ? l10n.routingRuleFilesReadySubtitle
                               : l10n.routingRuleFilesPreparingSubtitle,
                         ),
@@ -291,7 +293,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
                 _RouteMetadataTile(
                   icon: Icons.source_rounded,
                   label: l10n.routingRuleFilesSourceTitle,
-                  value: l10n.russiaRoutesLiveSource,
+                  value: ChinaRouteDataService.chinaRouteDataSourceName,
                   trailingIcon: Icons.open_in_new_rounded,
                   onTap: _openSource,
                   link: true,
@@ -460,7 +462,7 @@ class _RouteMetadataTile extends StatelessWidget {
 class _RoutingRuleFileTile extends StatelessWidget {
   const _RoutingRuleFileTile({required this.file});
 
-  final RussiaRouteDataFile file;
+  final ChinaRouteDataFile file;
 
   @override
   Widget build(BuildContext context) {
@@ -495,24 +497,19 @@ class _RoutingRuleFileTile extends StatelessWidget {
   }
 }
 
-String _stageLabel(
-  AppLocalizations l10n,
-  RussiaRouteUpdateStage? stage,
-) => switch (stage) {
-  RussiaRouteUpdateStage.checking => l10n.russiaRoutesStageChecking,
-  RussiaRouteUpdateStage.retryingWithoutVpn =>
-    l10n.remoteDownloadRetryWithoutVpn,
-  RussiaRouteUpdateStage.downloadingPackage =>
-    l10n.russiaRoutesStageDownloading,
-  RussiaRouteUpdateStage.verifyingPackage => l10n.russiaRoutesStageVerifying,
-  RussiaRouteUpdateStage.extractingPackage => l10n.russiaRoutesStageExtracting,
-  RussiaRouteUpdateStage.downloadingCategories =>
-    l10n.russiaRoutesStageCategories,
-  RussiaRouteUpdateStage.compiling => l10n.russiaRoutesStageCompiling,
-  RussiaRouteUpdateStage.activating => l10n.russiaRoutesStageActivating,
-  RussiaRouteUpdateStage.complete => l10n.russiaRoutesStageComplete,
-  null => l10n.russiaRoutesPreparingStatus,
-};
+String _stageLabel(AppLocalizations l10n, ChinaRouteUpdateStage? stage) =>
+    switch (stage) {
+      ChinaRouteUpdateStage.checking => l10n.routingRuleFilesStageChecking,
+      ChinaRouteUpdateStage.retryingWithoutVpn =>
+        l10n.remoteDownloadRetryWithoutVpn,
+      ChinaRouteUpdateStage.downloadingRuleSets =>
+        l10n.routingRuleFilesStageDownloading,
+      ChinaRouteUpdateStage.verifyingRuleSets =>
+        l10n.routingRuleFilesStageVerifying,
+      ChinaRouteUpdateStage.activating => l10n.routingRuleFilesStageActivating,
+      ChinaRouteUpdateStage.complete => l10n.routingRuleFilesStageComplete,
+      null => l10n.routingRuleFilesStageChecking,
+    };
 
 String _shortDuration(AppLocalizations l10n, int seconds) {
   if (seconds >= 60) {
@@ -522,7 +519,7 @@ String _shortDuration(AppLocalizations l10n, int seconds) {
 }
 
 String _formatRouteVersion(String value) {
-  final timestamp = parseRussiaRouteVersionTimestamp(value);
+  final timestamp = parseChinaRouteVersionTimestamp(value);
   if (timestamp == null) return value.replaceFirst('bundled-', '');
   final month = timestamp.month.toString().padLeft(2, '0');
   final day = timestamp.day.toString().padLeft(2, '0');

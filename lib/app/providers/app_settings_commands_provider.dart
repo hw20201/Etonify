@@ -1,18 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 
 typedef SetBlockLeaksCommand = void Function(bool value);
 typedef SetAdBlockEnabledCommand = void Function(bool value);
 typedef DownloadAdBlockRuleSetCommand = Future<AdBlockRuleSetStatus> Function();
 typedef DeleteAdBlockRuleSetCommand = Future<AdBlockRuleSetStatus> Function();
-typedef RefreshRoutingRuleDataCommand =
-    Future<RussiaRouteDataStatus> Function();
-typedef SetTrafficRulePresetCommand = void Function(TrafficRulePreset value);
-typedef PrepareTrafficRuleDataCommand =
-    Future<RussiaRouteDataStatus> Function(TrafficRulePreset preset);
+typedef RefreshRoutingRuleDataCommand = Future<ChinaRouteDataStatus> Function();
+typedef SetTrafficRoutingModeCommand = void Function(TrafficRoutingMode value);
+typedef SetCustomRoutingRulesCommand =
+    void Function(List<CustomRoutingRule> value);
+typedef PrepareChinaRouteDataCommand = Future<ChinaRouteDataStatus> Function();
 typedef SetRussiaDnsDirectResolverCommand = void Function(String value);
 typedef SetBypassLocalNetworkCommand = void Function(bool value);
 typedef SetSplitRoutingModeCommand = void Function(SplitRoutingMode value);
@@ -55,8 +56,9 @@ class AppSettingsCommands {
   DownloadAdBlockRuleSetCommand? _downloadAdBlockRuleSet;
   DeleteAdBlockRuleSetCommand? _deleteAdBlockRuleSet;
   RefreshRoutingRuleDataCommand? _refreshRoutingRuleData;
-  SetTrafficRulePresetCommand? _setTrafficRulePreset;
-  PrepareTrafficRuleDataCommand? _prepareTrafficRuleData;
+  SetTrafficRoutingModeCommand? _setTrafficRoutingMode;
+  SetCustomRoutingRulesCommand? _setCustomRoutingRules;
+  PrepareChinaRouteDataCommand? _prepareChinaRouteData;
   SetRussiaDnsDirectResolverCommand? _setRussiaDnsDirectResolver;
   SetBypassLocalNetworkCommand? _setBypassLocalNetwork;
   SetSplitRoutingModeCommand? _setSplitRoutingMode;
@@ -196,8 +198,9 @@ class AppSettingsCommands {
       _downloadAdBlockRuleSet != null &&
       _deleteAdBlockRuleSet != null &&
       _refreshRoutingRuleData != null &&
-      _setTrafficRulePreset != null &&
-      _prepareTrafficRuleData != null &&
+      _setTrafficRoutingMode != null &&
+      _setCustomRoutingRules != null &&
+      _prepareChinaRouteData != null &&
       _setRussiaDnsDirectResolver != null &&
       _setBypassLocalNetwork != null &&
       _setSplitRoutingMode != null &&
@@ -210,8 +213,9 @@ class AppSettingsCommands {
     required DownloadAdBlockRuleSetCommand downloadAdBlockRuleSet,
     required DeleteAdBlockRuleSetCommand deleteAdBlockRuleSet,
     required RefreshRoutingRuleDataCommand refreshRoutingRuleData,
-    required SetTrafficRulePresetCommand setTrafficRulePreset,
-    required PrepareTrafficRuleDataCommand prepareTrafficRuleData,
+    required SetTrafficRoutingModeCommand setTrafficRoutingMode,
+    required SetCustomRoutingRulesCommand setCustomRoutingRules,
+    required PrepareChinaRouteDataCommand prepareChinaRouteData,
     required SetRussiaDnsDirectResolverCommand setRussiaDnsDirectResolver,
     required SetBypassLocalNetworkCommand setBypassLocalNetwork,
     required SetSplitRoutingModeCommand setSplitRoutingMode,
@@ -224,8 +228,9 @@ class AppSettingsCommands {
     _downloadAdBlockRuleSet = downloadAdBlockRuleSet;
     _deleteAdBlockRuleSet = deleteAdBlockRuleSet;
     _refreshRoutingRuleData = refreshRoutingRuleData;
-    _setTrafficRulePreset = setTrafficRulePreset;
-    _prepareTrafficRuleData = prepareTrafficRuleData;
+    _setTrafficRoutingMode = setTrafficRoutingMode;
+    _setCustomRoutingRules = setCustomRoutingRules;
+    _prepareChinaRouteData = prepareChinaRouteData;
     _setRussiaDnsDirectResolver = setRussiaDnsDirectResolver;
     _setBypassLocalNetwork = setBypassLocalNetwork;
     _setSplitRoutingMode = setSplitRoutingMode;
@@ -240,8 +245,9 @@ class AppSettingsCommands {
     _downloadAdBlockRuleSet = null;
     _deleteAdBlockRuleSet = null;
     _refreshRoutingRuleData = null;
-    _setTrafficRulePreset = null;
-    _prepareTrafficRuleData = null;
+    _setTrafficRoutingMode = null;
+    _setCustomRoutingRules = null;
+    _prepareChinaRouteData = null;
     _setRussiaDnsDirectResolver = null;
     _setBypassLocalNetwork = null;
     _setSplitRoutingMode = null;
@@ -270,25 +276,26 @@ class AppSettingsCommands {
     return await command();
   }
 
-  Future<RussiaRouteDataStatus> refreshRoutingRuleData() async {
+  Future<ChinaRouteDataStatus> refreshRoutingRuleData() async {
     final command = _refreshRoutingRuleData;
     if (command == null) {
-      return const RussiaRouteDataStatus.unavailable();
+      return const ChinaRouteDataStatus.unavailable();
     }
     return await command();
   }
 
-  void setTrafficRulePreset(TrafficRulePreset value) =>
-      _setTrafficRulePreset?.call(value);
+  void setTrafficRoutingMode(TrafficRoutingMode value) =>
+      _setTrafficRoutingMode?.call(value);
 
-  Future<RussiaRouteDataStatus> prepareTrafficRuleData(
-    TrafficRulePreset preset,
-  ) async {
-    final command = _prepareTrafficRuleData;
+  void setCustomRoutingRules(List<CustomRoutingRule> value) =>
+      _setCustomRoutingRules?.call(value);
+
+  Future<ChinaRouteDataStatus> prepareChinaRouteData() async {
+    final command = _prepareChinaRouteData;
     if (command == null) {
-      return const RussiaRouteDataStatus.unavailable();
+      return const ChinaRouteDataStatus.unavailable();
     }
-    return await command(preset);
+    return await command();
   }
 
   void setRussiaDnsDirectResolver(String value) =>

@@ -4573,213 +4573,6 @@ abstract class AppLocalizations {
   /// **'Route private and LAN addresses directly'**
   String get bypassLocalNetworkSubtitle;
 
-  /// No description provided for @russiaRoutesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Smart routing'**
-  String get russiaRoutesTitle;
-
-  /// No description provided for @russiaRoutesRunetFreedomBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'runetfreedom'**
-  String get russiaRoutesRunetFreedomBadge;
-
-  /// No description provided for @russiaRoutesDomainListBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'domain-list-community'**
-  String get russiaRoutesDomainListBadge;
-
-  /// No description provided for @russiaRoutesSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Russian services go direct while blocked resources stay on VPN.'**
-  String get russiaRoutesSubtitle;
-
-  /// No description provided for @russiaRoutesInstallAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Download rules'**
-  String get russiaRoutesInstallAction;
-
-  /// No description provided for @russiaRoutesReinstallAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Update'**
-  String get russiaRoutesReinstallAction;
-
-  /// No description provided for @russiaRoutesUpdateAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Check now'**
-  String get russiaRoutesUpdateAction;
-
-  /// No description provided for @russiaRoutesUpdateAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'A new rules version is available: {version}'**
-  String russiaRoutesUpdateAvailable(String version);
-
-  /// No description provided for @russiaRoutesLatest.
-  ///
-  /// In en, this message translates to:
-  /// **'The latest rules version is installed.'**
-  String get russiaRoutesLatest;
-
-  /// No description provided for @russiaRoutesEnableTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Enable smart routing'**
-  String get russiaRoutesEnableTitle;
-
-  /// No description provided for @russiaRoutesEnabledSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply the prepared rules to the VPN connection.'**
-  String get russiaRoutesEnabledSubtitle;
-
-  /// No description provided for @russiaRoutesMissingSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'The bundled database works offline and is connected when enabled.'**
-  String get russiaRoutesMissingSubtitle;
-
-  /// No description provided for @russiaRoutesPreparingStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Updating rules...'**
-  String get russiaRoutesPreparingStatus;
-
-  /// No description provided for @russiaRoutesPreparingHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloading the latest database, verifying SRS files, and safely replacing local rules.'**
-  String get russiaRoutesPreparingHint;
-
-  /// No description provided for @russiaRoutesStageChecking.
-  ///
-  /// In en, this message translates to:
-  /// **'Checking rule version…'**
-  String get russiaRoutesStageChecking;
-
-  /// No description provided for @russiaRoutesStageDownloading.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloading rule archive…'**
-  String get russiaRoutesStageDownloading;
-
-  /// No description provided for @russiaRoutesStageVerifying.
-  ///
-  /// In en, this message translates to:
-  /// **'Verifying archive integrity…'**
-  String get russiaRoutesStageVerifying;
-
-  /// No description provided for @russiaRoutesStageExtracting.
-  ///
-  /// In en, this message translates to:
-  /// **'Extracting SRS files…'**
-  String get russiaRoutesStageExtracting;
-
-  /// No description provided for @russiaRoutesStageCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'Updating service lists…'**
-  String get russiaRoutesStageCategories;
-
-  /// No description provided for @russiaRoutesStageCompiling.
-  ///
-  /// In en, this message translates to:
-  /// **'Compiling local rules…'**
-  String get russiaRoutesStageCompiling;
-
-  /// No description provided for @russiaRoutesStageActivating.
-  ///
-  /// In en, this message translates to:
-  /// **'Replacing rules safely…'**
-  String get russiaRoutesStageActivating;
-
-  /// No description provided for @russiaRoutesStageComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Rules updated'**
-  String get russiaRoutesStageComplete;
-
-  /// No description provided for @russiaRoutesDownloadProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloaded {completed} of {total}.'**
-  String russiaRoutesDownloadProgress(String completed, String total);
-
-  /// No description provided for @russiaRoutesItemsProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'Processed lists: {completed} of {total}.'**
-  String russiaRoutesItemsProgress(int completed, int total);
-
-  /// No description provided for @russiaRoutesItemsProcessed.
-  ///
-  /// In en, this message translates to:
-  /// **'Processed lists: {completed}.'**
-  String russiaRoutesItemsProcessed(int completed);
-
-  /// No description provided for @russiaRoutesMissingStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Rules are not installed yet'**
-  String get russiaRoutesMissingStatus;
-
-  /// No description provided for @russiaRoutesMissingHint.
-  ///
-  /// In en, this message translates to:
-  /// **'The bundled database is connected first, then a fresh version is checked and downloaded in the background.'**
-  String get russiaRoutesMissingHint;
-
-  /// No description provided for @russiaRoutesReadyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Rules are stored locally. New versions are checked on startup, at most once a day.'**
-  String get russiaRoutesReadyHint;
-
-  /// No description provided for @russiaRoutesReadyStatus.
-  ///
-  /// In en, this message translates to:
-  /// **'Ready · {versionTag}'**
-  String russiaRoutesReadyStatus(String versionTag);
-
-  /// No description provided for @russiaRoutesLiveSource.
-  ///
-  /// In en, this message translates to:
-  /// **'runetfreedom'**
-  String get russiaRoutesLiveSource;
-
-  /// No description provided for @russiaRoutesBundledSource.
-  ///
-  /// In en, this message translates to:
-  /// **'bundled database'**
-  String get russiaRoutesBundledSource;
-
-  /// No description provided for @russiaRoutesSourceMeta.
-  ///
-  /// In en, this message translates to:
-  /// **'Source: {source} · {verifiedAt} · files: {fileCount}'**
-  String russiaRoutesSourceMeta(
-    String source,
-    String verifiedAt,
-    int fileCount,
-  );
-
-  /// No description provided for @russiaRoutesMeta.
-  ///
-  /// In en, this message translates to:
-  /// **'runetfreedom: {installedAt} · domain-list-community: {domainListUpdatedAt} · categories: {categoryCount} · domains: {domainCount}'**
-  String russiaRoutesMeta(
-    String installedAt,
-    String domainListUpdatedAt,
-    int categoryCount,
-    int domainCount,
-  );
-
   /// No description provided for @adBlockTitle.
   ///
   /// In en, this message translates to:
@@ -5516,270 +5309,6 @@ abstract class AppLocalizations {
   /// **'Failed to start VPN.'**
   String get vpnStartFailed;
 
-  /// No description provided for @trafficRulesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Traffic rules'**
-  String get trafficRulesTitle;
-
-  /// No description provided for @trafficRulesSettingsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Traffic rules'**
-  String get trafficRulesSettingsTitle;
-
-  /// No description provided for @trafficRulesSettingsSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose one verified rule for domains and IP routes.'**
-  String get trafficRulesSettingsSubtitle;
-
-  /// No description provided for @trafficRulesCurrentLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Active rule'**
-  String get trafficRulesCurrentLabel;
-
-  /// No description provided for @trafficRulesNone.
-  ///
-  /// In en, this message translates to:
-  /// **'Not selected'**
-  String get trafficRulesNone;
-
-  /// No description provided for @trafficRulesUsePresetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Use traffic rules'**
-  String get trafficRulesUsePresetTitle;
-
-  /// No description provided for @trafficRulesUsePresetSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a ready-made preset for domain and IP routing.'**
-  String get trafficRulesUsePresetSubtitle;
-
-  /// No description provided for @trafficRulesUsePresetAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Use preset'**
-  String get trafficRulesUsePresetAction;
-
-  /// No description provided for @trafficRulesDisablePreset.
-  ///
-  /// In en, this message translates to:
-  /// **'Disable preset'**
-  String get trafficRulesDisablePreset;
-
-  /// No description provided for @trafficRulesQuickSelection.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick selection'**
-  String get trafficRulesQuickSelection;
-
-  /// No description provided for @trafficRulesDeveloperSection.
-  ///
-  /// In en, this message translates to:
-  /// **'Developer rules'**
-  String get trafficRulesDeveloperSection;
-
-  /// No description provided for @trafficRulesDeveloperSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Verified presets with a detailed breakdown.'**
-  String get trafficRulesDeveloperSubtitle;
-
-  /// No description provided for @trafficRulesVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Verified'**
-  String get trafficRulesVerified;
-
-  /// No description provided for @trafficRulesVerifiedInfo.
-  ///
-  /// In en, this message translates to:
-  /// **'Verified by MeowTeam. Created by the official developer.'**
-  String get trafficRulesVerifiedInfo;
-
-  /// No description provided for @trafficRulesOnlyOne.
-  ///
-  /// In en, this message translates to:
-  /// **'Only one traffic rule can be active at a time to avoid conflicts.'**
-  String get trafficRulesOnlyOne;
-
-  /// No description provided for @trafficRulesAvailableOffline.
-  ///
-  /// In en, this message translates to:
-  /// **'After preparation, the rule works without an internet connection.'**
-  String get trafficRulesAvailableOffline;
-
-  /// No description provided for @trafficRulesDataReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Rule data is ready'**
-  String get trafficRulesDataReady;
-
-  /// No description provided for @trafficRulesDataMissing.
-  ///
-  /// In en, this message translates to:
-  /// **'Rule data has not been prepared yet'**
-  String get trafficRulesDataMissing;
-
-  /// No description provided for @trafficRulesUpdateData.
-  ///
-  /// In en, this message translates to:
-  /// **'Update rule data'**
-  String get trafficRulesUpdateData;
-
-  /// No description provided for @trafficRulesDeleteData.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete rule data'**
-  String get trafficRulesDeleteData;
-
-  /// No description provided for @trafficRulesChinaTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'China direct'**
-  String get trafficRulesChinaTitle;
-
-  /// No description provided for @trafficRulesChinaSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Chinese domains and IP ranges go direct; other traffic uses the VPN.'**
-  String get trafficRulesChinaSubtitle;
-
-  /// No description provided for @trafficRulesChinaSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Chinese domains and IP ranges go direct; other traffic uses the VPN.'**
-  String get trafficRulesChinaSummary;
-
-  /// No description provided for @trafficRulesAiTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'AI services through VPN'**
-  String get trafficRulesAiTitle;
-
-  /// No description provided for @trafficRulesAiSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Popular AI services are routed through the VPN; everything else is direct.'**
-  String get trafficRulesAiSubtitle;
-
-  /// No description provided for @trafficRulesAiSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'AI services use VPN; other traffic is direct.'**
-  String get trafficRulesAiSummary;
-
-  /// No description provided for @trafficRulesSocialTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Social networks through VPN'**
-  String get trafficRulesSocialTitle;
-
-  /// No description provided for @trafficRulesSocialSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Popular social networks and messengers are routed through the VPN; everything else is direct.'**
-  String get trafficRulesSocialSubtitle;
-
-  /// No description provided for @trafficRulesSocialSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Social networks and messengers use VPN; other traffic is direct.'**
-  String get trafficRulesSocialSummary;
-
-  /// No description provided for @trafficRulesDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Rule details'**
-  String get trafficRulesDetails;
-
-  /// No description provided for @trafficRulesDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Description'**
-  String get trafficRulesDescription;
-
-  /// No description provided for @trafficRulesAuthor.
-  ///
-  /// In en, this message translates to:
-  /// **'Author'**
-  String get trafficRulesAuthor;
-
-  /// No description provided for @trafficRulesRoutingDomains.
-  ///
-  /// In en, this message translates to:
-  /// **'Domain routing'**
-  String get trafficRulesRoutingDomains;
-
-  /// No description provided for @trafficRulesSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get trafficRulesSettings;
-
-  /// No description provided for @trafficRulesDefaultRoute.
-  ///
-  /// In en, this message translates to:
-  /// **'Everything else'**
-  String get trafficRulesDefaultRoute;
-
-  /// No description provided for @trafficRulesDirect.
-  ///
-  /// In en, this message translates to:
-  /// **'Direct'**
-  String get trafficRulesDirect;
-
-  /// No description provided for @trafficRulesVpn.
-  ///
-  /// In en, this message translates to:
-  /// **'Through VPN'**
-  String get trafficRulesVpn;
-
-  /// No description provided for @trafficRulesIncludes.
-  ///
-  /// In en, this message translates to:
-  /// **'Includes'**
-  String get trafficRulesIncludes;
-
-  /// No description provided for @trafficRulesLocalNetwork.
-  ///
-  /// In en, this message translates to:
-  /// **'Local network always stays direct'**
-  String get trafficRulesLocalNetwork;
-
-  /// No description provided for @trafficRulesChoose.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose rule'**
-  String get trafficRulesChoose;
-
-  /// No description provided for @trafficRulesChosen.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected'**
-  String get trafficRulesChosen;
-
-  /// No description provided for @trafficRulesDisabled.
-  ///
-  /// In en, this message translates to:
-  /// **'Disabled'**
-  String get trafficRulesDisabled;
-
-  /// No description provided for @trafficRulesPreparing.
-  ///
-  /// In en, this message translates to:
-  /// **'Preparing rule data…'**
-  String get trafficRulesPreparing;
-
-  /// No description provided for @trafficRulesApplying.
-  ///
-  /// In en, this message translates to:
-  /// **'Applying rule…'**
-  String get trafficRulesApplying;
-
   /// No description provided for @logsJumpToLatest.
   ///
   /// In en, this message translates to:
@@ -5797,12 +5326,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No servers in this group are available. Try another group or check again.'**
   String get proxyGroupNoAvailableServersMessage;
-
-  /// No description provided for @trafficRulesPrepareFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not prepare rule data. Check your connection and try again.'**
-  String get trafficRulesPrepareFailed;
 
   /// No description provided for @remoteDownloadConnectTimeout.
   ///
@@ -5837,13 +5360,13 @@ abstract class AppLocalizations {
   /// No description provided for @routingRuleFilesTitle.
   ///
   /// In en, this message translates to:
-  /// **'Rule files'**
+  /// **'China routing data'**
   String get routingRuleFilesTitle;
 
   /// No description provided for @routingRuleFilesSettingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Rule files'**
+  /// **'China routing data'**
   String get routingRuleFilesSettingsTitle;
 
   /// No description provided for @routingRuleFilesSettingsReady.
@@ -5855,31 +5378,31 @@ abstract class AppLocalizations {
   /// No description provided for @routingRuleFilesSettingsPreparing.
   ///
   /// In en, this message translates to:
-  /// **'Bundled files are prepared when you open this screen'**
+  /// **'China domain and IP data will be prepared automatically'**
   String get routingRuleFilesSettingsPreparing;
 
   /// No description provided for @routingRuleFilesReadyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Rule files are ready'**
+  /// **'China routing data is ready'**
   String get routingRuleFilesReadyTitle;
 
   /// No description provided for @routingRuleFilesReadySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'SRS files are stored on this device and work offline.'**
+  /// **'The domain and IP rule sets are stored locally and work offline.'**
   String get routingRuleFilesReadySubtitle;
 
   /// No description provided for @routingRuleFilesPreparingTitle.
   ///
   /// In en, this message translates to:
-  /// **'Preparing bundled files'**
+  /// **'Preparing China routing data'**
   String get routingRuleFilesPreparingTitle;
 
   /// No description provided for @routingRuleFilesPreparingSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Preparing local SRS files for traffic rules.'**
+  /// **'Downloading the current China domain and IP rule sets.'**
   String get routingRuleFilesPreparingSubtitle;
 
   /// No description provided for @routingRuleFilesSourceTitle.
@@ -5909,13 +5432,13 @@ abstract class AppLocalizations {
   /// No description provided for @routingRuleFilesScopeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Russia is the current priority'**
+  /// **'China domains and IP ranges'**
   String get routingRuleFilesScopeTitle;
 
   /// No description provided for @routingRuleFilesScopeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'The current set focuses on Russian networks and services. More regions will be added in future updates.'**
+  /// **'China domains and IP ranges connect directly in Rules mode. All other unmatched traffic uses the selected proxy.'**
   String get routingRuleFilesScopeSubtitle;
 
   /// No description provided for @routingRuleFilesOpenSourceFailed.
@@ -5977,12 +5500,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open this screen again or tap Update files.'**
   String get routingRuleFilesEmptySubtitle;
-
-  /// No description provided for @trafficRulesRuleCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} categories'**
-  String trafficRulesRuleCount(int count);
 
   /// No description provided for @coreIntegrationTitle.
   ///
@@ -6209,7 +5726,7 @@ abstract class AppLocalizations {
   /// No description provided for @routingBypassLocalSummary.
   ///
   /// In en, this message translates to:
-  /// **'Local addresses connect directly'**
+  /// **'Only applies in Rules mode; Global mode sends tunnel traffic through the selected proxy.'**
   String get routingBypassLocalSummary;
 
   /// No description provided for @routingAdBlockSummary.
@@ -6259,6 +5776,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open battery settings. Open them from Android settings.'**
   String get batteryOptimizationOpenFailed;
+
+  /// No description provided for @routingModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Traffic routing mode'**
+  String get routingModeTitle;
+
+  /// No description provided for @routingModeRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules'**
+  String get routingModeRules;
+
+  /// No description provided for @routingModeGlobal.
+  ///
+  /// In en, this message translates to:
+  /// **'Global'**
+  String get routingModeGlobal;
+
+  /// No description provided for @routingModeRulesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'China domains and IP ranges go direct. Your custom rules take priority; all unmatched traffic uses the selected proxy.'**
+  String get routingModeRulesDescription;
+
+  /// No description provided for @routingModeGlobalDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'All traffic handled by Etonify uses the selected proxy. Domain/IP rules and local-network bypass are ignored; app-based split routing still applies.'**
+  String get routingModeGlobalDescription;
+
+  /// No description provided for @routingModePreparingChinaData.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing China domain and IP rules…'**
+  String get routingModePreparingChinaData;
+
+  /// No description provided for @routingModeChinaDataFailedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'China rule data is unavailable. Rule mode remains active; unmatched traffic safely falls back to the proxy.'**
+  String get routingModeChinaDataFailedHint;
+
+  /// No description provided for @customRoutingRulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom domain and IP rules'**
+  String get customRoutingRulesTitle;
+
+  /// No description provided for @customRoutingRulesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom rules take priority over China direct rules. Unmatched traffic uses the proxy. Rules are ignored in Global mode. Move rules to change their priority.'**
+  String get customRoutingRulesDescription;
+
+  /// No description provided for @customRoutingRulesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No custom rules yet'**
+  String get customRoutingRulesEmptyTitle;
+
+  /// No description provided for @customRoutingRulesEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a domain or IP range and choose whether it should use the proxy or connect directly.'**
+  String get customRoutingRulesEmptySubtitle;
+
+  /// No description provided for @customRoutingRulesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} rules'**
+  String customRoutingRulesCount(int count);
+
+  /// No description provided for @customRoutingRulesLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You can add up to {count} rules.'**
+  String customRoutingRulesLimit(int count);
+
+  /// No description provided for @customRoutingRuleAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add rule'**
+  String get customRoutingRuleAdd;
+
+  /// No description provided for @customRoutingRuleAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add routing rule'**
+  String get customRoutingRuleAddTitle;
+
+  /// No description provided for @customRoutingRuleEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit routing rule'**
+  String get customRoutingRuleEditTitle;
+
+  /// No description provided for @customRoutingRuleActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule actions'**
+  String get customRoutingRuleActions;
+
+  /// No description provided for @customRoutingRuleType.
+  ///
+  /// In en, this message translates to:
+  /// **'Match type'**
+  String get customRoutingRuleType;
+
+  /// No description provided for @customRoutingRuleDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Domain'**
+  String get customRoutingRuleDomain;
+
+  /// No description provided for @customRoutingRuleIp.
+  ///
+  /// In en, this message translates to:
+  /// **'IP address or CIDR'**
+  String get customRoutingRuleIp;
+
+  /// No description provided for @customRoutingRuleDomainLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Domain name'**
+  String get customRoutingRuleDomainLabel;
+
+  /// No description provided for @customRoutingRuleIpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'IP address or CIDR'**
+  String get customRoutingRuleIpLabel;
+
+  /// No description provided for @customRoutingRuleDomainHint.
+  ///
+  /// In en, this message translates to:
+  /// **'example.com or *.example.com'**
+  String get customRoutingRuleDomainHint;
+
+  /// No description provided for @customRoutingRuleIpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'203.0.113.0/24 or 2001:db8::/32'**
+  String get customRoutingRuleIpHint;
+
+  /// No description provided for @customRoutingRuleTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Route'**
+  String get customRoutingRuleTarget;
+
+  /// No description provided for @customRoutingRuleProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use proxy'**
+  String get customRoutingRuleProxy;
+
+  /// No description provided for @customRoutingRuleDirect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect directly'**
+  String get customRoutingRuleDirect;
+
+  /// No description provided for @customRoutingRuleInvalidDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid domain name, such as example.com.'**
+  String get customRoutingRuleInvalidDomain;
+
+  /// No description provided for @customRoutingRuleInvalidIp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid IPv4/IPv6 address or CIDR range.'**
+  String get customRoutingRuleInvalidIp;
+
+  /// No description provided for @customRoutingRuleInvalidValue.
+  ///
+  /// In en, this message translates to:
+  /// **'The rule value is invalid.'**
+  String get customRoutingRuleInvalidValue;
+
+  /// No description provided for @customRoutingRuleDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'A rule with this domain or IP already exists.'**
+  String get customRoutingRuleDuplicate;
+
+  /// No description provided for @customRoutingRuleSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get customRoutingRuleSave;
+
+  /// No description provided for @customRoutingRuleEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get customRoutingRuleEdit;
+
+  /// No description provided for @customRoutingRuleDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get customRoutingRuleDelete;
+
+  /// No description provided for @customRoutingRuleMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up (higher priority)'**
+  String get customRoutingRuleMoveUp;
+
+  /// No description provided for @customRoutingRuleMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down (lower priority)'**
+  String get customRoutingRuleMoveDown;
+
+  /// No description provided for @routingRuleFilesUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to prepare China rule data. Check your connection and try again.'**
+  String get routingRuleFilesUpdateFailed;
+
+  /// No description provided for @routingRuleFilesPreparingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading and validating the China domain and IP rule sets…'**
+  String get routingRuleFilesPreparingHint;
+
+  /// No description provided for @routingRuleFilesDownloadProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded {completed} of {total}.'**
+  String routingRuleFilesDownloadProgress(String completed, String total);
+
+  /// No description provided for @routingRuleFilesItemsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed {completed} of {total} items.'**
+  String routingRuleFilesItemsProgress(int completed, int total);
+
+  /// No description provided for @routingRuleFilesItemsProcessed.
+  ///
+  /// In en, this message translates to:
+  /// **'Processed {completed} items.'**
+  String routingRuleFilesItemsProcessed(int completed);
+
+  /// No description provided for @routingRuleFilesStageChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking China rule data…'**
+  String get routingRuleFilesStageChecking;
+
+  /// No description provided for @routingRuleFilesStageDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading China rule data…'**
+  String get routingRuleFilesStageDownloading;
+
+  /// No description provided for @routingRuleFilesStageVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Validating rule files…'**
+  String get routingRuleFilesStageVerifying;
+
+  /// No description provided for @routingRuleFilesStageExtracting.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing rule files…'**
+  String get routingRuleFilesStageExtracting;
+
+  /// No description provided for @routingRuleFilesStageCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating rule data…'**
+  String get routingRuleFilesStageCategories;
+
+  /// No description provided for @routingRuleFilesStageCompiling.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking local rules…'**
+  String get routingRuleFilesStageCompiling;
+
+  /// No description provided for @routingRuleFilesStageActivating.
+  ///
+  /// In en, this message translates to:
+  /// **'Activating rule data…'**
+  String get routingRuleFilesStageActivating;
+
+  /// No description provided for @routingRuleFilesStageComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'China rule data is ready'**
+  String get routingRuleFilesStageComplete;
+
+  /// No description provided for @verifiedBadgeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get verifiedBadgeTooltip;
 }
 
 class _AppLocalizationsDelegate

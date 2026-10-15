@@ -4,7 +4,8 @@ import 'dart:math';
 import 'package:meow_client/core/lowest_proxy_groups.dart';
 import 'package:meow_client/core/proxy_selection_catalog.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/subscription/outbound_support.dart';
 import 'package:meow_client/data/subscription/outbound_schema.dart';
 import 'package:meow_client/models/subscription.dart';
@@ -54,19 +55,10 @@ class SingboxConfigBuilder {
     required this.adBlockEnabled,
     this.adBlockBlockRuleSetPath,
     this.adBlockAllowRuleSetPath,
-    required this.useRussiaRouteData,
-    this.russiaGeositeRuBlockedPath,
-    this.russiaGeositeRuAvailableOnlyInsidePath,
-    this.russiaGeositeCategoryRuPath,
-    this.russiaGeoipRuBlockedPath,
-    this.russiaGeoipRuWhitelistPath,
-    this.russiaGeoipRuPath,
-    this.russiaCuratedDirectServicesPath,
-    this.russiaAiServicesPath,
-    this.russiaSocialServicesPath,
     this.chinaGeositePath,
     this.chinaGeoipPath,
-    this.trafficRulePreset = TrafficRulePreset.none,
+    this.routingMode = TrafficRoutingMode.rules,
+    this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
     required this.splitRoutingPackages,
@@ -110,19 +102,10 @@ class SingboxConfigBuilder {
   final bool adBlockEnabled;
   final String? adBlockBlockRuleSetPath;
   final String? adBlockAllowRuleSetPath;
-  final bool useRussiaRouteData;
-  final String? russiaGeositeRuBlockedPath;
-  final String? russiaGeositeRuAvailableOnlyInsidePath;
-  final String? russiaGeositeCategoryRuPath;
-  final String? russiaGeoipRuBlockedPath;
-  final String? russiaGeoipRuWhitelistPath;
-  final String? russiaGeoipRuPath;
-  final String? russiaCuratedDirectServicesPath;
-  final String? russiaAiServicesPath;
-  final String? russiaSocialServicesPath;
   final String? chinaGeositePath;
   final String? chinaGeoipPath;
-  final TrafficRulePreset trafficRulePreset;
+  final TrafficRoutingMode routingMode;
+  final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
   final List<String> splitRoutingPackages;
@@ -160,32 +143,17 @@ class SingboxConfigBuilder {
     final selectableOutboundTags = selectionCatalog.standaloneOutbounds
         .map((outbound) => outbound.tag)
         .toList(growable: false);
-    final requestedTrafficRulePreset =
-        trafficRulePreset == TrafficRulePreset.none && useRussiaRouteData
-        ? TrafficRulePreset.chinaDirect
-        : trafficRulePreset;
+    final rulesModeActive = routingMode == TrafficRoutingMode.rules;
     final chinaRouteDataActive =
-        requestedTrafficRulePreset == TrafficRulePreset.chinaDirect &&
+        rulesModeActive &&
         _validRuleSetPath(chinaGeositePath) &&
         _validRuleSetPath(chinaGeoipPath);
-    final aiServicesActive =
-        requestedTrafficRulePreset == TrafficRulePreset.aiViaVpn &&
-        _validRuleSetPath(russiaAiServicesPath);
-    final socialServicesActive =
-        requestedTrafficRulePreset == TrafficRulePreset.socialViaVpn &&
-        _validRuleSetPath(russiaSocialServicesPath);
-    final activeTrafficRulePreset = switch (requestedTrafficRulePreset) {
-      TrafficRulePreset.chinaDirect when chinaRouteDataActive =>
-        TrafficRulePreset.chinaDirect,
-      TrafficRulePreset.aiViaVpn when aiServicesActive =>
-        TrafficRulePreset.aiViaVpn,
-      TrafficRulePreset.socialViaVpn when socialServicesActive =>
-        TrafficRulePreset.socialViaVpn,
-      _ => TrafficRulePreset.none,
-    };
-    final trafficRuleUsesDirectDefault =
-        trafficRulePresetDefinitionFor(activeTrafficRulePreset)?.defaultRoute ==
-        TrafficRuleDefaultRoute.direct;
+    final activeCustomRoutingRules = rulesModeActive
+        ? CustomRoutingRule.normalizeCustomRoutingRules(customRoutingRules)
+        : const <CustomRoutingRule>[];
+    final activeCustomDomainRules = activeCustomRoutingRules
+        .where((rule) => rule.type == CustomRouteRuleType.domain)
+        .toList(growable: false);
     final defaultLowestOutboundTags = _lowestOutboundTagsFor(
       lowestProxyTag,
       outbounds,
@@ -270,16 +238,8 @@ class SingboxConfigBuilder {
       proxyOutboundIndexes[proxyStartIndex + i] = outbounds[i].tag;
     }
 
-    final routeFinal = trafficRuleUsesDirectDefault
-        ? 'direct'
-        : hasProxies
-        ? 'select'
-        : 'direct';
-    final dnsFinal = trafficRuleUsesDirectDefault
-        ? 'dns-direct'
-        : hasProxies
-        ? 'dns-remote'
-        : 'dns-direct';
+    final routeFinal = hasProxies ? 'select' : 'direct';
+    final dnsFinal = hasProxies ? 'dns-remote' : 'dns-direct';
     final dnsRemoteDetour = hasProxies
         ? _dnsRemoteDetourFor(selectorDefault, selectableTags.toSet())
         : 'direct';
@@ -325,30 +285,12 @@ class SingboxConfigBuilder {
               },
             const <String, Object>{'type': 'local', 'tag': 'dns-local'},
           ],
-          if (chinaRouteDataActive ||
-              aiServicesActive ||
-              socialServicesActive ||
+          if ((rulesModeActive &&
+                  (chinaRouteDataActive ||
+                      activeCustomDomainRules.isNotEmpty)) ||
               adBlockActive ||
               fakeIpActive)
             'rules': [
-              if (chinaRouteDataActive)
-                {
-                  'rule_set': 'cn-geosite-cn',
-                  'action': 'route',
-                  'server': 'dns-direct',
-                },
-              if (aiServicesActive)
-                {
-                  'rule_set': 'ai-services',
-                  'action': 'route',
-                  'server': hasProxies ? 'dns-remote' : 'dns-direct',
-                },
-              if (socialServicesActive)
-                {
-                  'rule_set': 'social-services',
-                  'action': 'route',
-                  'server': hasProxies ? 'dns-remote' : 'dns-direct',
-                },
               if (adBlockAllowActive)
                 {
                   'rule_set': 'adblock-allow',
@@ -360,6 +302,18 @@ class SingboxConfigBuilder {
                   'rule_set': 'adblock-block',
                   'action': 'reject',
                   'method': 'default',
+                },
+              for (final rule in activeCustomDomainRules)
+                rule.toSingboxDnsRule(
+                  server: rule.action == CustomRouteAction.direct || !hasProxies
+                      ? 'dns-direct'
+                      : 'dns-remote',
+                ),
+              if (chinaRouteDataActive)
+                {
+                  'rule_set': 'cn-geosite-cn',
+                  'action': 'route',
+                  'server': 'dns-direct',
                 },
               // Keep explicit DNS rules above this catch-all. FakeIP must not
               // become the default resolver because the core itself also
@@ -451,10 +405,7 @@ class SingboxConfigBuilder {
           // Android's current network DNS is the reliable bootstrap resolver;
           // user DNS choices still handle routed application queries above.
           'default_domain_resolver': 'dns-local',
-          if (chinaRouteDataActive ||
-              aiServicesActive ||
-              socialServicesActive ||
-              adBlockActive)
+          if (chinaRouteDataActive || adBlockActive)
             'rule_set': [
               if (chinaRouteDataActive) ...[
                 {
@@ -470,20 +421,6 @@ class SingboxConfigBuilder {
                   'path': chinaGeoipPath,
                 },
               ],
-              if (aiServicesActive)
-                {
-                  'type': 'local',
-                  'tag': 'ai-services',
-                  'format': 'binary',
-                  'path': russiaAiServicesPath,
-                },
-              if (socialServicesActive)
-                {
-                  'type': 'local',
-                  'tag': 'social-services',
-                  'format': 'binary',
-                  'path': russiaSocialServicesPath,
-                },
               if (adBlockAllowActive)
                 {
                   'type': 'local',
@@ -517,22 +454,18 @@ class SingboxConfigBuilder {
                 'method': 'drop',
               },
             if (blockLeaks) {'protocol': 'stun', 'action': 'reject'},
-            if (bypassLocalNetwork)
+            for (final rule in activeCustomRoutingRules)
+              rule.toSingboxRouteRule(
+                outbound: rule.action == CustomRouteAction.direct || !hasProxies
+                    ? 'direct'
+                    : 'select',
+              ),
+            if (rulesModeActive && bypassLocalNetwork)
               {'ip_is_private': true, 'outbound': 'direct'},
             if (adBlockAllowActive)
               {'rule_set': 'adblock-allow', 'outbound': routeFinal},
             if (adBlockActive)
               {'rule_set': 'adblock-block', 'action': 'reject'},
-            if (aiServicesActive)
-              {
-                'rule_set': 'ai-services',
-                'outbound': hasProxies ? 'select' : 'direct',
-              },
-            if (socialServicesActive)
-              {
-                'rule_set': 'social-services',
-                'outbound': hasProxies ? 'select' : 'direct',
-              },
             if (chinaRouteDataActive)
               {'rule_set': 'cn-geosite-cn', 'outbound': 'direct'},
             if (chinaRouteDataActive)

@@ -40,9 +40,6 @@ bool isPinnedProxyTag(String tag) => pinnedProxyTags.contains(tag);
 
 bool isReservedProxyTag(String tag) => reservedProxyTags.contains(tag);
 
-List<String> activeLowestProxyTags({required bool russiaRouteDataEnabled}) =>
-    baseLowestProxyTags;
-
 int lowestProxyTagOrder(String tag) {
   final index = lowestProxyTags.indexOf(tag);
   return index < 0 ? 1 << 30 : index;

@@ -1,6 +1,6 @@
 import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/data/subscription/subscription_store.dart';
 import 'package:meow_client/logging/app_log_store.dart';
@@ -13,7 +13,7 @@ typedef SettingsStoreLoader = Future<AppSettingsStore> Function();
 typedef AppVersionInfoLoader = Future<AppVersionInfo> Function();
 typedef CoreCapabilitiesLoader = Future<LibboxCapabilities> Function();
 typedef AdBlockStatusLoader = Future<AdBlockRuleSetStatus> Function();
-typedef RussiaRouteStatusLoader = Future<RussiaRouteDataStatus> Function();
+typedef ChinaRouteStatusLoader = Future<ChinaRouteDataStatus> Function();
 
 class AppBootstrapResult {
   const AppBootstrapResult({
@@ -21,7 +21,7 @@ class AppBootstrapResult {
     required this.ownsStore,
     required this.state,
     required this.adBlockStatus,
-    required this.russiaRouteDataStatus,
+    required this.chinaRouteDataStatus,
     required this.appVersionInfo,
     required this.coreCapabilities,
     required this.pendingCoreConfigMigration,
@@ -32,7 +32,7 @@ class AppBootstrapResult {
   final bool ownsStore;
   final AppSettingsState state;
   final AdBlockRuleSetStatus adBlockStatus;
-  final RussiaRouteDataStatus russiaRouteDataStatus;
+  final ChinaRouteDataStatus chinaRouteDataStatus;
   final AppVersionInfo appVersionInfo;
   final LibboxCapabilities coreCapabilities;
   final CoreConfigMigrationResult? pendingCoreConfigMigration;
@@ -48,11 +48,11 @@ class AppBootstrapResult {
 class BootstrapDeferredStatuses {
   const BootstrapDeferredStatuses({
     required this.adBlockStatus,
-    required this.russiaRouteDataStatus,
+    required this.chinaRouteDataStatus,
   });
 
   final AdBlockRuleSetStatus adBlockStatus;
-  final RussiaRouteDataStatus russiaRouteDataStatus;
+  final ChinaRouteDataStatus chinaRouteDataStatus;
 }
 
 /// Loads the durable application state without owning any Flutter UI state.
@@ -69,7 +69,7 @@ class AppBootstrapController {
     AppVersionInfoLoader? loadAppVersionInfo,
     CoreCapabilitiesLoader? loadCoreCapabilities,
     AdBlockStatusLoader? loadAdBlockStatus,
-    RussiaRouteStatusLoader? loadRussiaRouteStatus,
+    ChinaRouteStatusLoader? loadChinaRouteStatus,
   }) : _initializeHive = initializeHive ?? HiveAppSettingsStore.initHive,
        _initializeSubscriptions =
            initializeSubscriptions ?? SubscriptionStore.initForBootstrap,
@@ -82,8 +82,8 @@ class AppBootstrapController {
            (() => SingboxRuntime.instance.getCoreCapabilities()),
        _loadAdBlockStatus =
            loadAdBlockStatus ?? AdBlockRuleSetService.instance.loadStatus,
-       _loadRussiaRouteStatus =
-           loadRussiaRouteStatus ?? RussiaRouteDataService.instance.loadStatus;
+       _loadChinaRouteStatus =
+           loadChinaRouteStatus ?? ChinaRouteDataService.instance.loadStatus;
 
   final String fallbackClientVersionLabel;
   final BootstrapAction _initializeHive;
@@ -92,14 +92,14 @@ class AppBootstrapController {
   final AppVersionInfoLoader _loadAppVersionInfo;
   final CoreCapabilitiesLoader _loadCoreCapabilities;
   final AdBlockStatusLoader _loadAdBlockStatus;
-  final RussiaRouteStatusLoader _loadRussiaRouteStatus;
+  final ChinaRouteStatusLoader _loadChinaRouteStatus;
 
   Future<AppBootstrapResult> load({AppSettingsStore? providedStore}) async {
     AppSettingsStore? store;
     var ownsStore = false;
     late AppSettingsState state;
     const adBlockStatus = AdBlockRuleSetStatus.unavailable();
-    const russiaRouteDataStatus = RussiaRouteDataStatus.unavailable();
+    const chinaRouteDataStatus = ChinaRouteDataStatus.unavailable();
     final appVersionInfoFuture = readAppVersionInfo();
     final usesInMemoryStore = providedStore is MemoryAppSettingsStore;
 
@@ -182,7 +182,7 @@ class AppBootstrapController {
       ownsStore: ownsStore,
       state: state,
       adBlockStatus: adBlockStatus,
-      russiaRouteDataStatus: russiaRouteDataStatus,
+      chinaRouteDataStatus: chinaRouteDataStatus,
       appVersionInfo: appVersionInfo,
       coreCapabilities: coreCapabilities,
       pendingCoreConfigMigration: pendingCoreConfigMigration,
@@ -198,21 +198,21 @@ class AppBootstrapController {
   /// directly; a status only changes what the UI displays.
   Future<BootstrapDeferredStatuses> loadDeferredStatuses({
     bool includeAdBlock = true,
-    bool includeRussiaRouteData = true,
+    bool includeChinaRouteData = true,
   }) async {
     final adBlockStatusFuture = includeAdBlock
         ? _loadAdBlockStatusSafely()
         : Future<AdBlockRuleSetStatus>.value(
             const AdBlockRuleSetStatus.unavailable(),
           );
-    final russiaRouteStatusFuture = includeRussiaRouteData
-        ? _loadRussiaRouteStatusSafely()
-        : Future<RussiaRouteDataStatus>.value(
-            const RussiaRouteDataStatus.unavailable(),
+    final chinaRouteStatusFuture = includeChinaRouteData
+        ? _loadChinaRouteStatusSafely()
+        : Future<ChinaRouteDataStatus>.value(
+            const ChinaRouteDataStatus.unavailable(),
           );
     return BootstrapDeferredStatuses(
       adBlockStatus: await adBlockStatusFuture,
-      russiaRouteDataStatus: await russiaRouteStatusFuture,
+      chinaRouteDataStatus: await chinaRouteStatusFuture,
     );
   }
 
@@ -224,11 +224,11 @@ class AppBootstrapController {
     }
   }
 
-  Future<RussiaRouteDataStatus> _loadRussiaRouteStatusSafely() async {
+  Future<ChinaRouteDataStatus> _loadChinaRouteStatusSafely() async {
     try {
-      return await _loadRussiaRouteStatus();
+      return await _loadChinaRouteStatus();
     } catch (_) {
-      return const RussiaRouteDataStatus.unavailable();
+      return const ChinaRouteDataStatus.unavailable();
     }
   }
 
@@ -298,7 +298,6 @@ class AppBootstrapController {
       locationLookupConcurrency: 2,
       blockLeaks: false,
       adBlockEnabled: false,
-      useRussiaRouteData: false,
       bypassLocalNetwork: true,
       splitRoutingMode: SplitRoutingMode.disabled,
       splitRoutingPackages: <String>[],

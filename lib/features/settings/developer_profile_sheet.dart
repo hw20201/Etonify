@@ -151,7 +151,7 @@ class _DeveloperProfileSheetState extends State<_DeveloperProfileSheet> {
                         ),
                         const Gap(4),
                         IconButton(
-                          tooltip: l10n.trafficRulesVerified,
+                          tooltip: l10n.verifiedBadgeTooltip,
                           visualDensity: VisualDensity.compact,
                           onPressed: () => setState(
                             () => _showVerification = !_showVerification,

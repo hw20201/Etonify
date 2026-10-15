@@ -151,7 +151,7 @@ void main() {
 
   test('disabled rule-set status is deferred until after bootstrap', () async {
     var adBlockRequests = 0;
-    var russiaRouteRequests = 0;
+    var chinaRouteRequests = 0;
     final controller = AppBootstrapController(
       fallbackClientVersionLabel: '0.3.0',
       loadAppVersionInfo: () async => const AppVersionInfo(
@@ -164,9 +164,9 @@ void main() {
         adBlockRequests++;
         throw StateError('ad block status unavailable');
       },
-      loadRussiaRouteStatus: () async {
-        russiaRouteRequests++;
-        throw StateError('russia route status unavailable');
+      loadChinaRouteStatus: () async {
+        chinaRouteRequests++;
+        throw StateError('China route status unavailable');
       },
     );
 
@@ -175,25 +175,22 @@ void main() {
     );
 
     expect(result.adBlockStatus.available, isFalse);
-    expect(result.russiaRouteDataStatus.available, isFalse);
+    expect(result.chinaRouteDataStatus.available, isFalse);
     expect(adBlockRequests, 0);
-    expect(russiaRouteRequests, 0);
+    expect(chinaRouteRequests, 0);
 
     await controller.loadDeferredStatuses();
 
     expect(adBlockRequests, 1);
-    expect(russiaRouteRequests, 1);
+    expect(chinaRouteRequests, 1);
   });
 
   test('enabled rule-set status is deferred until after bootstrap', () async {
     var adBlockRequests = 0;
-    var russiaRouteRequests = 0;
+    var chinaRouteRequests = 0;
     final store = MemoryAppSettingsStore();
     await store.saveState(
-      (await store.loadState()).copyWith(
-        adBlockEnabled: true,
-        useRussiaRouteData: true,
-      ),
+      (await store.loadState()).copyWith(adBlockEnabled: true),
     );
     final controller = AppBootstrapController(
       fallbackClientVersionLabel: '0.3.0',
@@ -207,26 +204,26 @@ void main() {
         adBlockRequests++;
         throw StateError('ad block status unavailable');
       },
-      loadRussiaRouteStatus: () async {
-        russiaRouteRequests++;
-        throw StateError('russia route status unavailable');
+      loadChinaRouteStatus: () async {
+        chinaRouteRequests++;
+        throw StateError('China route status unavailable');
       },
     );
 
     final result = await controller.load(providedStore: store);
 
     expect(result.adBlockStatus.available, isFalse);
-    expect(result.russiaRouteDataStatus.available, isFalse);
+    expect(result.chinaRouteDataStatus.available, isFalse);
     expect(adBlockRequests, 0);
-    expect(russiaRouteRequests, 0);
+    expect(chinaRouteRequests, 0);
 
     await controller.loadDeferredStatuses(
       includeAdBlock: true,
-      includeRussiaRouteData: true,
+      includeChinaRouteData: true,
     );
 
     expect(adBlockRequests, 1);
-    expect(russiaRouteRequests, 1);
+    expect(chinaRouteRequests, 1);
   });
 }
 

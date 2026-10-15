@@ -10,54 +10,49 @@ import 'package:meow_client/app/providers/app_settings_commands_provider.dart';
 import 'package:meow_client/app/providers/app_settings_provider.dart';
 import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
+import 'package:meow_client/features/settings/custom_routing_rules_page.dart';
 import 'package:meow_client/features/settings/settings_routing_page.dart';
-import 'package:meow_client/features/settings/traffic_rules_page.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 
 void main() {
-  testWidgets(
-    'traffic preparation shows progress and keeps selection disabled',
-    (tester) async {
-      final preparation = Completer<RussiaRouteDataStatus>();
-      final selected = <TrafficRulePreset>[];
-      await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ru'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: TrafficRulesPage(
-            currentPreset: TrafficRulePreset.none,
-            currentStatus: const RussiaRouteDataStatus.unavailable(),
-            onPrepareRuleData: (_) => preparation.future,
-            onPresetChanged: selected.add,
-          ),
+  testWidgets('custom rules editor adds and routes a domain directly', (
+    tester,
+  ) async {
+    List<CustomRoutingRule> saved = const [];
+    await tester.binding.setSurfaceSize(const Size(420, 860));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: CustomRoutingRulesPage(
+          currentRules: const [],
+          onChanged: (value) => saved = value,
         ),
-      );
-      await tester.pump();
-      expect(find.byType(LinearProgressIndicator), findsNothing);
-      await tester.tap(find.text('Китай напрямую'));
-      await tester.pump();
-      expect(find.text('Подготавливаем правило…'), findsOneWidget);
-      expect(find.byType(LinearProgressIndicator), findsOneWidget);
-      expect(tester.widget<Switch>(find.byType(Switch)).onChanged, isNull);
-      expect(selected, isEmpty);
-      preparation.complete(
-        const RussiaRouteDataStatus(
-          available: false,
-          sourceName: 'aliothlab/rule-set',
-          versionTag: 'latest',
-          chinaGeositePath: '/rules/geosite-cn.srs',
-          chinaGeoipPath: '/rules/geoip-cn.srs',
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byType(LinearProgressIndicator), findsNothing);
-      expect(tester.widget<Switch>(find.byType(Switch)).onChanged, isNotNull);
-      expect(selected, [TrafficRulePreset.chinaDirect]);
-    },
-  );
+      ),
+    );
+
+    await tester.tap(find.text('添加规则'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), 'example.com');
+    await tester.tap(find.byType(DropdownButtonFormField<CustomRouteAction>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('直连').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, '保存'));
+    await tester.pumpAndSettle();
+
+    expect(saved, hasLength(1));
+    expect(saved.single.type, CustomRouteRuleType.domain);
+    expect(saved.single.value, 'example.com');
+    expect(saved.single.action, CustomRouteAction.direct);
+    expect(find.text('域名 · 直连'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   const readyFilter = AdBlockRuleSetStatus(
     available: true,
@@ -74,7 +69,7 @@ void main() {
     final enabledValues = <bool>[];
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       scrollTo: 'Фильтр ещё не скачан',
       downloadAdBlock: () => download.future,
       onAdBlockEnabled: enabledValues.add,
@@ -105,7 +100,7 @@ void main() {
     final enabledValues = <bool>[];
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       scrollTo: 'Фильтр ещё не скачан',
       downloadAdBlock: () async => throw StateError('offline'),
       onAdBlockEnabled: enabledValues.add,
@@ -126,7 +121,7 @@ void main() {
     final enabledValues = <bool>[];
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       scrollTo: 'Удалить',
       adBlockStatus: readyFilter,
       adBlockEnabled: true,
@@ -151,7 +146,7 @@ void main() {
     final enabledValues = <bool>[];
     final controller = await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       scrollTo: 'Обновить',
       adBlockStatus: readyFilter,
       adBlockEnabled: true,
@@ -166,77 +161,49 @@ void main() {
     expect(find.text('Удалить'), findsOneWidget);
   });
 
-  testWidgets(
-    'selected traffic rule has one card and aligned selection control',
-    (tester) async {
-      await _pumpPage(
-        tester,
-        const RussiaRouteDataStatus.unavailable(),
-        currentPreset: TrafficRulePreset.aiViaVpn,
-      );
-      await tester.tap(find.text('Правила трафика'));
-      await tester.pumpAndSettle();
-      expect(find.byIcon(Icons.info_outline_rounded), findsNWidgets(3));
-      final selected = find.byIcon(Icons.check_circle_rounded);
-      final infos = find.byIcon(Icons.info_outline_rounded);
-      expect(
-        tester.getCenter(selected).dy,
-        closeTo(tester.getCenter(infos.at(1)).dy, 1),
-      );
-      final subtitle = tester.widget<Text>(
-        find.text('Нейросети через VPN, остальной трафик напрямую.'),
-      );
-      expect(subtitle.maxLines, isNull);
-      expect(subtitle.overflow, isNot(TextOverflow.ellipsis));
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('routing mode switches between rules and global', (tester) async {
+    final controller = await _pumpPage(
+      tester,
+      const ChinaRouteDataStatus.unavailable(),
+      scrollTo: 'Глобальный',
+    );
+    expect(find.byType(SegmentedButton<TrafficRoutingMode>), findsOneWidget);
+    expect(find.text('По правилам'), findsOneWidget);
+    expect(find.text('Глобальный'), findsOneWidget);
+    await tester.tap(find.text('Глобальный'));
+    await tester.pumpAndSettle();
+    expect(controller.routingMode, TrafficRoutingMode.global);
+    expect(find.text('Нейросети через VPN'), findsNothing);
+    expect(find.text('Социальные сети через VPN'), findsNothing);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-  testWidgets(
-    'large text keeps traffic rule descriptions and controls reachable',
-    (tester) async {
-      await _pumpPage(
-        tester,
-        const RussiaRouteDataStatus.unavailable(),
-        currentPreset: TrafficRulePreset.aiViaVpn,
-        textScale: 1.6,
-      );
-      await tester.tap(find.text('Правила трафика'));
-      await tester.pumpAndSettle();
-      final selected = find.byIcon(Icons.check_circle_rounded);
-      final selectedCard = find.ancestor(
-        of: selected,
-        matching: find.byType(Card),
-      );
-      final info = find.descendant(
-        of: selectedCard,
-        matching: find.byIcon(Icons.info_outline_rounded),
-      );
-      expect(
-        tester.getCenter(selected).dy,
-        closeTo(tester.getCenter(info).dy, 1),
-      );
-      await tester.scrollUntilVisible(
-        find.text('Социальные сети через VPN'),
-        180,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(
-        find.text(
-          'Соцсети и мессенджеры через VPN, остальной трафик напрямую.',
-        ),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull);
-    },
-  );
+  testWidgets('large text keeps the mode selector and rule entry reachable', (
+    tester,
+  ) async {
+    await _pumpPage(
+      tester,
+      const ChinaRouteDataStatus.unavailable(),
+      textScale: 1.6,
+      scrollTo: 'Глобальный',
+    );
+    expect(find.byType(SegmentedButton<TrafficRoutingMode>), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Свои правила доменов и IP'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Свои правила доменов и IP'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets(
     'large text and keyboard keep controls reachable without overflow',
     (tester) async {
       await _pumpPage(
         tester,
-        const RussiaRouteDataStatus.unavailable(),
+        const ChinaRouteDataStatus.unavailable(),
         textScale: 1.6,
         keyboardInset: 300,
         installedApps: [
@@ -270,7 +237,7 @@ void main() {
     var applies = 0;
     final controller = await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       installedApps: [
         {'packageName': 'org.telegram.messenger', 'label': 'Telegram'},
         {'packageName': 'com.example.mail', 'label': 'Mail'},
@@ -308,7 +275,7 @@ void main() {
     (tester) async {
       await _pumpPage(
         tester,
-        const RussiaRouteDataStatus.unavailable(),
+        const ChinaRouteDataStatus.unavailable(),
         splitRoutingMode: SplitRoutingMode.proxySelected,
         splitRoutingPackages: ['com.old.removed'],
         preloadApps: [
@@ -329,7 +296,7 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       installedApps: List.generate(
         1000,
         (i) => {'packageName': 'com.example.app$i', 'label': 'App $i'},
@@ -352,7 +319,7 @@ void main() {
     List<String>? applied;
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       scrollTo: 'Раздельная маршрутизация',
       onSplitRoutingPackagesChanged: (v) => applied = v,
     );
@@ -368,7 +335,7 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       scrollTo: 'Раздельная маршрутизация',
     );
     await tester.tap(find.text('Раздельная маршрутизация'));
@@ -377,64 +344,22 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
     expect(find.byKey(const ValueKey('split-routing-apply')), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
-  testWidgets('traffic rules replace the old smart routing entry', (
+  testWidgets('custom routing rules open from the routing settings page', (
     tester,
   ) async {
-    await _pumpPage(tester, const RussiaRouteDataStatus.unavailable());
-
-    expect(find.text('Правила трафика'), findsOneWidget);
-    expect(find.text('Умная маршрутизация'), findsNothing);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
-
-  testWidgets('traffic rules show three presets without duplicate navigation', (
-    tester,
-  ) async {
-    await _pumpPage(tester, const RussiaRouteDataStatus.unavailable());
-
-    await tester.tap(find.text('Правила трафика'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Китай напрямую'), findsOneWidget);
-    expect(find.text('Нейросети через VPN'), findsOneWidget);
-    expect(find.text('Социальные сети через VPN'), findsOneWidget);
-    expect(find.text('Правила от разработчика'), findsNothing);
-    expect(
-      find.text(
-        'Одновременно можно включить только одно правило трафика — так правила не конфликтуют между собой.',
-      ),
-      findsNothing,
+    await _pumpPage(
+      tester,
+      const ChinaRouteDataStatus.unavailable(),
+      scrollTo: 'Свои правила доменов и IP',
     );
-    expect(find.byIcon(Icons.public_rounded), findsOneWidget);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
-  testWidgets('traffic rule card opens details and developer profile', (
-    tester,
-  ) async {
-    await _pumpPage(tester, const RussiaRouteDataStatus.unavailable());
-
-    await tester.tap(find.text('Правила трафика'));
+    expect(find.text('Свои правила доменов и IP'), findsOneWidget);
+    await tester.tap(find.text('Свои правила доменов и IP'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.info_outline_rounded).first);
-    await tester.pumpAndSettle();
-
-    expect(find.text('ОПИСАНИЕ'), findsOneWidget);
-    expect(find.text('Применить правило'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('yamixdev'),
-      250,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('yamixdev'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Bio'), findsOneWidget);
-    expect(find.text('Telegram'), findsOneWidget);
-    expect(find.text('GitHub'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Проверено'));
-    await tester.pumpAndSettle();
-    expect(find.text('Участник проекта Etonify.'), findsOneWidget);
+    expect(find.byType(CustomRoutingRulesPage), findsOneWidget);
+    expect(find.text('Добавить правило'), findsOneWidget);
+    expect(find.text('Нейросети через VPN'), findsNothing);
+    expect(find.text('Социальные сети через VPN'), findsNothing);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   testWidgets('selected split app keeps name and package on separate rows', (
@@ -442,7 +367,7 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       splitRoutingMode: SplitRoutingMode.bypassSelected,
       splitRoutingPackages: const ['org.telegram.messenger'],
       installedApps: const [
@@ -465,7 +390,7 @@ void main() {
   ) async {
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       splitRoutingMode: SplitRoutingMode.bypassSelected,
       splitRoutingPackages: const ['com.example.removed'],
       scrollTo: 'Приложение не найдено',
@@ -481,7 +406,7 @@ void main() {
     List<String>? changedPackages;
     await _pumpPage(
       tester,
-      const RussiaRouteDataStatus.unavailable(),
+      const ChinaRouteDataStatus.unavailable(),
       splitRoutingMode: SplitRoutingMode.bypassSelected,
       splitRoutingPackages: const ['org.telegram.messenger'],
       installedApps: const [
@@ -513,21 +438,22 @@ void main() {
 
 Future<AppSettingsController> _pumpPage(
   WidgetTester tester,
-  RussiaRouteDataStatus routeStatus, {
+  ChinaRouteDataStatus routeStatus, {
   SplitRoutingMode splitRoutingMode = SplitRoutingMode.disabled,
   List<String> splitRoutingPackages = const [],
   List<Map<String, dynamic>> installedApps = const [],
   List<Map<String, dynamic>>? preloadApps,
   double textScale = 1,
   double keyboardInset = 0,
-  String scrollTo = 'Правила трафика',
+  String scrollTo = 'Свои правила доменов и IP',
   ValueChanged<List<String>>? onSplitRoutingPackagesChanged,
   AdBlockRuleSetStatus adBlockStatus = const AdBlockRuleSetStatus.unavailable(),
   bool adBlockEnabled = false,
   Future<AdBlockRuleSetStatus> Function()? downloadAdBlock,
   Future<AdBlockRuleSetStatus> Function()? deleteAdBlock,
   ValueChanged<bool>? onAdBlockEnabled,
-  TrafficRulePreset currentPreset = TrafficRulePreset.none,
+  TrafficRoutingMode routingMode = TrafficRoutingMode.rules,
+  List<CustomRoutingRule> customRoutingRules = const [],
 }) async {
   await tester.binding.setSurfaceSize(const Size(420, 860));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -535,7 +461,8 @@ Future<AppSettingsController> _pumpPage(
   final controller = AppSettingsController()
     ..blockLeaks = true
     ..adBlockEnabled = adBlockEnabled
-    ..trafficRulePreset = currentPreset
+    ..routingMode = routingMode
+    ..customRoutingRules = customRoutingRules
     ..russiaDnsDirectResolver = 'udp://77.88.8.8'
     ..bypassLocalNetwork = true
     ..vpnInboundEnabled = true
@@ -551,8 +478,9 @@ Future<AppSettingsController> _pumpPage(
     deleteAdBlockRuleSet:
         deleteAdBlock ?? () async => const AdBlockRuleSetStatus.unavailable(),
     refreshRoutingRuleData: () async => routeStatus,
-    setTrafficRulePreset: (_) {},
-    prepareTrafficRuleData: (_) async => routeStatus,
+    setTrafficRoutingMode: controller.setRoutingMode,
+    setCustomRoutingRules: controller.setCustomRoutingRules,
+    prepareChinaRouteData: () async => routeStatus,
     setRussiaDnsDirectResolver: (_) {},
     setBypassLocalNetwork: (_) {},
     setSplitRoutingMode: (_) {},
@@ -577,8 +505,8 @@ Future<AppSettingsController> _pumpPage(
         adBlockStatusProvider.overrideWith(
           () => AdBlockStatusNotifier(adBlockStatus),
         ),
-        russiaRouteDataStatusProvider.overrideWith(
-          () => RussiaRouteDataStatusNotifier(routeStatus),
+        chinaRouteDataStatusProvider.overrideWith(
+          () => ChinaRouteDataStatusNotifier(routeStatus),
         ),
         installedAppsCacheProvider.overrideWith(
           () => InstalledAppsCacheNotifier(installedApps),

@@ -14,10 +14,10 @@ import 'package:meow_client/core/network/remote_download_error_message.dart';
 import 'package:meow_client/core/widgets/app_notice.dart';
 import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
+import 'package:meow_client/features/settings/custom_routing_rules_page.dart';
 import 'package:meow_client/features/settings/routing_rule_files_page.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
-import 'package:meow_client/features/settings/traffic_rules_page.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/singbox/singbox_runtime.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
@@ -35,18 +35,6 @@ void clearInstalledAppIconCache() {
   _installedAppIconLoads.clear();
 }
 
-String _trafficRulePresetTitle(
-  AppLocalizations l10n,
-  TrafficRulePreset preset,
-) {
-  return switch (preset) {
-    TrafficRulePreset.none => l10n.trafficRulesNone,
-    TrafficRulePreset.chinaDirect => l10n.trafficRulesChinaTitle,
-    TrafficRulePreset.aiViaVpn => l10n.trafficRulesAiTitle,
-    TrafficRulePreset.socialViaVpn => l10n.trafficRulesSocialTitle,
-  };
-}
-
 class SettingsRoutingPage extends ConsumerStatefulWidget {
   const SettingsRoutingPage({super.key});
 
@@ -59,6 +47,7 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
   late final AdBlockRuleSetService _adBlockService;
   bool _adBlockBusy = false;
   bool _adBlockDeleting = false;
+  bool _chinaDataBusy = false;
   AdBlockUpdateProgress? _adBlockProgress;
 
   @override
@@ -103,24 +92,49 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
     );
   }
 
-  Future<void> _openTrafficRules() async {
+  Future<void> _openCustomRoutingRules() async {
     final commands = ref.read(appSettingsCommandsProvider);
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (context) => Consumer(
           builder: (context, ref, _) {
             final liveSettings = ref.watch(appSettingsProvider).controller;
-            final liveStatus = ref.watch(russiaRouteDataStatusProvider);
-            return TrafficRulesPage(
-              currentPreset: liveSettings.trafficRulePreset,
-              currentStatus: liveStatus,
-              onPrepareRuleData: commands.prepareTrafficRuleData,
-              onPresetChanged: commands.setTrafficRulePreset,
+            return CustomRoutingRulesPage(
+              currentRules: liveSettings.customRoutingRules,
+              onChanged: commands.setCustomRoutingRules,
             );
           },
         ),
       ),
     );
+  }
+
+  Future<void> _selectTrafficRoutingMode(TrafficRoutingMode mode) async {
+    final commands = ref.read(appSettingsCommandsProvider);
+    commands.setTrafficRoutingMode(mode);
+    if (mode != TrafficRoutingMode.rules ||
+        ref.read(chinaRouteDataStatusProvider).chinaRouteDataAvailable ||
+        _chinaDataBusy) {
+      return;
+    }
+
+    setState(() => _chinaDataBusy = true);
+    try {
+      final status = await commands.prepareChinaRouteData();
+      if (!mounted) return;
+      ref.read(chinaRouteDataStatusProvider.notifier).update(status);
+      if (!status.chinaRouteDataAvailable) {
+        AppNotice.show(
+          context,
+          AppLocalizations.of(context).routingModeChinaDataFailedHint,
+          tone: AppNoticeTone.error,
+        );
+      }
+    } catch (error) {
+      if (mounted) _showOperationError(error);
+    } finally {
+      if (mounted) setState(() => _chinaDataBusy = false);
+    }
   }
 
   Future<void> _openRoutingRuleFiles() async {
@@ -129,7 +143,7 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
       MaterialPageRoute<void>(
         builder: (context) => Consumer(
           builder: (context, ref, _) {
-            final liveStatus = ref.watch(russiaRouteDataStatusProvider);
+            final liveStatus = ref.watch(chinaRouteDataStatusProvider);
             return RoutingRuleFilesPage(
               currentStatus: liveStatus,
               onRefresh: commands.refreshRoutingRuleData,
@@ -224,12 +238,12 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
     final settings = settingsSnapshot.controller;
     final blockLeaks = settings.blockLeaks;
     final bypassLocalNetwork = settings.bypassLocalNetwork;
-    final trafficRulePreset = settings.trafficRulePreset;
+    final routingMode = settings.routingMode;
     final splitRoutingMode = settings.splitRoutingMode;
     final adBlockEnabled = settings.adBlockEnabled;
 
     final adBlockStatus = ref.watch(adBlockStatusProvider);
-    final russiaRouteDataStatus = ref.watch(russiaRouteDataStatusProvider);
+    final chinaRouteDataStatus = ref.watch(chinaRouteDataStatusProvider);
     final commands = ref.read(appSettingsCommandsProvider);
 
     return ProgressiveBlurScaffold(
@@ -275,6 +289,55 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
             const Gap(settingsIslandGap),
             Card(
               margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.routingModeTitle,
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const Gap(6),
+                    Text(
+                      _chinaDataBusy
+                          ? l10n.routingModePreparingChinaData
+                          : routingMode == TrafficRoutingMode.rules
+                          ? l10n.routingModeRulesDescription
+                          : l10n.routingModeGlobalDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    const Gap(14),
+                    SegmentedButton<TrafficRoutingMode>(
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment<TrafficRoutingMode>(
+                          value: TrafficRoutingMode.rules,
+                          label: Text(l10n.routingModeRules),
+                          icon: const Icon(Icons.rule_rounded),
+                        ),
+                        ButtonSegment<TrafficRoutingMode>(
+                          value: TrafficRoutingMode.global,
+                          label: Text(l10n.routingModeGlobal),
+                          icon: const Icon(Icons.public_rounded),
+                        ),
+                      ],
+                      selected: <TrafficRoutingMode>{routingMode},
+                      onSelectionChanged: (selection) {
+                        if (selection.isNotEmpty) {
+                          _selectTrafficRoutingMode(selection.first);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const Gap(settingsIslandGap),
+            Card(
+              margin: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -304,7 +367,9 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
                     title: Text(l10n.bypassLocalNetworkTitle),
                     subtitle: Text(l10n.routingBypassLocalSummary),
                     value: bypassLocalNetwork,
-                    onChanged: commands.setBypassLocalNetwork,
+                    onChanged: routingMode == TrafficRoutingMode.rules
+                        ? commands.setBypassLocalNetwork
+                        : null,
                   ),
                 ],
               ),
@@ -322,14 +387,14 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
                   icon: Icons.alt_route_rounded,
                   color: cs.primary,
                 ),
-                title: Text(l10n.trafficRulesSettingsTitle),
+                title: Text(l10n.customRoutingRulesTitle),
                 subtitle: Text(
-                  trafficRulePreset == TrafficRulePreset.none
-                      ? l10n.trafficRulesNone
-                      : _trafficRulePresetTitle(l10n, trafficRulePreset),
+                  l10n.customRoutingRulesCount(
+                    settings.customRoutingRules.length,
+                  ),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: _openTrafficRules,
+                onTap: _openCustomRoutingRules,
               ),
             ),
             const Gap(settingsIslandGap),
@@ -347,10 +412,8 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
                 ),
                 title: Text(l10n.routingRuleFilesSettingsTitle),
                 subtitle: Text(
-                  russiaRouteDataStatus.available
-                      ? l10n.routingRuleFilesSettingsReady(
-                          russiaRouteDataStatus.verifiedFiles.length,
-                        )
+                  chinaRouteDataStatus.chinaRouteDataAvailable
+                      ? l10n.routingRuleFilesSettingsReady(2)
                       : l10n.routingRuleFilesSettingsPreparing,
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded),

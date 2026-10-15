@@ -80,7 +80,6 @@ AppSettingsState _persistedSettings({required String proxySort}) {
     locationLookupConcurrency: 16,
     blockLeaks: false,
     adBlockEnabled: false,
-    useRussiaRouteData: false,
     bypassLocalNetwork: true,
     splitRoutingMode: SplitRoutingMode.disabled,
     splitRoutingPackages: const <String>[],

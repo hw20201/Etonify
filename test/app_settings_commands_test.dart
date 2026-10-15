@@ -2,8 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meow_client/app/providers/app_settings_commands_provider.dart';
 import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 
 void main() {
   group('AppSettingsCommands', () {
@@ -14,8 +15,9 @@ void main() {
       var downloaded = false;
       var deleted = false;
       var refreshed = false;
-      var trafficPreset = TrafficRulePreset.none;
-      var preparedPreset = TrafficRulePreset.none;
+      var routingMode = TrafficRoutingMode.rules;
+      var preparedChinaData = false;
+      List<CustomRoutingRule>? customRules;
       var directResolver = '';
       var bypassLocal = false;
       var splitMode = SplitRoutingMode.disabled;
@@ -35,13 +37,15 @@ void main() {
         },
         refreshRoutingRuleData: () async {
           refreshed = true;
-          return const RussiaRouteDataStatus.unavailable();
+          return const ChinaRouteDataStatus.unavailable();
         },
-        setTrafficRulePreset: (TrafficRulePreset value) =>
-            trafficPreset = value,
-        prepareTrafficRuleData: (TrafficRulePreset preset) async {
-          preparedPreset = preset;
-          return const RussiaRouteDataStatus.unavailable();
+        setTrafficRoutingMode: (TrafficRoutingMode value) =>
+            routingMode = value,
+        setCustomRoutingRules: (List<CustomRoutingRule> value) =>
+            customRules = value,
+        prepareChinaRouteData: () async {
+          preparedChinaData = true;
+          return const ChinaRouteDataStatus.unavailable();
         },
         setRussiaDnsDirectResolver: (String value) => directResolver = value,
         setBypassLocalNetwork: (bool value) => bypassLocal = value,
@@ -70,11 +74,19 @@ void main() {
       await commands.refreshRoutingRuleData();
       expect(refreshed, isTrue);
 
-      commands.setTrafficRulePreset(TrafficRulePreset.aiViaVpn);
-      expect(trafficPreset, TrafficRulePreset.aiViaVpn);
+      commands.setTrafficRoutingMode(TrafficRoutingMode.global);
+      expect(routingMode, TrafficRoutingMode.global);
 
-      await commands.prepareTrafficRuleData(TrafficRulePreset.socialViaVpn);
-      expect(preparedPreset, TrafficRulePreset.socialViaVpn);
+      final customRule = CustomRoutingRule.create(
+        type: CustomRouteRuleType.domain,
+        value: 'example.com',
+        action: CustomRouteAction.proxy,
+      );
+      commands.setCustomRoutingRules([customRule]);
+      expect(customRules, [customRule]);
+
+      await commands.prepareChinaRouteData();
+      expect(preparedChinaData, isTrue);
 
       commands.setRussiaDnsDirectResolver('udp://1.1.1.1');
       expect(directResolver, 'udp://1.1.1.1');

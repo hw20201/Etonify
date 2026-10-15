@@ -1,6 +1,5 @@
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/core/lowest_proxy_groups.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
 import 'package:meow_client/singbox/libbox_capabilities.dart';
 
 const currentCoreConfigSchemaVersion = 5;
@@ -270,16 +269,6 @@ class CoreConfigMigration {
       state.experimentalFakeIpEnabled,
       fakeIpEnabled,
     );
-    final preset =
-        state.trafficRulePreset == TrafficRulePreset.none &&
-            state.useRussiaRouteData
-        ? TrafficRulePreset.chinaDirect
-        : state.trafficRulePreset;
-    if (preset != state.trafficRulePreset) {
-      changes.add(
-        'traffic_rule_preset:${state.trafficRulePreset.storageValue}->${preset.storageValue}',
-      );
-    }
     return _step(
       from: 2,
       state: state.copyWith(
@@ -288,7 +277,6 @@ class CoreConfigMigration {
         proxyMixedListen: proxyListen,
         splitRoutingPackages: splitPackages,
         experimentalFakeIpEnabled: fakeIpEnabled,
-        trafficRulePreset: preset,
       ),
       changes: changes,
     );

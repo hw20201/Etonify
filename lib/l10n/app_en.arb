@@ -1120,109 +1120,6 @@
   "routingSubtitle": "Traffic routing rules",
   "bypassLocalNetworkTitle": "Bypass local network",
   "bypassLocalNetworkSubtitle": "Route private and LAN addresses directly",
-  "russiaRoutesTitle": "Smart routing",
-  "russiaRoutesRunetFreedomBadge": "runetfreedom",
-  "russiaRoutesDomainListBadge": "domain-list-community",
-  "russiaRoutesSubtitle": "Russian services go direct while blocked resources stay on VPN.",
-  "russiaRoutesInstallAction": "Download rules",
-  "russiaRoutesReinstallAction": "Update",
-  "russiaRoutesUpdateAction": "Check now",
-  "russiaRoutesUpdateAvailable": "A new rules version is available: {version}",
-  "@russiaRoutesUpdateAvailable": {
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
-  "russiaRoutesLatest": "The latest rules version is installed.",
-  "russiaRoutesEnableTitle": "Enable smart routing",
-  "russiaRoutesEnabledSubtitle": "Apply the prepared rules to the VPN connection.",
-  "russiaRoutesMissingSubtitle": "The bundled database works offline and is connected when enabled.",
-  "russiaRoutesPreparingStatus": "Updating rules...",
-  "russiaRoutesPreparingHint": "Downloading the latest database, verifying SRS files, and safely replacing local rules.",
-  "russiaRoutesStageChecking": "Checking rule version…",
-  "russiaRoutesStageDownloading": "Downloading rule archive…",
-  "russiaRoutesStageVerifying": "Verifying archive integrity…",
-  "russiaRoutesStageExtracting": "Extracting SRS files…",
-  "russiaRoutesStageCategories": "Updating service lists…",
-  "russiaRoutesStageCompiling": "Compiling local rules…",
-  "russiaRoutesStageActivating": "Replacing rules safely…",
-  "russiaRoutesStageComplete": "Rules updated",
-  "russiaRoutesDownloadProgress": "Downloaded {completed} of {total}.",
-  "@russiaRoutesDownloadProgress": {
-    "placeholders": {
-      "completed": {
-        "type": "String"
-      },
-      "total": {
-        "type": "String"
-      }
-    }
-  },
-  "russiaRoutesItemsProgress": "Processed lists: {completed} of {total}.",
-  "@russiaRoutesItemsProgress": {
-    "placeholders": {
-      "completed": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "russiaRoutesItemsProcessed": "Processed lists: {completed}.",
-  "@russiaRoutesItemsProcessed": {
-    "placeholders": {
-      "completed": {
-        "type": "int"
-      }
-    }
-  },
-  "russiaRoutesMissingStatus": "Rules are not installed yet",
-  "russiaRoutesMissingHint": "The bundled database is connected first, then a fresh version is checked and downloaded in the background.",
-  "russiaRoutesReadyHint": "Rules are stored locally. New versions are checked on startup, at most once a day.",
-  "@russiaRoutesReadyStatus": {
-    "placeholders": {
-      "versionTag": {
-        "type": "String"
-      }
-    }
-  },
-  "russiaRoutesReadyStatus": "Ready · {versionTag}",
-  "russiaRoutesLiveSource": "runetfreedom",
-  "russiaRoutesBundledSource": "bundled database",
-  "@russiaRoutesSourceMeta": {
-    "placeholders": {
-      "source": {
-        "type": "String"
-      },
-      "verifiedAt": {
-        "type": "String"
-      },
-      "fileCount": {
-        "type": "int"
-      }
-    }
-  },
-  "russiaRoutesSourceMeta": "Source: {source} · {verifiedAt} · files: {fileCount}",
-  "@russiaRoutesMeta": {
-    "placeholders": {
-      "installedAt": {
-        "type": "String"
-      },
-      "domainListUpdatedAt": {
-        "type": "String"
-      },
-      "categoryCount": {
-        "type": "int"
-      },
-      "domainCount": {
-        "type": "int"
-      }
-    }
-  },
-  "russiaRoutesMeta": "runetfreedom: {installedAt} · domain-list-community: {domainListUpdatedAt} · categories: {categoryCount} · domains: {domainCount}",
   "adBlockTitle": "Ad blocking",
   "adBlockSubtitle": "The client downloads a local rule-set itself and wires it into routing.",
   "adBlockDownloadAction": "Download",
@@ -1427,50 +1324,6 @@
   "connectionStageSelectingProxy": "Selecting server",
   "vpnStartTimedOut": "VPN did not start within 15 seconds. Startup was stopped.",
   "vpnStartFailed": "Failed to start VPN.",
-  "trafficRulesTitle": "Traffic rules",
-  "trafficRulesSettingsTitle": "Traffic rules",
-  "trafficRulesSettingsSubtitle": "Choose one verified rule for domains and IP routes.",
-  "trafficRulesCurrentLabel": "Active rule",
-  "trafficRulesNone": "Not selected",
-  "trafficRulesUsePresetTitle": "Use traffic rules",
-  "trafficRulesUsePresetSubtitle": "Choose a ready-made preset for domain and IP routing.",
-  "trafficRulesUsePresetAction": "Use preset",
-  "trafficRulesDisablePreset": "Disable preset",
-  "trafficRulesQuickSelection": "Quick selection",
-  "trafficRulesDeveloperSection": "Developer rules",
-  "trafficRulesDeveloperSubtitle": "Verified presets with a detailed breakdown.",
-  "trafficRulesVerified": "Verified",
-  "trafficRulesVerifiedInfo": "Verified by MeowTeam. Created by the official developer.",
-  "trafficRulesOnlyOne": "Only one traffic rule can be active at a time to avoid conflicts.",
-  "trafficRulesAvailableOffline": "After preparation, the rule works without an internet connection.",
-  "trafficRulesDataReady": "Rule data is ready",
-  "trafficRulesDataMissing": "Rule data has not been prepared yet",
-  "trafficRulesUpdateData": "Update rule data",
-  "trafficRulesDeleteData": "Delete rule data",
-  "trafficRulesChinaTitle": "China direct",
-  "trafficRulesChinaSubtitle": "Chinese domains and IP ranges go direct; other traffic uses the VPN.",
-  "trafficRulesChinaSummary": "Chinese domains and IP ranges go direct; other traffic uses the VPN.",
-  "trafficRulesAiTitle": "AI services through VPN",
-  "trafficRulesAiSubtitle": "Popular AI services are routed through the VPN; everything else is direct.",
-  "trafficRulesAiSummary": "AI services use VPN; other traffic is direct.",
-  "trafficRulesSocialTitle": "Social networks through VPN",
-  "trafficRulesSocialSubtitle": "Popular social networks and messengers are routed through the VPN; everything else is direct.",
-  "trafficRulesSocialSummary": "Social networks and messengers use VPN; other traffic is direct.",
-  "trafficRulesDetails": "Rule details",
-  "trafficRulesDescription": "Description",
-  "trafficRulesAuthor": "Author",
-  "trafficRulesRoutingDomains": "Domain routing",
-  "trafficRulesSettings": "Settings",
-  "trafficRulesDefaultRoute": "Everything else",
-  "trafficRulesDirect": "Direct",
-  "trafficRulesVpn": "Through VPN",
-  "trafficRulesIncludes": "Includes",
-  "trafficRulesLocalNetwork": "Local network always stays direct",
-  "trafficRulesChoose": "Choose rule",
-  "trafficRulesChosen": "Selected",
-  "trafficRulesDisabled": "Disabled",
-  "trafficRulesPreparing": "Preparing rule data…",
-  "trafficRulesApplying": "Applying rule…",
   "logsJumpToLatest": "Jump to latest entries",
   "proxyOpenGroup": "Open group: {name}",
   "proxyGroupNoAvailableServersMessage": "No servers in this group are available. Try another group or check again.",
@@ -1481,14 +1334,13 @@
       }
     }
   },
-  "trafficRulesPrepareFailed": "Could not prepare rule data. Check your connection and try again.",
   "remoteDownloadConnectTimeout": "Could not connect to the server within 5 seconds. Check your connection or active VPN and try again.",
   "remoteDownloadResponseTimeout": "The server did not start responding within 5 seconds. Check your connection or active VPN and try again.",
   "remoteDownloadRetryWithoutVpn": "Trying without VPN",
   "remoteDownloadRetryWithoutVpnHint": "The VPN route did not respond. Retrying over Wi-Fi or mobile data.",
   "remoteDownloadIdleTimeout": "The download stopped because the server sent no data for 7 seconds. Try again.",
-  "routingRuleFilesTitle": "Rule files",
-  "routingRuleFilesSettingsTitle": "Rule files",
+  "routingRuleFilesTitle": "China routing data",
+  "routingRuleFilesSettingsTitle": "China routing data",
   "routingRuleFilesSettingsReady": "{count} files ready",
   "@routingRuleFilesSettingsReady": {
     "placeholders": {
@@ -1497,17 +1349,17 @@
       }
     }
   },
-  "routingRuleFilesSettingsPreparing": "Bundled files are prepared when you open this screen",
-  "routingRuleFilesReadyTitle": "Rule files are ready",
-  "routingRuleFilesReadySubtitle": "SRS files are stored on this device and work offline.",
-  "routingRuleFilesPreparingTitle": "Preparing bundled files",
-  "routingRuleFilesPreparingSubtitle": "Preparing local SRS files for traffic rules.",
+  "routingRuleFilesSettingsPreparing": "China domain and IP data will be prepared automatically",
+  "routingRuleFilesReadyTitle": "China routing data is ready",
+  "routingRuleFilesReadySubtitle": "The domain and IP rule sets are stored locally and work offline.",
+  "routingRuleFilesPreparingTitle": "Preparing China routing data",
+  "routingRuleFilesPreparingSubtitle": "Downloading the current China domain and IP rule sets.",
   "routingRuleFilesSourceTitle": "Source",
   "routingRuleFilesVersionTitle": "Version",
   "routingRuleFilesCountTitle": "Files",
   "routingRuleFilesTotalSizeTitle": "Total size",
-  "routingRuleFilesScopeTitle": "Russia is the current priority",
-  "routingRuleFilesScopeSubtitle": "The current set focuses on Russian networks and services. More regions will be added in future updates.",
+  "routingRuleFilesScopeTitle": "China domains and IP ranges",
+  "routingRuleFilesScopeSubtitle": "China domains and IP ranges connect directly in Rules mode. All other unmatched traffic uses the selected proxy.",
   "routingRuleFilesOpenSourceFailed": "Unable to open the source page. Try again.",
   "routingRuleFilesSourceMeta": "Source: {source} · version: {version} · files: {count}",
   "@routingRuleFilesSourceMeta": {
@@ -1552,14 +1404,6 @@
   "routingRuleFilesListTitle": "Rule files",
   "routingRuleFilesEmptyTitle": "Files are not ready yet",
   "routingRuleFilesEmptySubtitle": "Open this screen again or tap Update files.",
-  "trafficRulesRuleCount": "{count} categories",
-  "@trafficRulesRuleCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "coreIntegrationTitle": "Core and configuration",
   "coreIntegrationSubtitle": "Shows the actual bundled core and last applied configuration state, not just the switches displayed by the app.",
   "coreApiLabel": "Core API",
@@ -1597,7 +1441,7 @@
   "splitRoutingApplyFailed": "Could not apply or save settings. Check your connection and try again.",
   "routingBlockLeaksCompact": "Block STUN/WebRTC",
   "routingBlockLeaksSummary": "Reduce WebRTC traffic bypassing the proxy",
-  "routingBypassLocalSummary": "Local addresses connect directly",
+  "routingBypassLocalSummary": "Only applies in Rules mode; Global mode sends tunnel traffic through the selected proxy.",
   "routingAdBlockSummary": "Local domain filter",
   "batteryOptimizationTitle": "Battery optimization",
   "batteryOptimizationExempt": "Unrestricted background access",
@@ -1605,5 +1449,96 @@
   "batteryOptimizationUnavailable": "Unavailable on this device",
   "batteryOptimizationChecking": "Checking system settings…",
   "batteryOptimizationDescription": "Allow background access if VPN stops when the screen is off. This may increase battery use; your device may have additional restrictions.",
-  "batteryOptimizationOpenFailed": "Could not open battery settings. Open them from Android settings."
+  "batteryOptimizationOpenFailed": "Could not open battery settings. Open them from Android settings.",
+  "routingModeTitle": "Traffic routing mode",
+  "routingModeRules": "Rules",
+  "routingModeGlobal": "Global",
+  "routingModeRulesDescription": "China domains and IP ranges go direct. Your custom rules take priority; all unmatched traffic uses the selected proxy.",
+  "routingModeGlobalDescription": "All traffic handled by Etonify uses the selected proxy. Domain/IP rules and local-network bypass are ignored; app-based split routing still applies.",
+  "routingModePreparingChinaData": "Preparing China domain and IP rules…",
+  "routingModeChinaDataFailedHint": "China rule data is unavailable. Rule mode remains active; unmatched traffic safely falls back to the proxy.",
+  "customRoutingRulesTitle": "Custom domain and IP rules",
+  "customRoutingRulesDescription": "Custom rules take priority over China direct rules. Unmatched traffic uses the proxy. Rules are ignored in Global mode. Move rules to change their priority.",
+  "customRoutingRulesEmptyTitle": "No custom rules yet",
+  "customRoutingRulesEmptySubtitle": "Add a domain or IP range and choose whether it should use the proxy or connect directly.",
+  "customRoutingRulesCount": "{count} rules",
+  "customRoutingRulesLimit": "You can add up to {count} rules.",
+  "customRoutingRuleAdd": "Add rule",
+  "customRoutingRuleAddTitle": "Add routing rule",
+  "customRoutingRuleEditTitle": "Edit routing rule",
+  "customRoutingRuleActions": "Rule actions",
+  "customRoutingRuleType": "Match type",
+  "customRoutingRuleDomain": "Domain",
+  "customRoutingRuleIp": "IP address or CIDR",
+  "customRoutingRuleDomainLabel": "Domain name",
+  "customRoutingRuleIpLabel": "IP address or CIDR",
+  "customRoutingRuleDomainHint": "example.com or *.example.com",
+  "customRoutingRuleIpHint": "203.0.113.0/24 or 2001:db8::/32",
+  "customRoutingRuleTarget": "Route",
+  "customRoutingRuleProxy": "Use proxy",
+  "customRoutingRuleDirect": "Connect directly",
+  "customRoutingRuleInvalidDomain": "Enter a valid domain name, such as example.com.",
+  "customRoutingRuleInvalidIp": "Enter a valid IPv4/IPv6 address or CIDR range.",
+  "customRoutingRuleInvalidValue": "The rule value is invalid.",
+  "customRoutingRuleDuplicate": "A rule with this domain or IP already exists.",
+  "customRoutingRuleSave": "Save",
+  "customRoutingRuleEdit": "Edit",
+  "customRoutingRuleDelete": "Delete",
+  "customRoutingRuleMoveUp": "Move up (higher priority)",
+  "customRoutingRuleMoveDown": "Move down (lower priority)",
+  "routingRuleFilesUpdateFailed": "Unable to prepare China rule data. Check your connection and try again.",
+  "routingRuleFilesPreparingHint": "Downloading and validating the China domain and IP rule sets…",
+  "routingRuleFilesDownloadProgress": "Downloaded {completed} of {total}.",
+  "routingRuleFilesItemsProgress": "Processed {completed} of {total} items.",
+  "routingRuleFilesItemsProcessed": "Processed {completed} items.",
+  "routingRuleFilesStageChecking": "Checking China rule data…",
+  "routingRuleFilesStageDownloading": "Downloading China rule data…",
+  "routingRuleFilesStageVerifying": "Validating rule files…",
+  "routingRuleFilesStageExtracting": "Preparing rule files…",
+  "routingRuleFilesStageCategories": "Updating rule data…",
+  "routingRuleFilesStageCompiling": "Checking local rules…",
+  "routingRuleFilesStageActivating": "Activating rule data…",
+  "routingRuleFilesStageComplete": "China rule data is ready",
+  "@customRoutingRulesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@customRoutingRulesLimit": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@routingRuleFilesDownloadProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "@routingRuleFilesItemsProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@routingRuleFilesItemsProcessed": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "verifiedBadgeTooltip": "Verified"
 }

@@ -7,7 +7,8 @@ import 'package:meow_client/core/lowest_proxy_groups.dart';
 import 'package:meow_client/core/proxy_selection_catalog.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/backup/etonify_backup_service.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/subscription/subscription_parser.dart';
 import 'package:meow_client/data/subscription/subscription_store.dart';
 import 'package:meow_client/models/subscription.dart';
@@ -15,7 +16,20 @@ import 'package:meow_client/features/subscriptions/subscription_server_catalog.d
 import 'package:meow_client/singbox/singbox_config_builder.dart';
 import 'package:meow_client/singbox/libbox_capabilities.dart';
 
+late Directory _testRuleSetDirectory;
+
 void main() {
+  setUpAll(() {
+    _testRuleSetDirectory = Directory.systemTemp.createTempSync(
+      'etonify-singbox-rule-set-test-',
+    );
+  });
+  tearDownAll(() {
+    if (_testRuleSetDirectory.existsSync()) {
+      _testRuleSetDirectory.deleteSync(recursive: true);
+    }
+  });
+
   test('group members and nested groups are valid manual runtime choices', () {
     const subscription = Subscription(
       id: 'manual-member',
@@ -1190,7 +1204,6 @@ void main() {
       urlTestUnavailableCheckIntervalSeconds: 5,
       blockLeaks: false,
       adBlockEnabled: false,
-      useRussiaRouteData: false,
       bypassLocalNetwork: true,
       splitRoutingMode: SplitRoutingMode.disabled,
       splitRoutingPackages: const <String>[],
@@ -2070,7 +2083,6 @@ void main() {
     final plan = _defaultBuilder(
       subscription,
       selectedProxyTag: 'lowest-free',
-      useRussiaRouteData: true,
     ).buildPlan();
     final outbounds = (plan.config['outbounds'] as List)
         .cast<Map<String, dynamic>>();
@@ -2128,7 +2140,6 @@ void main() {
     final plan = _defaultBuilder(
       subscription,
       selectedProxyTag: 'lowest-open',
-      useRussiaRouteData: true,
       markAllServersRussia: subscription.markAllServersRussia,
     ).buildPlan();
     final outbounds = (plan.config['outbounds'] as List)
@@ -2212,47 +2223,17 @@ void main() {
     final plan = _defaultBuilder(
       subscription,
       selectedProxyTag: 'mixed',
-      useRussiaRouteData: true,
     ).buildPlan();
     final config = plan.config;
     final outbounds = (config['outbounds'] as List)
         .cast<Map<String, dynamic>>();
     final selector = outbounds.firstWhere((entry) => entry['tag'] == 'select');
     final route = (config['route'] as Map).cast<String, dynamic>();
-    final routeRules = (route['rules'] as List).cast<Map<String, dynamic>>();
-    final ruleSets =
-        (route['rule_set'] as List?)?.cast<Map<String, dynamic>>() ??
-        const <Map<String, dynamic>>[];
 
     expect(selector['default'], lowestProxyTag);
     expect(outbounds.any((entry) => entry['tag'] == mixedProxyTag), isFalse);
     expect(route['final'], 'select');
-    expect(
-      ruleSets.map((entry) => entry['tag']).toSet().intersection({
-        'telegram-services',
-        'ru-ai-services',
-      }),
-      isEmpty,
-    );
-    expect(
-      routeRules,
-      isNot(
-        contains(
-          allOf([
-            containsPair('rule_set', 'ru-ai-services'),
-            containsPair('outbound', lowestProxyTag),
-          ]),
-        ),
-      ),
-    );
-    expect(
-      routeRules.any(
-        (rule) =>
-            rule['rule_set'] is String &&
-            (rule['rule_set'] as String).startsWith('ru-'),
-      ),
-      isFalse,
-    );
+    expect(route.containsKey('rule_set'), isFalse);
   });
 
   test('uses group flag as fallback and selected child flag as priority', () {
@@ -3301,14 +3282,11 @@ void main() {
       vpnInboundEnabled: true,
       splitRoutingMode: SplitRoutingMode.proxySelected,
       splitRoutingPackages: const ['com.example.proxy'],
-      trafficRulePreset: TrafficRulePreset.chinaDirect,
-      chinaGeositePath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
-      chinaGeoipPath: _russiaRuleSetPath('geoip-ru-blocked.srs'),
+      chinaGeositePath: _testRuleSetPath('geosite-cn.srs'),
+      chinaGeoipPath: _testRuleSetPath('geoip-cn.srs'),
       adBlockEnabled: true,
-      adBlockBlockRuleSetPath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
-      adBlockAllowRuleSetPath: _russiaRuleSetPath(
-        'geosite-ru-available-only-inside.srs',
-      ),
+      adBlockBlockRuleSetPath: _testRuleSetPath('adblock-block.srs'),
+      adBlockAllowRuleSetPath: _testRuleSetPath('adblock-allow.srs'),
     ).build();
 
     final routeRules = ((config['route'] as Map)['rules'] as List)
@@ -3344,7 +3322,7 @@ void main() {
     );
     final dnsRules = (dns['rules'] as List).cast<Map<dynamic, dynamic>>();
     expect(
-      dnsRules.first,
+      dnsRules.firstWhere((rule) => rule['rule_set'] == 'cn-geosite-cn'),
       allOf([
         containsPair('rule_set', 'cn-geosite-cn'),
         containsPair('server', 'dns-direct'),
@@ -3685,17 +3663,9 @@ void main() {
       urlTestUnavailableCheckIntervalSeconds: 30,
       blockLeaks: false,
       adBlockEnabled: false,
-      useRussiaRouteData: false,
-      trafficRulePreset: TrafficRulePreset.chinaDirect,
+      routingMode: TrafficRoutingMode.rules,
       chinaGeositePath: '/definitely/missing/geosite-cn.srs',
       chinaGeoipPath: '/definitely/missing/geoip-cn.srs',
-      russiaGeositeRuBlockedPath: '/definitely/missing/geosite.srs',
-      russiaGeositeRuAvailableOnlyInsidePath: '/definitely/missing/inside.srs',
-      russiaGeositeCategoryRuPath: '/definitely/missing/category-ru.srs',
-      russiaGeoipRuBlockedPath: '/definitely/missing/geoip.srs',
-      russiaGeoipRuWhitelistPath: '/definitely/missing/whitelist.srs',
-      russiaGeoipRuPath: '/definitely/missing/ru.srs',
-      russiaCuratedDirectServicesPath: '/definitely/missing/direct.srs',
       bypassLocalNetwork: true,
       splitRoutingMode: SplitRoutingMode.disabled,
       splitRoutingPackages: const <String>[],
@@ -3878,45 +3848,57 @@ void main() {
     },
   );
 
-  test(
-    'direct DNS can use the proxy without proxying direct website traffic',
-    () {
-      const subscription = Subscription(
-        id: 'dns-detour-sub',
-        name: 'DNS detour',
-        url: 'https://example.com/sub',
-        outbounds: [
-          Outbound(
-            tag: 'node',
-            name: 'Node',
-            config: {
-              'type': 'vless',
-              'tag': 'node',
-              'server': 'node.example.com',
-              'server_port': 443,
-              'uuid': 'node-uuid',
-            },
-          ),
-        ],
-      );
+  test('a custom direct domain can use a proxy DNS detour', () {
+    const subscription = Subscription(
+      id: 'dns-detour-sub',
+      name: 'DNS detour',
+      url: 'https://example.com/sub',
+      outbounds: [
+        Outbound(
+          tag: 'node',
+          name: 'Node',
+          config: {
+            'type': 'vless',
+            'tag': 'node',
+            'server': 'node.example.com',
+            'server_port': 443,
+            'uuid': 'node-uuid',
+          },
+        ),
+      ],
+    );
 
-      final config = _defaultBuilder(
-        subscription,
-        dnsDirectResolver: defaultSecureDnsDirectResolver,
-        dnsDirectThroughProxy: true,
-        trafficRulePreset: TrafficRulePreset.aiViaVpn,
-        russiaAiServicesPath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
-      ).build();
-      final servers = ((config['dns'] as Map)['servers'] as List)
-          .cast<Map<String, dynamic>>();
-      final direct = servers.firstWhere(
-        (server) => server['tag'] == 'dns-direct',
-      );
+    final config = _defaultBuilder(
+      subscription,
+      dnsDirectResolver: defaultSecureDnsDirectResolver,
+      dnsDirectThroughProxy: true,
+      customRoutingRules: [
+        CustomRoutingRule.create(
+          type: CustomRouteRuleType.domain,
+          value: 'direct.example.com',
+          action: CustomRouteAction.direct,
+        ),
+      ],
+    ).build();
+    final servers = ((config['dns'] as Map)['servers'] as List)
+        .cast<Map<String, dynamic>>();
+    final direct = servers.firstWhere(
+      (server) => server['tag'] == 'dns-direct',
+    );
 
-      expect(direct['detour'], 'select');
-      expect((config['route'] as Map)['final'], 'direct');
-    },
-  );
+    expect(direct['detour'], 'select');
+    final route = (config['route'] as Map).cast<String, dynamic>();
+    expect(route['final'], 'select');
+    expect(
+      (route['rules'] as List).cast<Map<dynamic, dynamic>>(),
+      contains(
+        allOf([
+          containsPair('domain_suffix', ['direct.example.com']),
+          containsPair('outbound', 'direct'),
+        ]),
+      ),
+    );
+  });
 
   test('China domains use the configured direct DNS resolver', () {
     const subscription = Subscription(
@@ -3940,9 +3922,8 @@ void main() {
 
     final config = _defaultBuilder(
       subscription,
-      trafficRulePreset: TrafficRulePreset.chinaDirect,
-      chinaGeositePath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
-      chinaGeoipPath: _russiaRuleSetPath('geoip-ru-blocked.srs'),
+      chinaGeositePath: _testRuleSetPath('geosite-cn.srs'),
+      chinaGeoipPath: _testRuleSetPath('geoip-cn.srs'),
       dnsDirectResolver: '77.88.8.1',
     ).build();
 
@@ -3962,88 +3943,139 @@ void main() {
     );
   });
 
-  test(
-    'routes only AI categories through VPN when the AI preset is active',
-    () {
-      const subscription = Subscription(
-        id: 'ai-rule',
-        name: 'AI rule',
-        url: 'https://example.com/sub',
-        outbounds: [
-          Outbound(
-            tag: 'node',
-            name: 'Node',
-            config: {
-              'type': 'vless',
-              'tag': 'node',
-              'server': 'node.example.com',
-              'server_port': 443,
-              'uuid': 'node-uuid',
-            },
-          ),
-        ],
-      );
-
-      final config = _defaultBuilder(
-        subscription,
-        trafficRulePreset: TrafficRulePreset.aiViaVpn,
-        russiaAiServicesPath: _russiaRuleSetPath('geosite-ru-blocked.srs'),
-      ).build();
-
-      final route = config['route'] as Map<String, dynamic>;
-      final dns = config['dns'] as Map<String, dynamic>;
-      final ruleSets = (route['rule_set'] as List).cast<Map<String, dynamic>>();
-      final rules = (route['rules'] as List).cast<Map<String, dynamic>>();
-
-      expect(route['final'], 'direct');
-      expect(dns['final'], 'dns-direct');
-      expect(ruleSets.any((item) => item['tag'] == 'ai-services'), isTrue);
-      expect(
-        rules.any(
-          (item) =>
-              item['rule_set'] == 'ai-services' && item['outbound'] == 'select',
+  test('custom domain and IP rules override China direct rules', () {
+    const subscription = Subscription(
+      id: 'custom-rules',
+      name: 'Custom rules',
+      url: 'https://example.com/sub',
+      outbounds: [
+        Outbound(
+          tag: 'node',
+          name: 'Node',
+          config: {
+            'type': 'vless',
+            'tag': 'node',
+            'server': 'node.example.com',
+            'server_port': 443,
+            'uuid': 'node-uuid',
+          },
         ),
-        isTrue,
-      );
-    },
-  );
+      ],
+    );
 
-  test(
-    'keeps the usual proxy route when selected social rule data is missing',
-    () {
-      const subscription = Subscription(
-        id: 'social-rule',
-        name: 'Social rule',
-        url: 'https://example.com/sub',
-        outbounds: [
-          Outbound(
-            tag: 'node',
-            name: 'Node',
-            config: {
-              'type': 'vless',
-              'tag': 'node',
-              'server': 'node.example.com',
-              'server_port': 443,
-              'uuid': 'node-uuid',
-            },
-          ),
-        ],
-      );
+    final config = _defaultBuilder(
+      subscription,
+      customRoutingRules: [
+        CustomRoutingRule.create(
+          type: CustomRouteRuleType.domain,
+          value: 'custom.example.com',
+          action: CustomRouteAction.proxy,
+        ),
+        CustomRoutingRule.create(
+          type: CustomRouteRuleType.ip,
+          value: '203.0.113.0/24',
+          action: CustomRouteAction.direct,
+        ),
+      ],
+      chinaGeositePath: _testRuleSetPath('geosite-cn.srs'),
+      chinaGeoipPath: _testRuleSetPath('geoip-cn.srs'),
+    ).build();
 
-      final config = _defaultBuilder(
-        subscription,
-        trafficRulePreset: TrafficRulePreset.socialViaVpn,
-      ).build();
+    final route = config['route'] as Map<String, dynamic>;
+    final dns = config['dns'] as Map<String, dynamic>;
+    final rules = (route['rules'] as List).cast<Map<String, dynamic>>();
+    final dnsRules = (dns['rules'] as List).cast<Map<String, dynamic>>();
 
-      final route = config['route'] as Map<String, dynamic>;
-      final ruleSets =
-          (route['rule_set'] as List?)?.cast<Map<String, dynamic>>() ??
-          const <Map<String, dynamic>>[];
+    expect(route['final'], 'select');
+    final proxyDomainIndex = rules.indexWhere(
+      (rule) =>
+          (rule['domain_suffix'] as List?)?.contains('custom.example.com') ==
+              true &&
+          rule['outbound'] == 'select',
+    );
+    final directIpIndex = rules.indexWhere(
+      (rule) =>
+          (rule['ip_cidr'] as List?)?.contains('203.0.113.0/24') == true &&
+          rule['outbound'] == 'direct',
+    );
+    final chinaDomainIndex = rules.indexWhere(
+      (rule) => rule['rule_set'] == 'cn-geosite-cn',
+    );
+    final chinaIpIndex = rules.indexWhere(
+      (rule) => rule['rule_set'] == 'cn-geoip-cn',
+    );
+    expect(proxyDomainIndex, greaterThanOrEqualTo(0));
+    expect(directIpIndex, greaterThanOrEqualTo(0));
+    expect(chinaDomainIndex, greaterThan(proxyDomainIndex));
+    expect(chinaIpIndex, greaterThan(directIpIndex));
+    expect(
+      dnsRules.any(
+        (rule) =>
+            (rule['domain_suffix'] as List?)?.contains('custom.example.com') ==
+                true &&
+            rule['server'] == 'dns-remote',
+      ),
+      isTrue,
+    );
+  });
 
-      expect(route['final'], 'select');
-      expect(ruleSets.any((item) => item['tag'] == 'social-services'), isFalse);
-    },
-  );
+  test('global mode ignores China, custom, and local bypass rules', () {
+    const subscription = Subscription(
+      id: 'global-mode',
+      name: 'Global mode',
+      url: 'https://example.com/sub',
+      outbounds: [
+        Outbound(
+          tag: 'node',
+          name: 'Node',
+          config: {
+            'type': 'vless',
+            'tag': 'node',
+            'server': 'node.example.com',
+            'server_port': 443,
+            'uuid': 'node-uuid',
+          },
+        ),
+      ],
+    );
+
+    final config = _defaultBuilder(
+      subscription,
+      routingMode: TrafficRoutingMode.global,
+      customRoutingRules: [
+        CustomRoutingRule.create(
+          type: CustomRouteRuleType.domain,
+          value: 'direct.example.com',
+          action: CustomRouteAction.direct,
+        ),
+        CustomRoutingRule.create(
+          type: CustomRouteRuleType.ip,
+          value: '10.0.0.0/8',
+          action: CustomRouteAction.direct,
+        ),
+      ],
+      chinaGeositePath: _testRuleSetPath('geosite-cn.srs'),
+      chinaGeoipPath: _testRuleSetPath('geoip-cn.srs'),
+    ).build();
+
+    final route = config['route'] as Map<String, dynamic>;
+    final rules = (route['rules'] as List).cast<Map<String, dynamic>>();
+    final dns = config['dns'] as Map<String, dynamic>;
+
+    expect(route['final'], 'select');
+    expect(route.containsKey('rule_set'), isFalse);
+    expect(dns['final'], 'dns-remote');
+    expect(
+      rules.any(
+        (rule) =>
+            rule.containsKey('domain_suffix') ||
+            rule.containsKey('ip_cidr') ||
+            rule.containsKey('ip_is_private') ||
+            rule.containsKey('rule_set'),
+      ),
+      isFalse,
+    );
+  });
   test(
     'home proxy cache retains only the selected proxy for a large profile',
     () {
@@ -4191,9 +4223,9 @@ void main() {
 SingboxConfigBuilder _defaultBuilder(
   Subscription subscription, {
   String selectedProxyTag = '',
-  bool useRussiaRouteData = false,
-  TrafficRulePreset trafficRulePreset = TrafficRulePreset.none,
   bool markAllServersRussia = false,
+  TrafficRoutingMode routingMode = TrafficRoutingMode.rules,
+  List<CustomRoutingRule> customRoutingRules = const <CustomRoutingRule>[],
   String urlTestUrl = 'https://www.gstatic.com/generate_204',
   int urlTestIntervalSeconds = 180,
   int urlTestTimeoutSeconds = 15,
@@ -4221,8 +4253,6 @@ SingboxConfigBuilder _defaultBuilder(
   bool dnsSecureOnly = false,
   bool dnsDirectThroughProxy = false,
   String russiaDnsDirectResolver = defaultRussiaDnsDirectResolver,
-  String? russiaAiServicesPath,
-  String? russiaSocialServicesPath,
   String? chinaGeositePath,
   String? chinaGeoipPath,
   LibboxCapabilities capabilities = LibboxCapabilities.bundledLegacy,
@@ -4255,35 +4285,10 @@ SingboxConfigBuilder _defaultBuilder(
     adBlockEnabled: adBlockEnabled,
     adBlockBlockRuleSetPath: adBlockBlockRuleSetPath,
     adBlockAllowRuleSetPath: adBlockAllowRuleSetPath,
-    useRussiaRouteData: useRussiaRouteData,
-    russiaGeositeRuBlockedPath: useRussiaRouteData
-        ? _russiaRuleSetPath('geosite-ru-blocked.srs')
-        : null,
-    russiaGeositeRuAvailableOnlyInsidePath: useRussiaRouteData
-        ? _russiaRuleSetPath('geosite-ru-available-only-inside.srs')
-        : null,
-    russiaGeositeCategoryRuPath: useRussiaRouteData
-        ? _russiaRuleSetPath('geosite-category-ru.srs')
-        : null,
-    russiaGeoipRuBlockedPath: useRussiaRouteData
-        ? _russiaRuleSetPath('geoip-ru-blocked.srs')
-        : null,
-    russiaGeoipRuWhitelistPath: useRussiaRouteData
-        ? _russiaRuleSetPath('geoip-ru-whitelist.srs')
-        : null,
-    russiaGeoipRuPath: useRussiaRouteData
-        ? _russiaRuleSetPath('geoip-ru.srs')
-        : null,
-    russiaCuratedDirectServicesPath: useRussiaRouteData
-        ? _russiaRuleSetPath('geosite-ru-available-only-inside.srs')
-        : null,
-    russiaAiServicesPath: useRussiaRouteData
-        ? russiaAiServicesPath ?? _russiaRuleSetPath('geosite-ru-blocked.srs')
-        : russiaAiServicesPath,
-    russiaSocialServicesPath: russiaSocialServicesPath,
     chinaGeositePath: chinaGeositePath,
     chinaGeoipPath: chinaGeoipPath,
-    trafficRulePreset: trafficRulePreset,
+    routingMode: routingMode,
+    customRoutingRules: customRoutingRules,
     bypassLocalNetwork: true,
     splitRoutingMode: splitRoutingMode,
     splitRoutingPackages: splitRoutingPackages,
@@ -4300,8 +4305,13 @@ SingboxConfigBuilder _defaultBuilder(
   );
 }
 
-String _russiaRuleSetPath(String fileName) {
-  return '${Directory.current.path}/assets/route_data/russia/$fileName';
+String _testRuleSetPath(String fileName) {
+  final file = File('${_testRuleSetDirectory.path}/$fileName');
+  if (!file.existsSync()) {
+    file.parent.createSync(recursive: true);
+    file.writeAsBytesSync(const [0x53, 0x52, 0x53, 0x02, 0x00]);
+  }
+  return file.path;
 }
 
 Map<String, dynamic> _xrayVlessOutbound(String tag, String server) {

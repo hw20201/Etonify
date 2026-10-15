@@ -2420,128 +2420,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bypassLocalNetworkSubtitle => '私有与局域网地址直接路由';
 
   @override
-  String get russiaRoutesTitle => '智能路由';
-
-  @override
-  String get russiaRoutesRunetFreedomBadge => 'runetfreedom';
-
-  @override
-  String get russiaRoutesDomainListBadge => 'domain-list-community';
-
-  @override
-  String get russiaRoutesSubtitle => '俄罗斯服务直连，被屏蔽的资源走 VPN。';
-
-  @override
-  String get russiaRoutesInstallAction => '下载规则';
-
-  @override
-  String get russiaRoutesReinstallAction => '更新';
-
-  @override
-  String get russiaRoutesUpdateAction => '立即检查';
-
-  @override
-  String russiaRoutesUpdateAvailable(String version) {
-    return '有新的规则版本可用：$version';
-  }
-
-  @override
-  String get russiaRoutesLatest => '已安装最新版本的规则。';
-
-  @override
-  String get russiaRoutesEnableTitle => '启用智能路由';
-
-  @override
-  String get russiaRoutesEnabledSubtitle => '将预置规则应用于 VPN 连接。';
-
-  @override
-  String get russiaRoutesMissingSubtitle => '内置数据库可离线使用，启用后自动接入。';
-
-  @override
-  String get russiaRoutesPreparingStatus => '正在更新规则…';
-
-  @override
-  String get russiaRoutesPreparingHint => '正在下载最新数据库、校验 SRS 文件并安全替换本地规则。';
-
-  @override
-  String get russiaRoutesStageChecking => '正在检查规则版本…';
-
-  @override
-  String get russiaRoutesStageDownloading => '正在下载规则压缩包…';
-
-  @override
-  String get russiaRoutesStageVerifying => '正在验证压缩包完整性……';
-
-  @override
-  String get russiaRoutesStageExtracting => '正在解压 SRS 文件…';
-
-  @override
-  String get russiaRoutesStageCategories => '正在更新服务列表…';
-
-  @override
-  String get russiaRoutesStageCompiling => '正在编译本地规则…';
-
-  @override
-  String get russiaRoutesStageActivating => '正在安全替换规则…';
-
-  @override
-  String get russiaRoutesStageComplete => '规则已更新';
-
-  @override
-  String russiaRoutesDownloadProgress(String completed, String total) {
-    return '已下载 $completed / 共 $total。';
-  }
-
-  @override
-  String russiaRoutesItemsProgress(int completed, int total) {
-    return '已处理列表：$completed / $total。';
-  }
-
-  @override
-  String russiaRoutesItemsProcessed(int completed) {
-    return '已处理的列表：$completed。';
-  }
-
-  @override
-  String get russiaRoutesMissingStatus => '规则尚未安装';
-
-  @override
-  String get russiaRoutesMissingHint => '先接入内置数据库，然后在后台检查并下载最新版本。';
-
-  @override
-  String get russiaRoutesReadyHint => '规则存储在本地。新版本每天启动时至多检查一次。';
-
-  @override
-  String russiaRoutesReadyStatus(String versionTag) {
-    return '就绪 · $versionTag';
-  }
-
-  @override
-  String get russiaRoutesLiveSource => 'runetfreedom';
-
-  @override
-  String get russiaRoutesBundledSource => '内置数据库';
-
-  @override
-  String russiaRoutesSourceMeta(
-    String source,
-    String verifiedAt,
-    int fileCount,
-  ) {
-    return '来源：$source · $verifiedAt · 文件数：$fileCount';
-  }
-
-  @override
-  String russiaRoutesMeta(
-    String installedAt,
-    String domainListUpdatedAt,
-    int categoryCount,
-    int domainCount,
-  ) {
-    return 'runetfreedom：$installedAt · domain-list-community：$domainListUpdatedAt · 分类：$categoryCount · 域名：$domainCount';
-  }
-
-  @override
   String get adBlockTitle => '广告拦截';
 
   @override
@@ -2945,138 +2823,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vpnStartFailed => 'VPN 启动失败。';
 
   @override
-  String get trafficRulesTitle => '流量规则';
-
-  @override
-  String get trafficRulesSettingsTitle => '流量规则';
-
-  @override
-  String get trafficRulesSettingsSubtitle => '为域名与 IP 路由选择一条已验证的规则。';
-
-  @override
-  String get trafficRulesCurrentLabel => '当前规则';
-
-  @override
-  String get trafficRulesNone => '未选择';
-
-  @override
-  String get trafficRulesUsePresetTitle => '使用流量规则';
-
-  @override
-  String get trafficRulesUsePresetSubtitle => '为域名与 IP 路由选择现成预设。';
-
-  @override
-  String get trafficRulesUsePresetAction => '使用预设';
-
-  @override
-  String get trafficRulesDisablePreset => '禁用预设';
-
-  @override
-  String get trafficRulesQuickSelection => '快速选择';
-
-  @override
-  String get trafficRulesDeveloperSection => '开发者规则';
-
-  @override
-  String get trafficRulesDeveloperSubtitle => '经验证的预设，附详细说明。';
-
-  @override
-  String get trafficRulesVerified => '已验证';
-
-  @override
-  String get trafficRulesVerifiedInfo => '经 MeowTeam 验证。由官方开发者创建。';
-
-  @override
-  String get trafficRulesOnlyOne => '为避免冲突，一次只能启用一条流量规则。';
-
-  @override
-  String get trafficRulesAvailableOffline => '准备完成后，该规则无需联网即可使用。';
-
-  @override
-  String get trafficRulesDataReady => '规则数据已就绪';
-
-  @override
-  String get trafficRulesDataMissing => '规则数据尚未准备好';
-
-  @override
-  String get trafficRulesUpdateData => '更新规则数据';
-
-  @override
-  String get trafficRulesDeleteData => '删除规则数据';
-
-  @override
-  String get trafficRulesChinaTitle => '中国直连';
-
-  @override
-  String get trafficRulesChinaSubtitle => '中国域名与 IP 网段直连，其余流量走代理。';
-
-  @override
-  String get trafficRulesChinaSummary => '中国域名与 IP 直连，其余流量走代理。';
-
-  @override
-  String get trafficRulesAiTitle => 'AI 服务走 VPN';
-
-  @override
-  String get trafficRulesAiSubtitle => '常用 AI 服务走 VPN，其余流量直连。';
-
-  @override
-  String get trafficRulesAiSummary => 'AI 服务走 VPN，其他流量直连。';
-
-  @override
-  String get trafficRulesSocialTitle => '社交网络走 VPN';
-
-  @override
-  String get trafficRulesSocialSubtitle => '常用社交网络和即时通讯走 VPN，其余流量直连。';
-
-  @override
-  String get trafficRulesSocialSummary => '社交网络和即时通讯走 VPN，其他流量直连。';
-
-  @override
-  String get trafficRulesDetails => '规则详情';
-
-  @override
-  String get trafficRulesDescription => '描述';
-
-  @override
-  String get trafficRulesAuthor => '作者';
-
-  @override
-  String get trafficRulesRoutingDomains => '域名路由';
-
-  @override
-  String get trafficRulesSettings => '设置';
-
-  @override
-  String get trafficRulesDefaultRoute => '其他所有';
-
-  @override
-  String get trafficRulesDirect => '直连';
-
-  @override
-  String get trafficRulesVpn => '经 VPN';
-
-  @override
-  String get trafficRulesIncludes => '包含';
-
-  @override
-  String get trafficRulesLocalNetwork => '本地网络始终直连';
-
-  @override
-  String get trafficRulesChoose => '选择规则';
-
-  @override
-  String get trafficRulesChosen => '已选择';
-
-  @override
-  String get trafficRulesDisabled => '已禁用';
-
-  @override
-  String get trafficRulesPreparing => '正在准备规则数据…';
-
-  @override
-  String get trafficRulesApplying => '正在应用规则…';
-
-  @override
   String get logsJumpToLatest => '跳到最新日志';
 
   @override
@@ -3086,9 +2832,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get proxyGroupNoAvailableServersMessage => '该分组中没有可用服务器，请尝试其他分组或重新检测。';
-
-  @override
-  String get trafficRulesPrepareFailed => '无法准备规则数据。请检查连接后重试。';
 
   @override
   String get remoteDownloadConnectTimeout => '5 秒内未能连接到服务器。请检查网络或已启用的 VPN 后重试。';
@@ -3107,10 +2850,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get remoteDownloadIdleTimeout => '服务器 7 秒未发送数据，下载已停止，请重试。';
 
   @override
-  String get routingRuleFilesTitle => '规则文件';
+  String get routingRuleFilesTitle => '中国路由数据';
 
   @override
-  String get routingRuleFilesSettingsTitle => '规则文件';
+  String get routingRuleFilesSettingsTitle => '中国路由数据';
 
   @override
   String routingRuleFilesSettingsReady(int count) {
@@ -3118,19 +2861,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get routingRuleFilesSettingsPreparing => '打开此页面时将准备内置文件';
+  String get routingRuleFilesSettingsPreparing => '将自动准备中国域名和 IP 数据';
 
   @override
-  String get routingRuleFilesReadyTitle => '规则文件已就绪';
+  String get routingRuleFilesReadyTitle => '中国路由数据已就绪';
 
   @override
-  String get routingRuleFilesReadySubtitle => 'SRS 文件保存在本机，可离线使用。';
+  String get routingRuleFilesReadySubtitle => '域名和 IP 规则集保存在本机，可离线使用。';
 
   @override
-  String get routingRuleFilesPreparingTitle => '正在准备内置文件';
+  String get routingRuleFilesPreparingTitle => '正在准备中国路由数据';
 
   @override
-  String get routingRuleFilesPreparingSubtitle => '正在为流量规则准备本地 SRS 文件。';
+  String get routingRuleFilesPreparingSubtitle => '正在下载最新的中国域名与 IP 规则集。';
 
   @override
   String get routingRuleFilesSourceTitle => '来源';
@@ -3145,10 +2888,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routingRuleFilesTotalSizeTitle => '总大小';
 
   @override
-  String get routingRuleFilesScopeTitle => '当前优先：俄罗斯';
+  String get routingRuleFilesScopeTitle => '中国域名和 IP 网段';
 
   @override
-  String get routingRuleFilesScopeSubtitle => '当前规则集主要覆盖俄罗斯的网络和服务。未来更新会增加更多地区。';
+  String get routingRuleFilesScopeSubtitle =>
+      '规则模式下，中国域名和 IP 网段直连；其余未匹配流量走当前代理。';
 
   @override
   String get routingRuleFilesOpenSourceFailed => '无法打开来源页面，请重试。';
@@ -3187,11 +2931,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get routingRuleFilesEmptySubtitle => '请重新打开此页面或点击“更新文件”。';
-
-  @override
-  String trafficRulesRuleCount(int count) {
-    return '$count 个分类';
-  }
 
   @override
   String get coreIntegrationTitle => '核心与配置';
@@ -3307,7 +3046,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routingBlockLeaksSummary => '减少通过 WebRTC 绕过代理的流量';
 
   @override
-  String get routingBypassLocalSummary => '本地地址直接连接';
+  String get routingBypassLocalSummary => '仅规则模式生效；全局模式会让隧道流量走当前代理。';
 
   @override
   String get routingAdBlockSummary => '本地域名过滤';
@@ -3333,4 +3072,168 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get batteryOptimizationOpenFailed => '无法打开电池设置。请从安卓设置中打开。';
+
+  @override
+  String get routingModeTitle => '流量路由模式';
+
+  @override
+  String get routingModeRules => '规则';
+
+  @override
+  String get routingModeGlobal => '全局';
+
+  @override
+  String get routingModeRulesDescription =>
+      '中国域名和 IP 网段直连；你添加的规则优先，其余未匹配流量走当前代理。';
+
+  @override
+  String get routingModeGlobalDescription =>
+      'Etonify 接管的流量全部走当前代理，忽略域名/IP规则和局域网直连；按应用分流仍然生效。';
+
+  @override
+  String get routingModePreparingChinaData => '正在准备中国域名和 IP 规则…';
+
+  @override
+  String get routingModeChinaDataFailedHint =>
+      '暂时无法获取中国规则数据。规则模式仍已启用，未匹配流量会安全地回退到代理。';
+
+  @override
+  String get customRoutingRulesTitle => '自定义域名和 IP 规则';
+
+  @override
+  String get customRoutingRulesDescription =>
+      '自定义规则优先于中国直连规则；未匹配流量走代理。全局模式会忽略这些规则。可调整规则顺序来设置优先级。';
+
+  @override
+  String get customRoutingRulesEmptyTitle => '还没有自定义规则';
+
+  @override
+  String get customRoutingRulesEmptySubtitle => '添加域名或 IP 网段，并选择它走代理还是直连。';
+
+  @override
+  String customRoutingRulesCount(int count) {
+    return '$count 条规则';
+  }
+
+  @override
+  String customRoutingRulesLimit(int count) {
+    return '最多可添加 $count 条规则。';
+  }
+
+  @override
+  String get customRoutingRuleAdd => '添加规则';
+
+  @override
+  String get customRoutingRuleAddTitle => '添加路由规则';
+
+  @override
+  String get customRoutingRuleEditTitle => '编辑路由规则';
+
+  @override
+  String get customRoutingRuleActions => '规则操作';
+
+  @override
+  String get customRoutingRuleType => '匹配类型';
+
+  @override
+  String get customRoutingRuleDomain => '域名';
+
+  @override
+  String get customRoutingRuleIp => 'IP 地址或网段';
+
+  @override
+  String get customRoutingRuleDomainLabel => '域名';
+
+  @override
+  String get customRoutingRuleIpLabel => 'IP 地址或网段';
+
+  @override
+  String get customRoutingRuleDomainHint => 'example.com 或 *.example.com';
+
+  @override
+  String get customRoutingRuleIpHint => '203.0.113.0/24 或 2001:db8::/32';
+
+  @override
+  String get customRoutingRuleTarget => '路由方式';
+
+  @override
+  String get customRoutingRuleProxy => '走代理';
+
+  @override
+  String get customRoutingRuleDirect => '直连';
+
+  @override
+  String get customRoutingRuleInvalidDomain => '请输入有效域名，例如 example.com。';
+
+  @override
+  String get customRoutingRuleInvalidIp => '请输入有效的 IPv4/IPv6 地址或 CIDR 网段。';
+
+  @override
+  String get customRoutingRuleInvalidValue => '规则内容无效。';
+
+  @override
+  String get customRoutingRuleDuplicate => '该域名或 IP 已有规则。';
+
+  @override
+  String get customRoutingRuleSave => '保存';
+
+  @override
+  String get customRoutingRuleEdit => '编辑';
+
+  @override
+  String get customRoutingRuleDelete => '删除';
+
+  @override
+  String get customRoutingRuleMoveUp => '上移（提高优先级）';
+
+  @override
+  String get customRoutingRuleMoveDown => '下移（降低优先级）';
+
+  @override
+  String get routingRuleFilesUpdateFailed => '无法准备中国规则数据，请检查网络后重试。';
+
+  @override
+  String get routingRuleFilesPreparingHint => '正在下载并校验中国域名和 IP 规则集…';
+
+  @override
+  String routingRuleFilesDownloadProgress(String completed, String total) {
+    return '已下载 $completed / 共 $total。';
+  }
+
+  @override
+  String routingRuleFilesItemsProgress(int completed, int total) {
+    return '已处理 $completed / 共 $total 项。';
+  }
+
+  @override
+  String routingRuleFilesItemsProcessed(int completed) {
+    return '已处理 $completed 项。';
+  }
+
+  @override
+  String get routingRuleFilesStageChecking => '正在检查中国规则数据…';
+
+  @override
+  String get routingRuleFilesStageDownloading => '正在下载中国规则数据…';
+
+  @override
+  String get routingRuleFilesStageVerifying => '正在校验规则文件…';
+
+  @override
+  String get routingRuleFilesStageExtracting => '正在准备规则文件…';
+
+  @override
+  String get routingRuleFilesStageCategories => '正在更新规则数据…';
+
+  @override
+  String get routingRuleFilesStageCompiling => '正在检查本地规则…';
+
+  @override
+  String get routingRuleFilesStageActivating => '正在应用规则数据…';
+
+  @override
+  String get routingRuleFilesStageComplete => '中国规则数据已就绪';
+
+  @override
+  String get verifiedBadgeTooltip => '已认证';
 }

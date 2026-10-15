@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
 import 'package:meow_client/features/settings/routing_rule_files_page.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 
@@ -11,12 +11,12 @@ void main() {
   ) async {
     final activity = _FakeRouteActivity();
     addTearDown(activity.progress.dispose);
-    const status = RussiaRouteDataStatus(
+    const status = ChinaRouteDataStatus(
       available: true,
-      sourceName: RussiaRouteDataService.sourceName,
+      sourceName: ChinaRouteDataService.chinaRouteDataSourceName,
       versionTag: '202609280600',
     );
-    Widget build(RussiaRouteDataStatus currentStatus) => MaterialApp(
+    Widget build(ChinaRouteDataStatus currentStatus) => MaterialApp(
       locale: const Locale('ru'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
@@ -36,9 +36,9 @@ void main() {
 
     await tester.pumpWidget(
       build(
-        const RussiaRouteDataStatus(
+        const ChinaRouteDataStatus(
           available: true,
-          sourceName: RussiaRouteDataService.sourceName,
+          sourceName: ChinaRouteDataService.chinaRouteDataSourceName,
           versionTag: '202609290600',
         ),
       ),
@@ -53,17 +53,19 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('route files use compact metadata and readable version', (
+  testWidgets('China route files use compact metadata and readable version', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(420, 860));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    const status = RussiaRouteDataStatus(
+    const status = ChinaRouteDataStatus(
       available: true,
-      sourceName: RussiaRouteDataService.sourceName,
-      sourceKind: RussiaRouteDataService.sourceKindLive,
+      sourceName: ChinaRouteDataService.chinaRouteDataSourceName,
+      sourceKind: ChinaRouteDataService.sourceKindLive,
       versionTag: '202608261635',
       releaseTag: '202608261635',
+      chinaGeositePath: '/test/geosite-cn.srs',
+      chinaGeoipPath: '/test/geoip-cn.srs',
     );
 
     await tester.pumpWidget(
@@ -86,17 +88,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Источник'), findsOneWidget);
-    expect(find.text('runetfreedom'), findsOneWidget);
+    expect(find.text('aliothlab/rule-set'), findsOneWidget);
     expect(find.byIcon(Icons.open_in_new_rounded), findsOneWidget);
     expect(find.text('Версия'), findsOneWidget);
     expect(find.text('26.08.2026 16:35'), findsOneWidget);
     expect(find.text('Общий размер'), findsOneWidget);
     expect(find.text('0 B'), findsOneWidget);
-    expect(find.text('Сейчас в приоритете Россия'), findsOneWidget);
+    expect(find.text('Домены и IP-диапазоны Китая'), findsOneWidget);
     expect(
       find.text(
-        'Набор пока содержит правила для российских сетей и сервисов. '
-        'География будет расширяться в следующих обновлениях.',
+        'В режиме правил домены и IP Китая идут напрямую; остальной трафик '
+        'идет через выбранный прокси.',
       ),
       findsOneWidget,
     );
@@ -107,11 +109,11 @@ void main() {
   });
 }
 
-class _FakeRouteActivity implements RussiaRouteUpdateActivity {
+class _FakeRouteActivity implements ChinaRouteUpdateActivity {
   @override
   bool isUpdating = true;
   @override
-  final ValueNotifier<RussiaRouteUpdateProgress?> progress = ValueNotifier(
-    const RussiaRouteUpdateProgress(stage: RussiaRouteUpdateStage.activating),
+  final ValueNotifier<ChinaRouteUpdateProgress?> progress = ValueNotifier(
+    const ChinaRouteUpdateProgress(stage: ChinaRouteUpdateStage.activating),
   );
 }

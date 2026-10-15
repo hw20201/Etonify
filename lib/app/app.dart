@@ -60,8 +60,9 @@ import 'package:meow_client/core/outbound_location.dart';
 import 'package:meow_client/core/widgets/app_notice.dart';
 import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/russia_route_data_service.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/china_route_data_service.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/data/subscription/subscription_store.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
@@ -179,7 +180,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
   String _lastVpnNotificationPresentationSignature = '';
   late final SingboxRuntime _singboxRuntime;
   late final AppUpdateService _appUpdateService;
-  late final RussiaRouteDataService _russiaRouteDataService;
+  late final ChinaRouteDataService _chinaRouteDataService;
   late final VpnLifecycleCommands _vpnLifecycleCommands;
   late final AppSettingsCommands _appSettingsCommands;
   late final ProxyLocationCoordinator _proxyLocationCoordinator;
@@ -192,8 +193,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
   late final DeepLinkImportCoordinator _deepLinkImportCoordinator;
   AdBlockRuleSetStatus _adBlockStatus =
       const AdBlockRuleSetStatus.unavailable();
-  RussiaRouteDataStatus _russiaRouteDataStatus =
-      const RussiaRouteDataStatus.unavailable();
+  ChinaRouteDataStatus _chinaRouteDataStatus =
+      const ChinaRouteDataStatus.unavailable();
   List<Map<String, dynamic>> _installedAppsCache =
       const <Map<String, dynamic>>[];
   Future<List<Map<String, dynamic>>>? _installedAppsWarmupFuture;
@@ -407,8 +408,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
   bool get _blockLeaks => _settings.blockLeaks;
   bool get _adBlockEnabled => _settings.adBlockEnabled;
   set _adBlockEnabled(bool value) => _settings.adBlockEnabled = value;
-  bool get _useRussiaRouteData => _settings.useRussiaRouteData;
-  TrafficRulePreset get _trafficRulePreset => _settings.trafficRulePreset;
+  TrafficRoutingMode get _routingMode => _settings.routingMode;
   bool get _bypassLocalNetwork => _settings.bypassLocalNetwork;
   SplitRoutingMode get _splitRoutingMode => _splitRoutingTemporarilyDisabled
       ? SplitRoutingMode.disabled
@@ -2094,7 +2094,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     ref.read(appSettingsProvider);
     _singboxRuntime = ref.read(singboxRuntimeProvider);
     _appUpdateService = ref.read(appUpdateServiceProvider);
-    _russiaRouteDataService = ref.read(russiaRouteDataServiceProvider);
+    _chinaRouteDataService = ref.read(chinaRouteDataServiceProvider);
     _vpnLifecycleCommands = ref.read(vpnLifecycleCommandsProvider);
     _appSettingsCommands = ref.read(appSettingsCommandsProvider);
     _appSettingsCommands.bindRoutingHandlers(
@@ -2102,9 +2102,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
       setAdBlockEnabled: _setAdBlockEnabled,
       downloadAdBlockRuleSet: _downloadAdBlockRuleSet,
       deleteAdBlockRuleSet: _deleteAdBlockRuleSet,
-      refreshRoutingRuleData: _installRussiaRouteData,
-      setTrafficRulePreset: _setTrafficRulePreset,
-      prepareTrafficRuleData: _prepareTrafficRuleData,
+      refreshRoutingRuleData: _refreshChinaRouteData,
+      setTrafficRoutingMode: _setTrafficRoutingMode,
+      setCustomRoutingRules: _setCustomRoutingRules,
+      prepareChinaRouteData: _prepareChinaRouteData,
       setRussiaDnsDirectResolver: _setRussiaDnsDirectResolver,
       setBypassLocalNetwork: _setBypassLocalNetwork,
       setSplitRoutingMode: _setSplitRoutingMode,
@@ -2891,7 +2892,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     final ownsStore = bootstrap.ownsStore;
     final state = bootstrap.state;
     final adBlockStatus = bootstrap.adBlockStatus;
-    final russiaRouteDataStatus = bootstrap.russiaRouteDataStatus;
+    final chinaRouteDataStatus = bootstrap.chinaRouteDataStatus;
     final appVersionInfo = bootstrap.appVersionInfo;
     final coreCapabilities = bootstrap.coreCapabilities;
     final pendingCoreConfigMigration = bootstrap.pendingCoreConfigMigration;
@@ -2962,11 +2963,11 @@ class _MeowClientState extends ConsumerState<MeowClient>
         'settings hydrated autoCheckServers=${state.autoCheckServers}',
       );
       _adBlockStatus = adBlockStatus;
-      _russiaRouteDataStatus = russiaRouteDataStatus;
+      _chinaRouteDataStatus = chinaRouteDataStatus;
       ref.read(adBlockStatusProvider.notifier).update(adBlockStatus);
       ref
-          .read(russiaRouteDataStatusProvider.notifier)
-          .update(russiaRouteDataStatus);
+          .read(chinaRouteDataStatusProvider.notifier)
+          .update(chinaRouteDataStatus);
       _setConnectionPhase(AppConnectionPhase.idle);
       _refreshThemeCache();
       _applyMetadataActiveProfile(
@@ -2979,7 +2980,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     if (!useInMemoryBootstrap) {
       _scheduleDeferredBootstrapStatuses(
         includeAdBlock: state.adBlockEnabled,
-        includeRussiaRouteData: state.useRussiaRouteData,
+        includeChinaRouteData: state.routingMode == TrafficRoutingMode.rules,
       );
     }
     if (!useInMemoryBootstrap && normalized.activeSubscriptionId.isNotEmpty) {
@@ -3173,7 +3174,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   void _scheduleDeferredBootstrapStatuses({
     required bool includeAdBlock,
-    required bool includeRussiaRouteData,
+    required bool includeChinaRouteData,
   }) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -3182,7 +3183,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
       unawaited(
         _refreshDeferredBootstrapStatuses(
           includeAdBlock: includeAdBlock,
-          includeRussiaRouteData: includeRussiaRouteData,
+          includeChinaRouteData: includeChinaRouteData,
         ),
       );
     });
@@ -3190,23 +3191,44 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   Future<void> _refreshDeferredBootstrapStatuses({
     required bool includeAdBlock,
-    required bool includeRussiaRouteData,
+    required bool includeChinaRouteData,
   }) async {
     final statuses = await _bootstrapController.loadDeferredStatuses(
       includeAdBlock: includeAdBlock,
-      includeRussiaRouteData: includeRussiaRouteData,
+      includeChinaRouteData: includeChinaRouteData,
     );
+    var routeStatus = statuses.chinaRouteDataStatus;
+    var chinaDataPrepared = false;
+    if (_routingMode == TrafficRoutingMode.rules &&
+        !routeStatus.chinaRouteDataAvailable) {
+      try {
+        routeStatus = await _chinaRouteDataService.ensureChinaRouteData(
+          force: false,
+        );
+        chinaDataPrepared = routeStatus.chinaRouteDataAvailable;
+      } catch (error) {
+        AppLogStore.warning('china routing data', 'Prepare failed: $error');
+      }
+    }
     if (!mounted) {
       return;
     }
     setState(() {
       _adBlockStatus = statuses.adBlockStatus;
-      _russiaRouteDataStatus = statuses.russiaRouteDataStatus;
+      _chinaRouteDataStatus = routeStatus;
       ref.read(adBlockStatusProvider.notifier).update(statuses.adBlockStatus);
-      ref
-          .read(russiaRouteDataStatusProvider.notifier)
-          .update(statuses.russiaRouteDataStatus);
+      ref.read(chinaRouteDataStatusProvider.notifier).update(routeStatus);
     });
+    if (chinaDataPrepared &&
+        _connected &&
+        _routingMode == TrafficRoutingMode.rules) {
+      await _configCoordinator.emitCurrentConfigLogAsync(
+        'China route data prepared on startup',
+        restartRuntime: true,
+        applyWhenNativeRunning: true,
+        forceFullServiceRestart: true,
+      );
+    }
   }
 
   AppSettingsState _currentSettingsState() {
@@ -6380,66 +6402,34 @@ class _MeowClientState extends ConsumerState<MeowClient>
     return status;
   }
 
-  void _setTrafficRulePreset(TrafficRulePreset value) {
-    _applySettingsChange(() => _settings.setTrafficRulePreset(value));
+  void _setTrafficRoutingMode(TrafficRoutingMode value) {
+    _applySettingsChange(() => _settings.setRoutingMode(value));
   }
 
-  Future<RussiaRouteDataStatus> _installRussiaRouteData() async {
-    final affectsActiveRuntime = _trafficRulePreset != TrafficRulePreset.none;
-    final hadInstalledData = _russiaRouteDataStatus.available;
-    var status = _trafficRulePreset == TrafficRulePreset.chinaDirect
-        ? await _russiaRouteDataService.ensureChinaRouteData(force: true)
-        : hadInstalledData
-        ? await _russiaRouteDataService.ensureUpdated(force: true)
-        : await _russiaRouteDataService.ensureBundledInstalled();
-    if (!mounted) {
-      return status;
-    }
-    setState(() {
-      _russiaRouteDataStatus = status;
-      ref.read(russiaRouteDataStatusProvider.notifier).update(status);
-    });
-    if (affectsActiveRuntime) {
-      await _configCoordinator.emitCurrentConfigLogAsync(
-        'russia route data prepared',
-        restartRuntime: true,
-        applyWhenNativeRunning: true,
-        forceFullServiceRestart: true,
-      );
-    }
-    return status;
+  void _setCustomRoutingRules(List<CustomRoutingRule> value) {
+    _applySettingsChange(() => _settings.setCustomRoutingRules(value));
   }
 
-  Future<RussiaRouteDataStatus> _prepareTrafficRuleData(
-    TrafficRulePreset preset,
-  ) async {
-    final affectsActiveRuntime =
-        _trafficRulePreset != TrafficRulePreset.none &&
-        (preset == TrafficRulePreset.none || preset == _trafficRulePreset);
-    var status = _russiaRouteDataStatus;
-    final hadPreparedData = status.available;
-    if (!status.available && preset != TrafficRulePreset.chinaDirect) {
-      status = await _russiaRouteDataService.ensureBundledInstalled();
-    }
-    if (preset == TrafficRulePreset.chinaDirect) {
-      status = await _russiaRouteDataService.ensureChinaRouteData(
-        force: !status.chinaRouteDataAvailable,
-      );
-    } else if (preset == TrafficRulePreset.aiViaVpn ||
-        preset == TrafficRulePreset.socialViaVpn ||
-        hadPreparedData) {
-      status = await _russiaRouteDataService.ensureUpdated(force: true);
-    }
-    if (!mounted) {
-      return status;
-    }
+  Future<ChinaRouteDataStatus> _refreshChinaRouteData() =>
+      _updateChinaRouteData(force: true);
+
+  Future<ChinaRouteDataStatus> _prepareChinaRouteData() =>
+      _updateChinaRouteData(force: false);
+
+  Future<ChinaRouteDataStatus> _updateChinaRouteData({
+    required bool force,
+  }) async {
+    final status = await _chinaRouteDataService.ensureChinaRouteData(
+      force: force,
+    );
+    if (!mounted) return status;
     setState(() {
-      _russiaRouteDataStatus = status;
-      ref.read(russiaRouteDataStatusProvider.notifier).update(status);
+      _chinaRouteDataStatus = status;
+      ref.read(chinaRouteDataStatusProvider.notifier).update(status);
     });
-    if (affectsActiveRuntime) {
+    if (_routingMode == TrafficRoutingMode.rules) {
       await _configCoordinator.emitCurrentConfigLogAsync(
-        'traffic rule data prepared',
+        'China route data prepared',
         restartRuntime: true,
         applyWhenNativeRunning: true,
         forceFullServiceRestart: true,
@@ -7336,7 +7326,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
   }
 
   SingboxConfigCoordinatorSnapshot _currentSingboxConfigSnapshot() {
-    final routeData = _russiaRouteDataStatus;
+    final routeData = _chinaRouteDataStatus;
     return SingboxConfigCoordinatorSnapshot(
       connected: _connected,
       runtimeTransitionInProgress: _runtimeTransitionInProgress,
@@ -7368,23 +7358,13 @@ class _MeowClientState extends ConsumerState<MeowClient>
       adBlockEnabled: _adBlockEnabled,
       adBlockBlockRuleSetPath: _adBlockStatus.blockRuleSetPath,
       adBlockAllowRuleSetPath: _adBlockStatus.allowRuleSetPath,
-      useRussiaRouteData: _useRussiaRouteData,
-      routeDataAvailable: routeData.available,
+      routeDataAvailable: routeData.chinaRouteDataAvailable,
       routeDataSourceKind: routeData.sourceKind,
       routeDataRelease: routeData.releaseTag ?? routeData.versionTag,
-      russiaGeositeRuBlockedPath: routeData.geositeRuBlockedPath,
-      russiaGeositeRuAvailableOnlyInsidePath:
-          routeData.geositeRuAvailableOnlyInsidePath,
-      russiaGeositeCategoryRuPath: routeData.geositeCategoryRuPath,
-      russiaGeoipRuBlockedPath: routeData.geoipRuBlockedPath,
-      russiaGeoipRuWhitelistPath: routeData.geoipRuWhitelistPath,
-      russiaGeoipRuPath: routeData.geoipRuPath,
-      russiaCuratedDirectServicesPath: routeData.curatedDirectServicesPath,
-      russiaAiServicesPath: routeData.aiServicesPath,
-      russiaSocialServicesPath: routeData.socialServicesPath,
       chinaGeositePath: routeData.chinaGeositePath,
       chinaGeoipPath: routeData.chinaGeoipPath,
-      trafficRulePreset: _trafficRulePreset,
+      routingMode: _routingMode,
+      customRoutingRules: _settings.customRoutingRules,
       bypassLocalNetwork: _bypassLocalNetwork,
       splitRoutingMode: _splitRoutingMode,
       splitRoutingPackages: _splitRoutingPackages,

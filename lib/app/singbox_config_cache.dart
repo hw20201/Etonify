@@ -2,7 +2,7 @@ part of 'app_background_tasks.dart';
 
 // Bump when config generation/validation semantics change, even if the native
 // contract stays the same. Only one entry is retained, in private app storage.
-const _configCacheSchema = 3;
+const _configCacheSchema = 4;
 
 Future<String> singboxConfigFingerprintInBackground(
   SingboxConfigBuildInput input,
@@ -19,15 +19,6 @@ Future<String> _configFingerprint(
   for (final path in <String?>[
     input.adBlockBlockRuleSetPath,
     input.adBlockAllowRuleSetPath,
-    input.russiaGeositeRuBlockedPath,
-    input.russiaGeositeRuAvailableOnlyInsidePath,
-    input.russiaGeositeCategoryRuPath,
-    input.russiaGeoipRuBlockedPath,
-    input.russiaGeoipRuWhitelistPath,
-    input.russiaGeoipRuPath,
-    input.russiaCuratedDirectServicesPath,
-    input.russiaAiServicesPath,
-    input.russiaSocialServicesPath,
     input.chinaGeositePath,
     input.chinaGeoipPath,
   ].whereType<String>().where((path) => path.isNotEmpty).toSet()) {
@@ -74,20 +65,12 @@ Future<String> _configFingerprint(
     'adBlockEnabled': input.adBlockEnabled,
     'adBlockBlockRuleSetPath': input.adBlockBlockRuleSetPath,
     'adBlockAllowRuleSetPath': input.adBlockAllowRuleSetPath,
-    'useRussiaRouteData': input.useRussiaRouteData,
-    'russiaGeositeRuBlockedPath': input.russiaGeositeRuBlockedPath,
-    'russiaGeositeRuAvailableOnlyInsidePath':
-        input.russiaGeositeRuAvailableOnlyInsidePath,
-    'russiaGeositeCategoryRuPath': input.russiaGeositeCategoryRuPath,
-    'russiaGeoipRuBlockedPath': input.russiaGeoipRuBlockedPath,
-    'russiaGeoipRuWhitelistPath': input.russiaGeoipRuWhitelistPath,
-    'russiaGeoipRuPath': input.russiaGeoipRuPath,
-    'russiaCuratedDirectServicesPath': input.russiaCuratedDirectServicesPath,
-    'russiaAiServicesPath': input.russiaAiServicesPath,
-    'russiaSocialServicesPath': input.russiaSocialServicesPath,
     'chinaGeositePath': input.chinaGeositePath,
     'chinaGeoipPath': input.chinaGeoipPath,
-    'trafficRulePreset': input.trafficRulePreset.name,
+    'routingMode': input.routingMode.storageValue,
+    'customRoutingRules': input.customRoutingRules
+        .map((rule) => rule.toJson())
+        .toList(growable: false),
     'bypassLocalNetwork': input.bypassLocalNetwork,
     'splitRoutingMode': input.splitRoutingMode.name,
     'splitRoutingPackages': input.splitRoutingPackages,

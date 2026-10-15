@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meow_client/models/core_settings.dart';
 import 'package:meow_client/app/app_settings_controller.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
-import 'package:meow_client/data/routing/traffic_rule_preset.dart';
+import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 
 void main() {
@@ -193,20 +195,30 @@ void main() {
     );
   });
 
-  test('persists the single selected traffic rule preset', () {
+  test('persists routing mode and custom domain/IP rules', () {
     final store = _TestSettingsStore();
-    final state = store.mapState(const <String, dynamic>{
-      'traffic_rule_preset': 'social_via_vpn',
+    final state = store.mapState(<String, dynamic>{
+      'traffic_routing_mode': 'global',
+      'custom_routing_rules': jsonEncode([
+        {'type': 'domain', 'value': '*.example.com', 'action': 'proxy'},
+        {'type': 'ip', 'value': '203.0.113.0/24', 'action': 'direct'},
+      ]),
     });
     final map = store.stateToMap(state);
 
-    expect(state.trafficRulePreset, TrafficRulePreset.socialViaVpn);
-    expect(map['traffic_rule_preset'], 'social_via_vpn');
+    expect(state.routingMode, TrafficRoutingMode.global);
+    expect(state.customRoutingRules, hasLength(2));
+    expect(state.customRoutingRules.first.value, 'example.com');
+    expect(map['traffic_routing_mode'], 'global');
+    expect(jsonDecode(map['custom_routing_rules']! as String), [
+      {'type': 'domain', 'value': 'example.com', 'action': 'proxy'},
+      {'type': 'ip', 'value': '203.0.113.0/24', 'action': 'direct'},
+    ]);
     expect(
       store.mapState(const <String, dynamic>{
-        'traffic_rule_preset': 'unknown',
-      }).trafficRulePreset,
-      TrafficRulePreset.none,
+        'traffic_routing_mode': 'unknown',
+      }).routingMode,
+      TrafficRoutingMode.rules,
     );
   });
 
