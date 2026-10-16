@@ -564,6 +564,17 @@ class _PublicIpSection extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (info != null && info.locationLabel.isNotEmpty) ...[
+                    const Gap(6),
+                    Text(
+                      '${l10n.homeOutboundIpCountry}: ${info.locationLabel}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
               ),
             ),

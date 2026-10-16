@@ -189,7 +189,8 @@ void main() {
       final notifier = ValueNotifier(snapshot());
       addTearDown(notifier.dispose);
       final controller = PublicIpController(
-        load: () async => PublicIpInfo.fromTrace('ip=203.0.113.8\nloc=SE'),
+        load: () async =>
+            const PublicIpInfo(ip: '203.0.113.8', countryCode: 'SE'),
       );
       addTearDown(controller.dispose);
       await tester.pumpWidget(app(notifier, publicIpController: controller));
@@ -222,7 +223,7 @@ void main() {
       final controller = PublicIpController(
         load: () async {
           if (++calls > 1) throw StateError('network unavailable');
-          return PublicIpInfo.fromTrace('ip=203.0.113.8\nloc=SE');
+          return const PublicIpInfo(ip: '203.0.113.8', countryCode: 'SE');
         },
       );
       final notifier = ValueNotifier(snapshot());
@@ -282,7 +283,7 @@ void main() {
     expect(cancellations, 1);
     await tester.pumpWidget(app(notifier, publicIpController: controller));
     expect(calls, 1);
-    pending.complete(PublicIpInfo.fromTrace('ip=203.0.113.8\nloc=SE'));
+    pending.complete(const PublicIpInfo(ip: '203.0.113.8', countryCode: 'SE'));
     await tester.pump();
     expect(controller.info, isNull);
     await tester.pumpWidget(const SizedBox());
@@ -297,8 +298,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final controller = PublicIpController(
-      load: () async =>
-          PublicIpInfo.fromTrace('ip=2001:db8:abcd:1234::1\nloc=SE'),
+      load: () async => const PublicIpInfo(
+        ip: '2001:db8:abcd:1234::1',
+        countryCode: 'SE',
+        country: 'Sweden',
+        city: 'Stockholm',
+      ),
     );
     final notifier = ValueNotifier(snapshot(hideIp: true));
     addTearDown(notifier.dispose);
@@ -311,6 +316,10 @@ void main() {
     expect(find.text('2001:db8:abcd:1234::1'), findsNothing);
     expect(
       find.descendant(of: card, matching: find.textContaining('****')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Sweden')),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);

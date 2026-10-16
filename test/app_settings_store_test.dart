@@ -6,6 +6,7 @@ import 'package:meow_client/app/app_settings_controller.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
+import 'package:meow_client/models/public_ip_source.dart';
 
 void main() {
   test(
@@ -66,6 +67,28 @@ void main() {
       expect(controller.dnsDirectResolver, state.dnsDirectResolver);
     },
   );
+  test('selected IP lookup source defaults and round-trips through backup', () {
+    final store = _TestSettingsStore();
+    final defaults = store.mapState(const {});
+    expect(defaults.publicIpSource, PublicIpSource.ipQuery);
+
+    final selected = defaults.copyWith(publicIpSource: PublicIpSource.ipWho);
+    final persisted = store.stateToMap(selected);
+    expect(persisted['public_ip_source'], 'ipWho');
+    final restored = store.mapState(persisted);
+    expect(restored.publicIpSource, PublicIpSource.ipWho);
+    expect(store.stateToSafeExportMap(selected)['public_ip_source'], 'ipWho');
+    expect(
+      store.mergeSafeImportMap(defaults, const {
+        'public_ip_source': 'ipApi',
+      }).publicIpSource,
+      PublicIpSource.ipApi,
+    );
+    expect(
+      store.mapState(const {'public_ip_source': 'invalid'}).publicIpSource,
+      PublicIpSource.ipQuery,
+    );
+  });
   test('HWID sharing consent persists locally but cannot be imported', () {
     final store = _TestSettingsStore();
     final off = store.mapState(const {

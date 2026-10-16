@@ -1511,6 +1511,79 @@ class AppLocalizationsRu extends AppLocalizations {
       'Обновление доступно раз в 4 секунды';
 
   @override
+  String get homeOutboundIpTitle => 'Внешний IP';
+
+  @override
+  String get homeOutboundIpHint =>
+      'Сторонний сервис определения IP; только для справки';
+
+  @override
+  String get homeOutboundIpExpand => 'Показать сведения о внешнем IP';
+
+  @override
+  String get homeOutboundIpCollapse => 'Закрыть сведения о внешнем IP';
+
+  @override
+  String get homeOutboundIpLoading => 'Проверяем внешний IP…';
+
+  @override
+  String get homeOutboundIpUnavailable => 'Внешний IP недоступен';
+
+  @override
+  String get homeOutboundIpBasicSection => 'Основные сведения';
+
+  @override
+  String get homeOutboundIpAddress => 'IP-адрес';
+
+  @override
+  String get homeOutboundIpCountry => 'Страна / регион';
+
+  @override
+  String get homeOutboundIpNetworkSection => 'Сеть';
+
+  @override
+  String get homeOutboundIpOrganization => 'Организация';
+
+  @override
+  String get homeOutboundIpAsn => 'ASN';
+
+  @override
+  String get homeOutboundIpIsp => 'Провайдер';
+
+  @override
+  String get homeOutboundIpSource => 'Источник';
+
+  @override
+  String get homeOutboundIpSourceIpQuery => 'ipquery.io';
+
+  @override
+  String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
+  String get homeOutboundIpSourceIpWho => 'ipwho.is';
+
+  @override
+  String get ipLookupSourceTitle => 'Источник проверки IP';
+
+  @override
+  String get ipLookupSourceDescription =>
+      'Выберите сайт для определения общедоступного IP и местоположения';
+
+  @override
+  String get ipLookupSourceDialogTitle => 'Выберите сервис';
+
+  @override
+  String get ipLookupSourceIpQuerySubtitle => 'HTTPS · ключ API не требуется';
+
+  @override
+  String get ipLookupSourceIpApiSubtitle =>
+      'Только HTTP · некоммерческое использование · 45 запросов/мин';
+
+  @override
+  String get ipLookupSourceIpWhoSubtitle =>
+      'Бесплатный тариф · до 1 000 запросов в день';
+
+  @override
   String get trafficDashboardDownloadTotal => 'Скачано';
 
   @override

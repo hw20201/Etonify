@@ -328,7 +328,7 @@ class SingboxConfigBuilder {
           'final': dnsFinal,
           'cache_capacity': 4096,
           if (vpnInboundEnabled)
-            'strategy': vpnEnableIpv6 ? 'prefer_ipv4' : 'ipv4_only',
+            'strategy': vpnEnableIpv6 ? 'prefer_ipv6' : 'ipv4_only',
         },
         'inbounds': [
           if (vpnInboundEnabled)

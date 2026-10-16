@@ -4,6 +4,7 @@ import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/features/settings/settings_general_page.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
+import 'package:meow_client/models/public_ip_source.dart';
 
 Widget _generalSettingsApp({
   required bool statusNotificationEnabled,
@@ -16,6 +17,8 @@ Widget _generalSettingsApp({
   ValueChanged<bool>? onHwidChanged,
   bool autoConnectOnLaunch = false,
   ValueChanged<bool>? onAutoConnectChanged,
+  PublicIpSource currentPublicIpSource = PublicIpSource.ipQuery,
+  ValueChanged<PublicIpSource>? onPublicIpSourceChanged,
   VoidCallback? onAddQuickSettingsTile,
 }) {
   return MaterialApp(
@@ -31,6 +34,8 @@ Widget _generalSettingsApp({
       currentNotificationTrafficDisplayMode: trafficDisplayMode,
       currentNotificationTrafficRefreshSeconds: 2,
       currentHideServerIp: false,
+      currentPublicIpSource: currentPublicIpSource,
+      onPublicIpSourceChanged: onPublicIpSourceChanged,
       currentSendHwidToProviders: currentSendHwidToProviders,
       onSendHwidToProvidersChanged: onHwidChanged,
       currentAutoConnectOnLaunch: autoConnectOnLaunch,
@@ -84,6 +89,31 @@ void main() {
     await tester.tap(tileAction);
     expect(tileRequests, 1);
   });
+
+  testWidgets('IP lookup source can be selected in general settings', (
+    tester,
+  ) async {
+    final selections = <PublicIpSource>[];
+    await tester.pumpWidget(
+      _generalSettingsApp(
+        statusNotificationEnabled: true,
+        onPublicIpSourceChanged: selections.add,
+      ),
+    );
+    final tile = find.byKey(const ValueKey('public-ip-source'));
+    await tester.ensureVisible(tile);
+    expect(find.text('ipquery.io'), findsOneWidget);
+    await tester.tap(tile);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Choose a lookup site'), findsOneWidget);
+    expect(find.text('Free tier · up to 1,000 requests/day'), findsOneWidget);
+    await tester.tap(find.text('ipwho.is'));
+    await tester.pumpAndSettle();
+    expect(selections, [PublicIpSource.ipWho]);
+    expect(find.text('ipwho.is'), findsOneWidget);
+  });
+
   testWidgets(
     'HWID switch defaults to true, updates immediately and remains readable in Russian',
     (tester) async {

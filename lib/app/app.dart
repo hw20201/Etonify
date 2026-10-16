@@ -189,7 +189,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
   final Map<String, List<ValueGetter<bool>>> _visibleProxyLocationInterests =
       {};
   late final AppTrafficMonitor _appTrafficMonitor;
-  final _publicIpController = PublicIpController();
+  late final PublicIpController _publicIpController;
   late final DeepLinkImportCoordinator _deepLinkImportCoordinator;
   AdBlockRuleSetStatus _adBlockStatus =
       const AdBlockRuleSetStatus.unavailable();
@@ -2092,6 +2092,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
       }
     });
     ref.read(appSettingsProvider);
+    _publicIpController = PublicIpController(
+      sourceProvider: () =>
+          ref.read(appSettingsProvider).controller.publicIpSource,
+    );
     _singboxRuntime = ref.read(singboxRuntimeProvider);
     _appUpdateService = ref.read(appUpdateServiceProvider);
     _chinaRouteDataService = ref.read(chinaRouteDataServiceProvider);
@@ -5359,6 +5363,13 @@ class _MeowClientState extends ConsumerState<MeowClient>
     _applySettingsChange(() => _settings.setHideServerIp(value));
   }
 
+  void _setPublicIpSource(PublicIpSource source) {
+    if (_settings.publicIpSource == source) return;
+    _applySettingsChange(() => _settings.setPublicIpSource(source));
+    _publicIpController.invalidateForSourceChange();
+    if (_connected) unawaited(_publicIpController.refresh());
+  }
+
   void _setAllowUntrustedProxyCertificates(bool value) {
     _applySettingsChange(
       () => _settings.setAllowUntrustedProxyCertificates(value),
@@ -6119,6 +6130,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
           currentNotificationTrafficRefreshSeconds:
               _notificationTrafficRefreshSeconds,
           currentHideServerIp: _hideServerIp,
+          currentPublicIpSource: _settings.publicIpSource,
+          onPublicIpSourceChanged: _setPublicIpSource,
           currentSendHwidToProviders: _settings.sendHwidToProviders,
           currentAutoConnectOnLaunch: _settings.autoConnectOnLaunch,
           onAutoConnectOnLaunchChanged: _setAutoConnectOnLaunch,
@@ -9235,6 +9248,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
         uplinkTotalBytes: _appTrafficMonitor.uplinkTotalBytes,
         downlinkTotalBytes: _appTrafficMonitor.downlinkTotalBytes,
         trafficListenable: _appTrafficMonitor.trafficUiSnapshotNotifier,
+        publicIpController: _publicIpController,
         activeProfileRefreshing: _activeProfileRefreshInFlight,
         showActiveProfileRefreshAction: activeSubscription != null,
         brandName: 'Etonify',

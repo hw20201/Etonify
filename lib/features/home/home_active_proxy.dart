@@ -1,12 +1,10 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:meow_client/core/formatting.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/models/app_view_models.dart';
 import 'package:meow_client/widgets/country_flag_badge.dart';
-import 'package:meow_client/widgets/ip_refresh_dots.dart';
 
 class ActiveProxyDelayIndicator extends StatelessWidget {
   const ActiveProxyDelayIndicator({
@@ -197,67 +195,14 @@ class ActiveProxyFooter extends StatelessWidget {
     super.key,
     required this.connected,
     required this.proxy,
-    required this.hideIp,
-    required this.hapticEnabled,
     required this.speedBytesPerSecond,
     required this.trafficBytes,
-    required this.unknownText,
-    this.onRefreshIp,
   });
 
   final bool connected;
   final AppProxySummary proxy;
-  final bool hideIp;
-  final bool hapticEnabled;
   final double speedBytesPerSecond;
   final double trafficBytes;
-  final String unknownText;
-  final VoidCallback? onRefreshIp;
-
-  String _maskIp(String ip) {
-    final parts = ip.split('.');
-    if (parts.length == 4) {
-      return '${parts[0]}.${parts[1]}.*.*';
-    }
-    if (ip.length > 8) {
-      return '${ip.substring(0, ip.length ~/ 2)}****';
-    }
-    return ip;
-  }
-
-  String get _displayIp {
-    if (!connected) return '—';
-    final ip = proxy.ip;
-    if (ip.isEmpty) return unknownText;
-    if (hideIp) return _maskIp(ip);
-    return ip;
-  }
-
-  void _refreshIp() {
-    if (!connected || onRefreshIp == null) return;
-    if (hapticEnabled) {
-      HapticFeedback.lightImpact();
-    }
-    onRefreshIp?.call();
-  }
-
-  Widget _ipDisplay(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.onSurfaceVariant;
-    if (connected && proxy.ipChecking && proxy.ip.trim().isEmpty) {
-      return IpRefreshDots(
-        key: const ValueKey('ip-refresh-checking'),
-        color: color,
-      );
-    }
-    return Text(
-      _displayIp,
-      key: ValueKey(_displayIp),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.bodyMedium?.copyWith(color: color),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -322,49 +267,9 @@ class ActiveProxyFooter extends StatelessWidget {
                                 key: ValueKey(proxy.displayName),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleSmall?.copyWith(
+                                style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const Gap(6),
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: connected ? _refreshIp : null,
-                          child: SizedBox(
-                            height: 24,
-                            width: double.infinity,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 220),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeOutCubic,
-                                layoutBuilder:
-                                    (currentChild, previousChildren) {
-                                      return Stack(
-                                        alignment: Alignment.centerLeft,
-                                        children: [
-                                          ...previousChildren,
-                                          ?currentChild,
-                                        ],
-                                      );
-                                    },
-                                transitionBuilder: (child, animation) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: SlideTransition(
-                                      position: Tween<Offset>(
-                                        begin: const Offset(0, 0.08),
-                                        end: Offset.zero,
-                                      ).animate(animation),
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: _ipDisplay(context),
                               ),
                             ),
                           ),

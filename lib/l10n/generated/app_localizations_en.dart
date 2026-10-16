@@ -1514,6 +1514,78 @@ class AppLocalizationsEn extends AppLocalizations {
       'Refresh available every 4 seconds';
 
   @override
+  String get homeOutboundIpTitle => 'Outbound IP';
+
+  @override
+  String get homeOutboundIpHint => 'Third-party IP lookup; for reference only';
+
+  @override
+  String get homeOutboundIpExpand => 'Show outbound IP details';
+
+  @override
+  String get homeOutboundIpCollapse => 'Close outbound IP details';
+
+  @override
+  String get homeOutboundIpLoading => 'Looking up outbound IP…';
+
+  @override
+  String get homeOutboundIpUnavailable => 'Outbound IP unavailable';
+
+  @override
+  String get homeOutboundIpBasicSection => 'Basics';
+
+  @override
+  String get homeOutboundIpAddress => 'IP address';
+
+  @override
+  String get homeOutboundIpCountry => 'Country / region';
+
+  @override
+  String get homeOutboundIpNetworkSection => 'Network';
+
+  @override
+  String get homeOutboundIpOrganization => 'Organization';
+
+  @override
+  String get homeOutboundIpAsn => 'ASN';
+
+  @override
+  String get homeOutboundIpIsp => 'Provider';
+
+  @override
+  String get homeOutboundIpSource => 'Source';
+
+  @override
+  String get homeOutboundIpSourceIpQuery => 'ipquery.io';
+
+  @override
+  String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
+  String get homeOutboundIpSourceIpWho => 'ipwho.is';
+
+  @override
+  String get ipLookupSourceTitle => 'IP lookup source';
+
+  @override
+  String get ipLookupSourceDescription =>
+      'Choose the site used to look up your public IP location';
+
+  @override
+  String get ipLookupSourceDialogTitle => 'Choose a lookup site';
+
+  @override
+  String get ipLookupSourceIpQuerySubtitle => 'HTTPS · no API key required';
+
+  @override
+  String get ipLookupSourceIpApiSubtitle =>
+      'HTTP only · non-commercial · 45 requests/min';
+
+  @override
+  String get ipLookupSourceIpWhoSubtitle =>
+      'Free tier · up to 1,000 requests/day';
+
+  @override
   String get trafficDashboardDownloadTotal => 'Downloaded';
 
   @override

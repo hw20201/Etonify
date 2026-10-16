@@ -1447,6 +1447,75 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trafficDashboardPublicIpCooldown => '每 4 秒可刷新一次';
 
   @override
+  String get homeOutboundIpTitle => '出站 IP';
+
+  @override
+  String get homeOutboundIpHint => '通过第三方网站查询 IP，仅供参考';
+
+  @override
+  String get homeOutboundIpExpand => '查看出站 IP 详情';
+
+  @override
+  String get homeOutboundIpCollapse => '收起出站 IP 详情';
+
+  @override
+  String get homeOutboundIpLoading => '正在查询出站 IP…';
+
+  @override
+  String get homeOutboundIpUnavailable => '暂无出站 IP';
+
+  @override
+  String get homeOutboundIpBasicSection => '基础信息';
+
+  @override
+  String get homeOutboundIpAddress => 'IP 地址';
+
+  @override
+  String get homeOutboundIpCountry => '国家 / 地区';
+
+  @override
+  String get homeOutboundIpNetworkSection => '网络';
+
+  @override
+  String get homeOutboundIpOrganization => '组织';
+
+  @override
+  String get homeOutboundIpAsn => 'ASN';
+
+  @override
+  String get homeOutboundIpIsp => '网络运营商';
+
+  @override
+  String get homeOutboundIpSource => '采用来源';
+
+  @override
+  String get homeOutboundIpSourceIpQuery => 'ipquery.io';
+
+  @override
+  String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
+  String get homeOutboundIpSourceIpWho => 'ipwho.is';
+
+  @override
+  String get ipLookupSourceTitle => 'IP 检测源';
+
+  @override
+  String get ipLookupSourceDescription => '选择用于查询公网 IP 位置的网站';
+
+  @override
+  String get ipLookupSourceDialogTitle => '选择查询网站';
+
+  @override
+  String get ipLookupSourceIpQuerySubtitle => 'HTTPS · 无需 API 密钥';
+
+  @override
+  String get ipLookupSourceIpApiSubtitle => '仅 HTTP · 非商业用途 · 每分钟最多 45 次';
+
+  @override
+  String get ipLookupSourceIpWhoSubtitle => '免费版每天最多 1,000 次';
+
+  @override
   String get trafficDashboardDownloadTotal => '已下载';
 
   @override

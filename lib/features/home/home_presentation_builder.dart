@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:meow_client/features/home/home_page.dart';
 import 'package:meow_client/features/home/home_presentation.dart';
+import 'package:meow_client/features/home/public_ip_controller.dart';
 import 'package:meow_client/features/proxies/proxy_panel_shell.dart';
 import 'package:meow_client/models/app_view_models.dart';
 import 'package:meow_client/models/proxy_runtime_visual_state.dart';
@@ -23,6 +24,7 @@ class HomePresentationData {
     required this.uplinkTotalBytes,
     required this.downlinkTotalBytes,
     required this.trafficListenable,
+    this.publicIpController,
     required this.activeProfileRefreshing,
     required this.showActiveProfileRefreshAction,
     required this.brandName,
@@ -44,6 +46,7 @@ class HomePresentationData {
   final int uplinkTotalBytes;
   final int downlinkTotalBytes;
   final ValueListenable<TrafficUiSnapshot> trafficListenable;
+  final PublicIpController? publicIpController;
   final bool activeProfileRefreshing;
   final bool showActiveProfileRefreshAction;
   final String brandName;
@@ -60,6 +63,7 @@ class HomePresentationData {
       activeProfile: activeProfile,
       activeProxy: activeProxy,
       runtimeStates: runtimeStates,
+      publicIpController: publicIpController,
       hideServerIp: hideServerIp,
       hapticEnabled: hapticEnabled,
       speedBytesPerSecond: showTraffic ? downlinkBytesPerSecond.toDouble() : 0,

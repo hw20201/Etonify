@@ -2767,6 +2767,144 @@ abstract class AppLocalizations {
   /// **'Refresh available every 4 seconds'**
   String get trafficDashboardPublicIpCooldown;
 
+  /// No description provided for @homeOutboundIpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbound IP'**
+  String get homeOutboundIpTitle;
+
+  /// No description provided for @homeOutboundIpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Third-party IP lookup; for reference only'**
+  String get homeOutboundIpHint;
+
+  /// No description provided for @homeOutboundIpExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Show outbound IP details'**
+  String get homeOutboundIpExpand;
+
+  /// No description provided for @homeOutboundIpCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Close outbound IP details'**
+  String get homeOutboundIpCollapse;
+
+  /// No description provided for @homeOutboundIpLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking up outbound IP…'**
+  String get homeOutboundIpLoading;
+
+  /// No description provided for @homeOutboundIpUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Outbound IP unavailable'**
+  String get homeOutboundIpUnavailable;
+
+  /// No description provided for @homeOutboundIpBasicSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Basics'**
+  String get homeOutboundIpBasicSection;
+
+  /// No description provided for @homeOutboundIpAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'IP address'**
+  String get homeOutboundIpAddress;
+
+  /// No description provided for @homeOutboundIpCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country / region'**
+  String get homeOutboundIpCountry;
+
+  /// No description provided for @homeOutboundIpNetworkSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get homeOutboundIpNetworkSection;
+
+  /// No description provided for @homeOutboundIpOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization'**
+  String get homeOutboundIpOrganization;
+
+  /// No description provided for @homeOutboundIpAsn.
+  ///
+  /// In en, this message translates to:
+  /// **'ASN'**
+  String get homeOutboundIpAsn;
+
+  /// No description provided for @homeOutboundIpIsp.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get homeOutboundIpIsp;
+
+  /// No description provided for @homeOutboundIpSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get homeOutboundIpSource;
+
+  /// No description provided for @homeOutboundIpSourceIpQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'ipquery.io'**
+  String get homeOutboundIpSourceIpQuery;
+
+  /// No description provided for @homeOutboundIpSourceIpApi.
+  ///
+  /// In en, this message translates to:
+  /// **'ip-api.com'**
+  String get homeOutboundIpSourceIpApi;
+
+  /// No description provided for @homeOutboundIpSourceIpWho.
+  ///
+  /// In en, this message translates to:
+  /// **'ipwho.is'**
+  String get homeOutboundIpSourceIpWho;
+
+  /// No description provided for @ipLookupSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'IP lookup source'**
+  String get ipLookupSourceTitle;
+
+  /// No description provided for @ipLookupSourceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the site used to look up your public IP location'**
+  String get ipLookupSourceDescription;
+
+  /// No description provided for @ipLookupSourceDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a lookup site'**
+  String get ipLookupSourceDialogTitle;
+
+  /// No description provided for @ipLookupSourceIpQuerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTPS · no API key required'**
+  String get ipLookupSourceIpQuerySubtitle;
+
+  /// No description provided for @ipLookupSourceIpApiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP only · non-commercial · 45 requests/min'**
+  String get ipLookupSourceIpApiSubtitle;
+
+  /// No description provided for @ipLookupSourceIpWhoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free tier · up to 1,000 requests/day'**
+  String get ipLookupSourceIpWhoSubtitle;
+
   /// No description provided for @trafficDashboardDownloadTotal.
   ///
   /// In en, this message translates to:
