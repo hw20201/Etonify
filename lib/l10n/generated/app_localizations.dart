@@ -1168,6 +1168,36 @@ abstract class AppLocalizations {
   /// **'TLS certificates'**
   String get securityTlsSectionTitle;
 
+  /// No description provided for @securityBackupSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription backup and restore'**
+  String get securityBackupSectionTitle;
+
+  /// No description provided for @securityBackupToLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up subscriptions to this device'**
+  String get securityBackupToLocalTitle;
+
+  /// No description provided for @securityBackupToLocalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export subscriptions and servers as a password-encrypted local backup.'**
+  String get securityBackupToLocalSubtitle;
+
+  /// No description provided for @securityRestoreFromLocalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore subscriptions from a local file'**
+  String get securityRestoreFromLocalTitle;
+
+  /// No description provided for @securityRestoreFromLocalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a password-encrypted Etonify subscription backup.'**
+  String get securityRestoreFromLocalSubtitle;
+
   /// No description provided for @securityUntrustedProxyCertificatesTitle.
   ///
   /// In en, this message translates to:

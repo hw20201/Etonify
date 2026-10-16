@@ -577,6 +577,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get securityTlsSectionTitle => 'TLS 证书';
 
   @override
+  String get securityBackupSectionTitle => '订阅备份与恢复';
+
+  @override
+  String get securityBackupToLocalTitle => '加密备份订阅到本地';
+
+  @override
+  String get securityBackupToLocalSubtitle => '将订阅及服务器信息加密后导出到本地文件，需要设置备份密码。';
+
+  @override
+  String get securityRestoreFromLocalTitle => '从本地恢复订阅';
+
+  @override
+  String get securityRestoreFromLocalSubtitle => '导入此前导出的加密 Etonify 订阅备份。';
+
+  @override
   String get securityUntrustedProxyCertificatesTitle => '允许不受信任的代理证书';
 
   @override

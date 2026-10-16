@@ -87,7 +87,7 @@ class _SettingsDnsPageState extends ConsumerState<SettingsDnsPage> {
   late final FocusNode _proxyFocusNode;
   late final AppSettingsCommands _commands;
 
-  static const _directPresets = <_DnsPreset>[
+  static const _dnsPresets = <_DnsPreset>[
     _DnsPreset(
       id: 'device',
       label: 'Device network',
@@ -108,32 +108,51 @@ class _SettingsDnsPageState extends ConsumerState<SettingsDnsPage> {
       label: 'Cloudflare DoH',
       value: 'https://dns.cloudflare.com/dns-query',
     ),
+    _DnsPreset(
+      id: 'google',
+      label: 'Google Public DNS',
+      value: 'udp://8.8.8.8',
+    ),
+    _DnsPreset(
+      id: 'google_dot',
+      label: 'Google DoT',
+      value: 'tls://dns.google',
+    ),
+    _DnsPreset(
+      id: 'google_doh',
+      label: 'Google DoH',
+      value: 'https://dns.google/dns-query',
+    ),
+    _DnsPreset(id: 'quad9', label: 'Quad9 9.9.9.9', value: 'udp://9.9.9.9'),
+    _DnsPreset(
+      id: 'quad9_dot',
+      label: 'Quad9 DoT',
+      value: 'tls://dns.quad9.net',
+    ),
+    _DnsPreset(
+      id: 'quad9_doh',
+      label: 'Quad9 DoH',
+      value: 'https://dns.quad9.net/dns-query',
+    ),
+    _DnsPreset(
+      id: 'adguard',
+      label: 'AdGuard DNS',
+      value: 'udp://94.140.14.14',
+    ),
+    _DnsPreset(
+      id: 'adguard_dot',
+      label: 'AdGuard DoT',
+      value: 'tls://dns.adguard-dns.com',
+    ),
+    _DnsPreset(
+      id: 'adguard_doh',
+      label: 'AdGuard DoH',
+      value: 'https://dns.adguard-dns.com/dns-query',
+    ),
     _DnsPreset(id: 'custom', label: 'Custom', value: ''),
   ];
-
-  static const _proxyPresets = <_DnsPreset>[
-    _DnsPreset(
-      id: 'device',
-      label: 'Device network',
-      value: 'device://network',
-    ),
-    _DnsPreset(
-      id: 'cloudflare',
-      label: 'Cloudflare 1.1.1.1',
-      value: 'udp://1.1.1.1',
-    ),
-    _DnsPreset(
-      id: 'cloudflare_dot',
-      label: 'Cloudflare DoT',
-      value: defaultSecureDnsDirectResolver,
-    ),
-    _DnsPreset(
-      id: 'cloudflare_doh',
-      label: 'Cloudflare DoH',
-      value: 'https://dns.cloudflare.com/dns-query',
-    ),
-    _DnsPreset(id: 'custom', label: 'Custom', value: ''),
-  ];
+  static const _directPresets = _dnsPresets;
+  static const _proxyPresets = _dnsPresets;
 
   @override
   void initState() {

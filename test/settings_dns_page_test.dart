@@ -269,4 +269,66 @@ void main() {
     expect(find.text('Cloudflare 1.1.1.1'), findsNothing);
     expect(find.text('Device network'), findsNothing);
   });
+
+  testWidgets('popular encrypted DNS presets can be selected', (tester) async {
+    final harnessKey = GlobalKey<_DnsSettingsHarnessState>();
+    final controller = AppSettingsController();
+    final commands = AppSettingsCommands();
+    final container = ProviderContainer(
+      overrides: [
+        appSettingsControllerProvider.overrideWithValue(controller),
+        appSettingsCommandsProvider.overrideWithValue(commands),
+      ],
+    );
+    addTearDown(container.dispose);
+    commands.bindDnsHandlers(
+      setDnsDirectPreset: (value) {
+        container
+            .read(appSettingsProvider.notifier)
+            .mutate((c) => c.setDnsDirectPreset(value));
+      },
+      setDnsDirectResolver: (value) {
+        container
+            .read(appSettingsProvider.notifier)
+            .mutate((c) => c.setDnsDirectResolver(value));
+      },
+      setDnsProxyPreset: (value) {
+        container
+            .read(appSettingsProvider.notifier)
+            .mutate((c) => c.setDnsProxyPreset(value));
+      },
+      setDnsProxyResolver: (value) {
+        container
+            .read(appSettingsProvider.notifier)
+            .mutate((c) => c.setDnsProxyResolver(value));
+      },
+      setDnsSecureOnly: (value) {
+        container
+            .read(appSettingsProvider.notifier)
+            .mutate((c) => c.setDnsSecureOnly(value));
+      },
+      setDnsDirectThroughProxy: (value) {
+        container
+            .read(appSettingsProvider.notifier)
+            .mutate((c) => c.setDnsDirectThroughProxy(value));
+      },
+    );
+
+    await tester.pumpWidget(
+      _dnsSettingsApp(harnessKey: harnessKey, container: container),
+    );
+    await tester.tap(find.byIcon(Icons.bolt_rounded));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Quad9 DoH'),
+      240,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Quad9 DoH'), findsOneWidget);
+    await tester.tap(find.text('Quad9 DoH'));
+    await tester.pumpAndSettle();
+
+    expect(controller.dnsDirectPreset, 'quad9_doh');
+    expect(controller.dnsDirectResolver, 'https://dns.quad9.net/dns-query');
+  });
 }

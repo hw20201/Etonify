@@ -599,6 +599,25 @@ class AppLocalizationsRu extends AppLocalizations {
   String get securityTlsSectionTitle => 'TLS-сертификаты';
 
   @override
+  String get securityBackupSectionTitle =>
+      'Резервное копирование и восстановление подписок';
+
+  @override
+  String get securityBackupToLocalTitle => 'Сохранить подписки на устройстве';
+
+  @override
+  String get securityBackupToLocalSubtitle =>
+      'Экспортировать подписки и серверы в зашифрованный локальный файл. Требуется пароль.';
+
+  @override
+  String get securityRestoreFromLocalTitle =>
+      'Восстановить подписки из локального файла';
+
+  @override
+  String get securityRestoreFromLocalSubtitle =>
+      'Импортировать зашифрованную резервную копию подписок Etonify.';
+
+  @override
   String get securityUntrustedProxyCertificatesTitle =>
       'Разрешать недоверенные сертификаты прокси';
 

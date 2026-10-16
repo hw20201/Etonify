@@ -7,7 +7,14 @@ import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 
 class SettingsSecurityPage extends ConsumerWidget {
-  const SettingsSecurityPage({super.key});
+  const SettingsSecurityPage({
+    super.key,
+    required this.onBackupSubscriptions,
+    required this.onRestoreFromLocal,
+  });
+
+  final VoidCallback onBackupSubscriptions;
+  final VoidCallback onRestoreFromLocal;
 
   Future<bool> _confirmRisk({
     required BuildContext context,
@@ -139,6 +146,47 @@ class SettingsSecurityPage extends ConsumerWidget {
                     value: settings.allowUntrustedSubscriptionCertificates,
                     onChanged: (value) =>
                         _setSubscriptionCertificates(context, ref, value),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+              child: Text(
+                l10n.securityBackupSectionTitle,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            Card(
+              margin: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  ListTile(
+                    key: const ValueKey('security-local-backup'),
+                    leading: SettingsLeadingIcon(
+                      icon: Icons.save_alt_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    title: Text(l10n.securityBackupToLocalTitle),
+                    subtitle: Text(l10n.securityBackupToLocalSubtitle),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: onBackupSubscriptions,
+                  ),
+                  const Divider(height: 1, indent: 72),
+                  ListTile(
+                    key: const ValueKey('security-local-restore'),
+                    leading: SettingsLeadingIcon(
+                      icon: Icons.settings_backup_restore_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    title: Text(l10n.securityRestoreFromLocalTitle),
+                    subtitle: Text(l10n.securityRestoreFromLocalSubtitle),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: onRestoreFromLocal,
                   ),
                 ],
               ),

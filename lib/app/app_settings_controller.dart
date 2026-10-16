@@ -1162,12 +1162,30 @@ class AppSettingsController {
       'cloudflare': 'udp://1.1.1.1',
       'cloudflare_dot': defaultSecureDnsDirectResolver,
       'cloudflare_doh': 'https://dns.cloudflare.com/dns-query',
+      'google': 'udp://8.8.8.8',
+      'google_dot': 'tls://dns.google',
+      'google_doh': 'https://dns.google/dns-query',
+      'quad9': 'udp://9.9.9.9',
+      'quad9_dot': 'tls://dns.quad9.net',
+      'quad9_doh': 'https://dns.quad9.net/dns-query',
+      'adguard': 'udp://94.140.14.14',
+      'adguard_dot': 'tls://dns.adguard-dns.com',
+      'adguard_doh': 'https://dns.adguard-dns.com/dns-query',
     };
     const proxyPresets = {
       'device': 'device://network',
       'cloudflare': 'udp://1.1.1.1',
       'cloudflare_dot': defaultSecureDnsDirectResolver,
       'cloudflare_doh': 'https://dns.cloudflare.com/dns-query',
+      'google': 'udp://8.8.8.8',
+      'google_dot': 'tls://dns.google',
+      'google_doh': 'https://dns.google/dns-query',
+      'quad9': 'udp://9.9.9.9',
+      'quad9_dot': 'tls://dns.quad9.net',
+      'quad9_doh': 'https://dns.quad9.net/dns-query',
+      'adguard': 'udp://94.140.14.14',
+      'adguard_dot': 'tls://dns.adguard-dns.com',
+      'adguard_doh': 'https://dns.adguard-dns.com/dns-query',
     };
     final preset = isDirect ? dnsDirectPreset : dnsProxyPreset;
     if (preset == 'custom') {

@@ -600,6 +600,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get securityTlsSectionTitle => 'TLS certificates';
 
   @override
+  String get securityBackupSectionTitle => 'Subscription backup and restore';
+
+  @override
+  String get securityBackupToLocalTitle =>
+      'Back up subscriptions to this device';
+
+  @override
+  String get securityBackupToLocalSubtitle =>
+      'Export subscriptions and servers as a password-encrypted local backup.';
+
+  @override
+  String get securityRestoreFromLocalTitle =>
+      'Restore subscriptions from a local file';
+
+  @override
+  String get securityRestoreFromLocalSubtitle =>
+      'Import a password-encrypted Etonify subscription backup.';
+
+  @override
   String get securityUntrustedProxyCertificatesTitle =>
       'Allow untrusted proxy certificates';
 

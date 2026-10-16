@@ -6672,7 +6672,16 @@ class _MeowClientState extends ConsumerState<MeowClient>
     if (navigator == null) return;
     await navigator.push(
       MaterialPageRoute<void>(
-        builder: (context) => const SettingsSecurityPage(),
+        builder: (context) => SettingsSecurityPage(
+          onBackupSubscriptions: () => unawaited(
+            _runSettingsBackupAction(
+              SettingsBackupAction.exportEncryptedProfile,
+            ),
+          ),
+          onRestoreFromLocal: () => unawaited(
+            _runSettingsBackupAction(SettingsBackupAction.importFile),
+          ),
+        ),
       ),
     );
   }

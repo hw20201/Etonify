@@ -14,6 +14,8 @@ Widget _securityApp({
   bool allowSubscription = false,
   ValueChanged<bool>? onProxyChanged,
   ValueChanged<bool>? onSubscriptionChanged,
+  VoidCallback? onBackupSubscriptions,
+  VoidCallback? onRestoreFromLocal,
 }) {
   final controller = AppSettingsController()
     ..allowUntrustedProxyCertificates = allowProxy
@@ -46,7 +48,10 @@ Widget _securityApp({
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      home: const SettingsSecurityPage(),
+      home: SettingsSecurityPage(
+        onBackupSubscriptions: onBackupSubscriptions ?? () {},
+        onRestoreFromLocal: onRestoreFromLocal ?? () {},
+      ),
     ),
   );
 }
@@ -136,5 +141,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Allow untrusted proxy certificates?'), findsOneWidget);
+  });
+
+  testWidgets('security page exposes encrypted subscription backup and restore', (
+    tester,
+  ) async {
+    var backupCalls = 0;
+    var restoreCalls = 0;
+    await tester.pumpWidget(
+      _securityApp(
+        onBackupSubscriptions: () => backupCalls++,
+        onRestoreFromLocal: () => restoreCalls++,
+      ),
+    );
+
+    final backup = find.byKey(const ValueKey('security-local-backup'));
+    await tester.ensureVisible(backup);
+    await tester.tap(backup);
+    await tester.pump();
+    final restore = find.byKey(const ValueKey('security-local-restore'));
+    await tester.ensureVisible(restore);
+    await tester.tap(restore);
+    await tester.pump();
+
+    expect(backupCalls, 1);
+    expect(restoreCalls, 1);
+    expect(
+      find.text(
+        'Export subscriptions and servers as a password-encrypted local backup.',
+      ),
+      findsOneWidget,
+    );
   });
 }
