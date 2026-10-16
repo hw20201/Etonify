@@ -26,6 +26,18 @@ void main() {
     expect(workflow, contains("inputs.release_tag != ''"));
     expect(workflow, contains(r'ref: ${{ inputs.release_tag || github.ref }}'));
     expect(workflow, contains(r'RELEASE_TAG_INPUT: ${{ inputs.release_tag }}'));
+    expect(workflow, contains("github.ref == 'refs/heads/master'"));
+    expect(workflow, contains('MINIMUM_UPGRADE_VERSION_CODE: "4047"'));
+    expect(
+      workflow,
+      contains(
+        'cmp scripts/verify_android_release_apk.sh verifier-fix/scripts/verify_android_release_apk.sh',
+      ),
+    );
+    expect(
+      workflow,
+      contains('run: bash scripts/verify_android_release_apk_test.sh'),
+    );
     expect(workflow, contains('MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"'));
     expect(workflow, contains('secrets.ANDROID_KEYSTORE_BASE64'));
     expect(workflow, contains('secrets.ANDROID_KEYSTORE_PASSWORD'));

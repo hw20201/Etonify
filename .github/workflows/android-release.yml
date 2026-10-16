@@ -92,7 +92,7 @@ jobs:
   draft-tag-release:
     if: >-
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feat/v0.3.100-routing-data-resilience' && inputs.release_tag == 'v0.3.100')
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master' && inputs.release_tag != '')
     name: Build signed tag APK and create draft Release
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -179,15 +179,16 @@ jobs:
           fi
           echo "Verified ${RELEASE_TAG} target and checked-out commit: ${checked_out_sha}"
 
-      - name: Checkout repaired APK verifier
+      - name: Checkout pinned APK verifier reference
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: 841f6a63b3398aff50ef502cab93efd91a78406b
           path: verifier-fix
-      - name: Test repaired APK verifier
-        run: bash verifier-fix/scripts/verify_android_release_apk_test.sh
-      - name: Use repaired APK verifier for the fixed tag build
-        run: install -m 755 verifier-fix/scripts/verify_android_release_apk.sh scripts/verify_android_release_apk.sh
+      - name: Verify tag contains the repaired APK verifier
+        run: |
+          cmp scripts/verify_android_release_apk.sh verifier-fix/scripts/verify_android_release_apk.sh
+      - name: Test APK verifier from tag source
+        run: bash scripts/verify_android_release_apk_test.sh
 
       - name: Validate Android signing secrets
         shell: bash
@@ -255,7 +256,7 @@ jobs:
           flutter test
 
       - name: Test Android release APK verifier
-        run: bash verifier-fix/scripts/verify_android_release_apk_test.sh
+        run: bash scripts/verify_android_release_apk_test.sh
 
       - name: Build signed arm64 Release APK
         shell: bash
@@ -273,7 +274,7 @@ jobs:
       - name: Verify signed APK package, version and certificate before draft
         shell: bash
         env:
-          MINIMUM_UPGRADE_VERSION_CODE: "4046"
+          MINIMUM_UPGRADE_VERSION_CODE: "4047"
           EXPECTED_RELEASE_CERT_SHA256: "f1e431ddbefe3496db75f264a0dd02472c7a4be704f8f78c7bd834c146f9f665"
         run: |
           set -euo pipefail

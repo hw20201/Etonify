@@ -17,7 +17,7 @@ printf 'fixture apk\n' > "$apk"
 cat > "$build_tools/aapt" <<'AAPT'
 #!/usr/bin/env bash
 set -euo pipefail
-printf "%s\n" "package: name='com.etonify.meow_client' versionCode='4047' versionName='0.3.100' platformBuildVersionName='16' platformBuildVersionCode='36'"
+printf "%s\n" "package: name='com.etonify.meow_client' versionCode='${FAKE_APK_VERSION_CODE:-4048}' versionName='${FAKE_APK_VERSION_NAME:-0.3.101}' platformBuildVersionName='16' platformBuildVersionCode='36'"
 AAPT
 
 cat > "$build_tools/apksigner" <<'APKSIGNER'
@@ -52,34 +52,41 @@ chmod +x "$build_tools/aapt" "$build_tools/apksigner"
 run_success_case() {
   local format="$1"
   local output="$tmp_dir/${format}.out"
-  ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT="$format" \
-    bash "$verifier" "$apk" '0.3.100' '2047' '4046' "$expected_sha256" > "$output"
-  grep -Fq 'versionCode=4047' "$output"
+  ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT="$format" FAKE_APK_VERSION_CODE=4048 \
+    bash "$verifier" "$apk" '0.3.101' '4048' '4047' "$expected_sha256" > "$output"
+  grep -Fq 'versionCode=4048' "$output"
   grep -Fq "certificateSha256=$expected_sha256" "$output"
 }
 
 run_success_case legacy
 run_success_case v2
 
+if ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=v2 FAKE_APK_VERSION_CODE=4047 \
+  bash "$verifier" "$apk" '0.3.101' '4047' '4047' "$expected_sha256" > "$tmp_dir/baseline.out" 2>&1; then
+  echo 'Expected an APK at the installed baseline versionCode to be rejected.' >&2
+  exit 1
+fi
+grep -Fq 'APK versionCode 4047 must be greater than installed baseline 4047.' "$tmp_dir/baseline.out"
+
 if ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=mismatch \
-  bash "$verifier" "$apk" '0.3.100' '2047' '4046' "$expected_sha256" > "$tmp_dir/mismatch.out" 2>&1; then
+  bash "$verifier" "$apk" '0.3.101' '4048' '4047' "$expected_sha256" > "$tmp_dir/mismatch.out" 2>&1; then
   echo 'Expected a mismatched certificate to be rejected.' >&2
   exit 1
 fi
 grep -Fq 'APK signing certificate does not match the existing release certificate.' "$tmp_dir/mismatch.out"
 
 if ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=missing \
-  bash "$verifier" "$apk" '0.3.100' '2047' '4046' "$expected_sha256" > "$tmp_dir/missing.out" 2>&1; then
+  bash "$verifier" "$apk" '0.3.101' '4048' '4047' "$expected_sha256" > "$tmp_dir/missing.out" 2>&1; then
   echo 'Expected missing certificate metadata to be rejected.' >&2
   exit 1
 fi
 grep -Fq 'No certificate SHA-256 digest found in apksigner output.' "$tmp_dir/missing.out"
 
 if ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=multiple \
-  bash "$verifier" "$apk" '0.3.100' '2047' '4046' "$expected_sha256" > "$tmp_dir/multiple.out" 2>&1; then
+  bash "$verifier" "$apk" '0.3.101' '4048' '4047' "$expected_sha256" > "$tmp_dir/multiple.out" 2>&1; then
   echo 'Expected conflicting signer certificates to be rejected.' >&2
   exit 1
 fi
 grep -Fq 'APK contains multiple distinct signing certificate SHA-256 digests.' "$tmp_dir/multiple.out"
 
-printf '%s\n' 'APK verifier regression tests passed (legacy, apksigner 0.9, mismatch, missing, multiple).'
+printf '%s\n' 'APK verifier regression tests passed (legacy, apksigner 0.9, baseline, mismatch, missing, multiple).'
