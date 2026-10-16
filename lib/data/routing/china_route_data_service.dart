@@ -6,9 +6,15 @@ import 'package:meow_client/core/platform/android_files_dir.dart';
 
 const List<int> _srsMagicBytes = <int>[0x53, 0x52, 0x53];
 
+typedef ChinaRouteDataByteDownloader = Future<Uint8List> Function(Uri uri);
+
 @visibleForTesting
 bool isChinaRouteRuleSetValidForTest(Uint8List bytes) =>
     _isUsableSrsBytes(bytes);
+
+/// Validates an SRS header, supported version, bounded zlib payload and
+/// checksum before any route-data service stores the file.
+bool isUsableSrsRuleSetBytes(Uint8List bytes) => _isUsableSrsBytes(bytes);
 
 DateTime? parseChinaRouteVersionTimestamp(String value) {
   final match = RegExp(r'\d{12}').firstMatch(value.trim());
@@ -169,19 +175,36 @@ abstract interface class ChinaRouteUpdateActivity {
 }
 
 class ChinaRouteDataService implements ChinaRouteUpdateActivity {
-  ChinaRouteDataService._();
+  ChinaRouteDataService._({ChinaRouteDataByteDownloader? downloadOverride})
+    : _downloadOverride = downloadOverride;
+
+  @visibleForTesting
+  ChinaRouteDataService.forTesting({
+    required ChinaRouteDataByteDownloader downloadBytes,
+  }) : this._(downloadOverride: downloadBytes);
 
   static final ChinaRouteDataService instance = ChinaRouteDataService._();
 
-  static const chinaRouteDataSourceName = 'aliothlab/rule-set';
+  static const chinaRouteDataSourceName = 'SagerNet/sing-geosite + sing-geoip';
   static const chinaRouteDataSourceUrl =
-      'https://github.com/aliothlab/rule-set';
+      'https://github.com/SagerNet/sing-geosite/tree/rule-set';
   static const sourceKindLive = 'live';
   static const _chinaGeositeUrl =
-      'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geosite-cn.srs';
+      'https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs';
   static const _chinaGeoipUrl =
+      'https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs';
+  static const _fallbackGeositeUrl =
+      'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geosite-cn.srs';
+  static const _fallbackGeoipUrl =
       'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geoip-cn.srs';
   static const _maxChinaRuleSetBytes = 4 * 1024 * 1024;
+  // Keep this in sync with RuleSetVersionCurrent in etonify-core.
+  static const _minimumChinaRuleSetVersion = 1;
+  static const _maximumChinaRuleSetVersion = 5;
+  static const _maxChinaRuleSetDecompressedBytes = 32 * 1024 * 1024;
+  static const _maxChinaRuleSetRuleCount = 1000000;
+
+  final ChinaRouteDataByteDownloader? _downloadOverride;
 
   Future<ChinaRouteDataStatus>? _updateInFlight;
 
@@ -300,21 +323,12 @@ class ChinaRouteDataService implements ChinaRouteUpdateActivity {
     final paths = await _storagePaths();
     await Directory(paths.ruleSetDirectoryPath).create(recursive: true);
     _emitProgress(ChinaRouteUpdateStage.downloadingRuleSets);
-    final geositeBytes = await _downloadBytes(Uri.parse(_chinaGeositeUrl));
-    final geoipBytes = await _downloadBytes(
-      Uri.parse(_chinaGeoipUrl),
-      completedBytesOffset: geositeBytes.length,
-    );
+    final (geositeBytes, geoipBytes) = await _downloadRuleSets();
     _emitProgress(
       ChinaRouteUpdateStage.verifyingRuleSets,
       completedBytes: geositeBytes.length + geoipBytes.length,
       totalBytes: geositeBytes.length + geoipBytes.length,
     );
-    if (!_isUsableSrsBytes(geositeBytes) || !_isUsableSrsBytes(geoipBytes)) {
-      throw const FormatException(
-        'Downloaded China route data is not valid SRS',
-      );
-    }
 
     _emitProgress(ChinaRouteUpdateStage.activating);
     await _writeAtomically(paths.chinaGeositePath, geositeBytes);
@@ -349,6 +363,16 @@ class ChinaRouteDataService implements ChinaRouteUpdateActivity {
     Uri uri, {
     int completedBytesOffset = 0,
   }) async {
+    final downloadOverride = _downloadOverride;
+    if (downloadOverride != null) {
+      final bytes = await downloadOverride(uri);
+      _emitProgress(
+        ChinaRouteUpdateStage.downloadingRuleSets,
+        completedBytes: completedBytesOffset + bytes.length,
+        totalBytes: completedBytesOffset + bytes.length,
+      );
+      return bytes;
+    }
     final result = await VpnAwareRemoteDownloader.instance.fetchBytes(
       uri: uri,
       maximumBytes: _maxChinaRuleSetBytes,
@@ -378,6 +402,40 @@ class ChinaRouteDataService implements ChinaRouteUpdateActivity {
       },
     );
     return result.bytes ?? Uint8List(0);
+  }
+
+  Future<(Uint8List, Uint8List)> _downloadRuleSets() async {
+    try {
+      return await _downloadRuleSetPair(
+        Uri.parse(_chinaGeositeUrl),
+        Uri.parse(_chinaGeoipUrl),
+      );
+    } on Exception {
+      // Keep both files from one provider; never mix a primary and fallback
+      // rule set in the same installed pair.
+      _emitProgress(ChinaRouteUpdateStage.downloadingRuleSets);
+      return _downloadRuleSetPair(
+        Uri.parse(_fallbackGeositeUrl),
+        Uri.parse(_fallbackGeoipUrl),
+      );
+    }
+  }
+
+  Future<(Uint8List, Uint8List)> _downloadRuleSetPair(
+    Uri geositeUri,
+    Uri geoipUri,
+  ) async {
+    final geositeBytes = await _downloadBytes(geositeUri);
+    final geoipBytes = await _downloadBytes(
+      geoipUri,
+      completedBytesOffset: geositeBytes.length,
+    );
+    if (!_isUsableSrsBytes(geositeBytes) || !_isUsableSrsBytes(geoipBytes)) {
+      throw const FormatException(
+        'Downloaded China route data is not valid SRS',
+      );
+    }
+    return (geositeBytes, geoipBytes);
   }
 
   Future<void> _migrateLegacyChinaRuleSets(
@@ -481,28 +539,101 @@ class _ChinaRouteStoragePaths {
   final String legacyRuleSetDirectoryPath;
 }
 
-bool _isUsableSrsBytes(Uint8List bytes) =>
-    bytes.length > _srsMagicBytes.length &&
-    bytes[0] == _srsMagicBytes[0] &&
-    bytes[1] == _srsMagicBytes[1] &&
-    bytes[2] == _srsMagicBytes[2];
+class _SrsPayloadValidationSink implements Sink<List<int>> {
+  int _decompressedBytes = 0;
+  int _ruleCount = 0;
+  int _ruleCountShift = 0;
+  bool _ruleCountComplete = false;
+  int _adlerA = 1;
+  int _adlerB = 0;
+  int _adlerChunkBytes = 0;
+
+  int get adler32 => (_adlerB << 16) | _adlerA;
+
+  @override
+  void add(List<int> chunk) {
+    _decompressedBytes += chunk.length;
+    if (_decompressedBytes >
+        ChinaRouteDataService._maxChinaRuleSetDecompressedBytes) {
+      throw const FormatException('SRS decompressed payload exceeds limit');
+    }
+    for (final byte in chunk) {
+      _adlerA += byte;
+      _adlerB += _adlerA;
+      _adlerChunkBytes++;
+      if (_adlerChunkBytes == 5552) {
+        _reduceAdler32();
+      }
+      if (!_ruleCountComplete) {
+        _ruleCount |= (byte & 0x7f) << _ruleCountShift;
+        if ((byte & 0x80) == 0) {
+          _ruleCountComplete = true;
+          if (_ruleCount == 0 ||
+              _ruleCount > ChinaRouteDataService._maxChinaRuleSetRuleCount) {
+            throw const FormatException('SRS contains an invalid rule count');
+          }
+        } else {
+          _ruleCountShift += 7;
+          if (_ruleCountShift > 28) {
+            throw const FormatException('SRS rule count varint is too long');
+          }
+        }
+      }
+    }
+  }
+
+  @override
+  void close() {
+    if (!_ruleCountComplete) {
+      throw const FormatException('SRS payload has no complete rule count');
+    }
+    _reduceAdler32();
+  }
+
+  void _reduceAdler32() {
+    _adlerA %= 65521;
+    _adlerB %= 65521;
+    _adlerChunkBytes = 0;
+  }
+}
+
+bool _isUsableSrsBytes(Uint8List bytes) {
+  if (bytes.length <= _srsMagicBytes.length + 1 ||
+      bytes.length > ChinaRouteDataService._maxChinaRuleSetBytes ||
+      bytes[0] != _srsMagicBytes[0] ||
+      bytes[1] != _srsMagicBytes[1] ||
+      bytes[2] != _srsMagicBytes[2] ||
+      bytes[3] < ChinaRouteDataService._minimumChinaRuleSetVersion ||
+      bytes[3] > ChinaRouteDataService._maximumChinaRuleSetVersion) {
+    return false;
+  }
+  try {
+    final validationSink = _SrsPayloadValidationSink();
+    ZLibDecoder().startChunkedConversion(validationSink)
+      ..add(bytes.sublist(_srsMagicBytes.length + 1))
+      ..close();
+    final expectedAdler32 =
+        (bytes[bytes.length - 4] << 24) |
+        (bytes[bytes.length - 3] << 16) |
+        (bytes[bytes.length - 2] << 8) |
+        bytes[bytes.length - 1];
+    return validationSink.adler32 == expectedAdler32;
+  } on Exception {
+    return false;
+  }
+}
 
 Future<bool> _hasUsableRuleSet(File file) async {
-  RandomAccessFile? reader;
   try {
-    if (!await file.exists() || await file.length() <= _srsMagicBytes.length) {
+    if (!await file.exists()) return false;
+    final length = await file.length();
+    if (length <= _srsMagicBytes.length + 1 ||
+        length > ChinaRouteDataService._maxChinaRuleSetBytes) {
       return false;
     }
-    reader = await file.open();
-    final magic = await reader.read(_srsMagicBytes.length);
-    return magic.length == _srsMagicBytes.length &&
-        magic[0] == _srsMagicBytes[0] &&
-        magic[1] == _srsMagicBytes[1] &&
-        magic[2] == _srsMagicBytes[2];
+    return _isUsableSrsBytes(await file.readAsBytes());
   } on FileSystemException {
     return false;
-  } finally {
-    await reader?.close();
   }
 }
 

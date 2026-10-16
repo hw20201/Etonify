@@ -7,6 +7,7 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:meow_client/core/platform/android_files_dir.dart';
 import 'package:meow_client/data/local/hive_storage_diagnostics.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/google_play_routing_preset.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 import 'package:meow_client/logging/app_log_store.dart';
@@ -205,6 +206,7 @@ class AppSettingsState {
     required this.locationLookupConcurrency,
     required this.blockLeaks,
     required this.adBlockEnabled,
+    this.chinaPlayStorePresetEnabled = true,
     this.routingMode = TrafficRoutingMode.rules,
     this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
@@ -282,6 +284,7 @@ class AppSettingsState {
   final int locationLookupConcurrency;
   final bool blockLeaks;
   final bool adBlockEnabled;
+  final bool chinaPlayStorePresetEnabled;
   final TrafficRoutingMode routingMode;
   final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
@@ -359,6 +362,7 @@ class AppSettingsState {
     int? locationLookupConcurrency,
     bool? blockLeaks,
     bool? adBlockEnabled,
+    bool? chinaPlayStorePresetEnabled,
     TrafficRoutingMode? routingMode,
     List<CustomRoutingRule>? customRoutingRules,
     bool? bypassLocalNetwork,
@@ -460,6 +464,8 @@ class AppSettingsState {
           locationLookupConcurrency ?? this.locationLookupConcurrency,
       blockLeaks: blockLeaks ?? this.blockLeaks,
       adBlockEnabled: adBlockEnabled ?? this.adBlockEnabled,
+      chinaPlayStorePresetEnabled:
+          chinaPlayStorePresetEnabled ?? this.chinaPlayStorePresetEnabled,
       routingMode: routingMode ?? this.routingMode,
       customRoutingRules: customRoutingRules ?? this.customRoutingRules,
       bypassLocalNetwork: bypassLocalNetwork ?? this.bypassLocalNetwork,
@@ -598,8 +604,15 @@ abstract class AppSettingsStore {
   static const _locationLookupConcurrencyKey = 'location_lookup_concurrency';
   static const _blockLeaksKey = 'block_leaks';
   static const _adBlockEnabledKey = 'ad_block_enabled';
+  static const _chinaPlayStorePresetEnabledKey =
+      'china_play_store_preset_enabled';
   static const _trafficRoutingModeKey = 'traffic_routing_mode';
   static const _customRoutingRulesKey = 'custom_routing_rules';
+  // One-shot migration marker and backup are device-local, never exported.
+  static const _googlePlayCustomRulesMigratedKey =
+      'google_play_custom_rules_migrated_v1';
+  static const _customRulesBeforeGooglePlayMigrationKey =
+      'custom_routing_rules_before_google_play_migration_v1';
   static const _bypassLocalNetworkKey = 'bypass_local_network';
   static const _splitRoutingModeKey = 'split_routing_mode';
   static const _splitRoutingPackagesKey = 'split_routing_packages';
@@ -668,6 +681,7 @@ abstract class AppSettingsStore {
     _locationLookupConcurrencyKey,
     _blockLeaksKey,
     _adBlockEnabledKey,
+    _chinaPlayStorePresetEnabledKey,
     _trafficRoutingModeKey,
     _customRoutingRulesKey,
     _bypassLocalNetworkKey,
@@ -977,6 +991,10 @@ abstract class AppSettingsStore {
           : locationLookupConcurrency,
       blockLeaks: boolValue(_blockLeaksKey, defaultValue: false),
       adBlockEnabled: boolValue(_adBlockEnabledKey, defaultValue: false),
+      chinaPlayStorePresetEnabled: boolValue(
+        _chinaPlayStorePresetEnabledKey,
+        defaultValue: true,
+      ),
       routingMode: TrafficRoutingMode.fromStorage(map[_trafficRoutingModeKey]),
       customRoutingRules: CustomRoutingRule.decodeStorage(
         map[_customRoutingRulesKey],
@@ -1105,6 +1123,9 @@ abstract class AppSettingsStore {
       _locationLookupConcurrencyKey: state.locationLookupConcurrency.toString(),
       _blockLeaksKey: state.blockLeaks ? '1' : '0',
       _adBlockEnabledKey: state.adBlockEnabled ? '1' : '0',
+      _chinaPlayStorePresetEnabledKey: state.chinaPlayStorePresetEnabled
+          ? '1'
+          : '0',
       _trafficRoutingModeKey: state.routingMode.storageValue,
       _customRoutingRulesKey: jsonEncode(
         CustomRoutingRule.normalizeCustomRoutingRules(
@@ -1252,6 +1273,7 @@ class HiveAppSettingsStore extends AppSettingsStore {
   @override
   Future<AppSettingsState> loadState() async {
     await _migrateUrlTestConcurrencyDefault();
+    await migrateGooglePlayCustomProxyDomains(_box);
     final raw = _box.toMap().map(
       (key, value) => MapEntry(key.toString(), value),
     );
@@ -1295,6 +1317,73 @@ class HiveAppSettingsStore extends AppSettingsStore {
 final Expando<Future<void>> _urlTestMigrationInFlight = Expando<Future<void>>(
   'urltest concurrency migration',
 );
+
+final Expando<Future<void>> _googlePlayRulesMigrationInFlight =
+    Expando<Future<void>>('Google Play proxy rules migration');
+
+/// Adds Play Store, Play Services, and download proxy rules once while
+/// preserving existing entries and backing up malformed raw storage.
+Future<void> migrateGooglePlayCustomProxyDomains(Box<dynamic> box) async {
+  final inFlight = _googlePlayRulesMigrationInFlight[box];
+  if (inFlight != null) return inFlight;
+  final operation = _applyGooglePlayCustomProxyDomainMigration(box);
+  _googlePlayRulesMigrationInFlight[box] = operation;
+  try {
+    await operation;
+  } finally {
+    if (identical(_googlePlayRulesMigrationInFlight[box], operation)) {
+      _googlePlayRulesMigrationInFlight[box] = null;
+    }
+  }
+}
+
+Future<void> _applyGooglePlayCustomProxyDomainMigration(
+  Box<dynamic> box,
+) async {
+  if (box.containsKey(AppSettingsStore._googlePlayCustomRulesMigratedKey)) {
+    return;
+  }
+  final raw = box.get(AppSettingsStore._customRoutingRulesKey);
+  if (raw != null &&
+      !_isCustomRoutingRuleStorageStructurallyValid(raw as Object)) {
+    final backupKey = AppSettingsStore._customRulesBeforeGooglePlayMigrationKey;
+    if (!box.containsKey(backupKey)) {
+      await box.put(backupKey, raw);
+    }
+  }
+  final merged = mergeGooglePlayCustomProxyRules(
+    CustomRoutingRule.decodeStorage(raw),
+  );
+  await box.put(
+    AppSettingsStore._customRoutingRulesKey,
+    jsonEncode(merged.map((rule) => rule.toJson()).toList(growable: false)),
+  );
+  await box.put(AppSettingsStore._googlePlayCustomRulesMigratedKey, '1');
+  await box.flush();
+  AppLogStore.info(
+    'settings storage',
+    'migrated Google Play proxy domain rules',
+  );
+}
+
+bool _isCustomRoutingRuleStorageStructurallyValid(Object raw) {
+  Object? decoded = raw;
+  if (raw is String) {
+    try {
+      decoded = jsonDecode(raw);
+    } on FormatException {
+      return false;
+    }
+  }
+  if (decoded is! Iterable) return false;
+  try {
+    // decodeStorage drops malformed entries and duplicate keys are
+    // normalized. Preserve the raw payload whenever that would lose data.
+    return CustomRoutingRule.decodeStorage(raw).length == decoded.length;
+  } on Object {
+    return false;
+  }
+}
 
 /// Applies the one-time URLTest default migration to an already opened box.
 Future<void> migrateUrlTestConcurrencyDefault(Box<dynamic> box) async {

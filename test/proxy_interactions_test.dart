@@ -58,6 +58,11 @@ Widget _page({
   required ValueChanged<String> onSelected,
   Map<String, List<AppProxySummary>> groups = const {},
   bool shell = false,
+  AppProxySummary? activeProxy,
+  double sheetExtent = 1,
+  double collapsedSheetExtent = 0,
+  double expandedHeaderExtent = 1,
+  bool? sheetAtMaxExtent,
 }) {
   Widget page({
     ValueListenable<ProxyPanelMetrics>? metrics,
@@ -66,14 +71,15 @@ Widget _page({
   }) => ProxiesPage(
     proxies: proxies,
     selectedTag: '',
+    activeProxy: activeProxy,
     connected: true,
     progressiveBlurEnabled: false,
     hapticEnabled: false,
     embedded: true,
-    sheetAtMaxExtent: !shell,
-    sheetExtent: 1,
-    collapsedSheetExtent: 0,
-    expandedHeaderExtent: 1,
+    sheetAtMaxExtent: sheetAtMaxExtent ?? !shell,
+    sheetExtent: sheetExtent,
+    collapsedSheetExtent: collapsedSheetExtent,
+    expandedHeaderExtent: expandedHeaderExtent,
     sheetMetricsListenable: metrics,
     scrollController: controller,
     onHeaderTap: onHeaderTap,
@@ -108,7 +114,160 @@ Widget _page({
   );
 }
 
+List<String> _activeBottomTexts(WidgetTester tester) {
+  final bottomLabel = find.byKey(const ValueKey('active-proxy-bottom-label'));
+  return tester
+      .widgetList<Text>(
+        find.descendant(of: bottomLabel, matching: find.byType(Text)),
+      )
+      .map((widget) => widget.data ?? widget.textSpan?.toPlainText() ?? '')
+      .where((text) => text.isNotEmpty)
+      .toList();
+}
+
 void main() {
+  testWidgets(
+    'collapsed production active-proxy strip omits IPv4/IPv6 and refresh UI',
+    (tester) async {
+      const addresses = [
+        '203.0.113.8',
+        '203.0.113.8:443',
+        '2001:db8::8',
+        '[2001:db8::8]:443',
+      ];
+
+      for (var index = 0; index < addresses.length; index++) {
+        final address = addresses[index];
+        final proxy = _proxy('node-tag-$index').copyWith(
+          displayName: address,
+          server: 'relay.example.com',
+          endpointLabel: 'relay.example.com:443',
+          ip: '',
+          ipChecking: true,
+        );
+
+        await tester.pumpWidget(
+          _app(
+            _page(
+              proxies: [proxy],
+              activeProxy: proxy,
+              onSelected: (_) {},
+              sheetExtent: 0,
+              collapsedSheetExtent: 0,
+              expandedHeaderExtent: 1,
+              sheetAtMaxExtent: false,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final bottomLabel = find.byKey(
+          const ValueKey('active-proxy-bottom-label'),
+        );
+        final accessibleText = _activeBottomTexts(tester).join(' ');
+        expect(accessibleText, contains('—'));
+        expect(accessibleText, isNot(contains(address)));
+        expect(
+          find.descendant(
+            of: bottomLabel,
+            matching: find.byKey(const ValueKey('ip-refresh-checking')),
+          ),
+          findsNothing,
+        );
+        expect(
+          find.descendant(
+            of: bottomLabel,
+            matching: find.byType(GestureDetector),
+          ),
+          findsNothing,
+        );
+      }
+
+      const rawFallback = '[2001:db8::9]:8443';
+      final unnamed = _proxy(rawFallback).copyWith(
+        displayName: '',
+        server: '[2001:db8::9]',
+        endpointLabel: rawFallback,
+        ip: '',
+        ipChecking: true,
+      );
+      await tester.pumpWidget(
+        _app(
+          _page(
+            proxies: [unnamed],
+            activeProxy: unnamed,
+            onSelected: (_) {},
+            sheetExtent: 0,
+            collapsedSheetExtent: 0,
+            expandedHeaderExtent: 1,
+            sheetAtMaxExtent: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final unnamedText = _activeBottomTexts(tester).join(' ');
+      expect(unnamedText, contains('—'));
+      expect(unnamedText, isNot(contains(rawFallback)));
+    },
+  );
+
+  testWidgets(
+    'collapsed production active-proxy title stays safe during node-switch animation',
+    (tester) async {
+      var active = _proxy(
+        'warsaw-tag',
+      ).copyWith(displayName: 'Warsaw 01', ip: '198.51.100.24');
+      late StateSetter updateActive;
+
+      await tester.pumpWidget(
+        _app(
+          StatefulBuilder(
+            builder: (context, setState) {
+              updateActive = setState;
+              return _page(
+                proxies: [active],
+                activeProxy: active,
+                onSelected: (_) {},
+                sheetExtent: 0,
+                collapsedSheetExtent: 0,
+                expandedHeaderExtent: 1,
+                sheetAtMaxExtent: false,
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(_activeBottomTexts(tester).join(' '), contains('Warsaw 01'));
+      expect(
+        _activeBottomTexts(tester).join(' '),
+        isNot(contains('198.51.100.24')),
+      );
+
+      final next = _proxy('tokyo-tag').copyWith(
+        displayName: 'Tokyo 02 [2001:db8::12]:443',
+        server: '2001:db8::12',
+        endpointLabel: '[2001:db8::12]:443',
+        ip: '2001:db8::12',
+        ipChecking: true,
+      );
+      updateActive(() => active = next);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 110));
+
+      var accessibleText = _activeBottomTexts(tester).join(' ');
+      expect(accessibleText, contains('Warsaw 01'));
+      expect(accessibleText, contains('Tokyo 02'));
+      expect(accessibleText, isNot(contains('2001:db8::12')));
+
+      await tester.pumpAndSettle();
+      accessibleText = _activeBottomTexts(tester).join(' ');
+      expect(accessibleText, contains('Tokyo 02'));
+      expect(accessibleText, isNot(contains('2001:db8::12')));
+    },
+  );
+
   testWidgets(
     'group selection reprioritizes after scroll ends in source order',
     (tester) async {

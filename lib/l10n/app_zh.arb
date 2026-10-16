@@ -1485,6 +1485,8 @@
   "routingModeGlobalDescription": "Etonify 接管的流量全部走当前代理，忽略域名/IP规则和局域网直连；按应用分流仍然生效。",
   "routingModePreparingChinaData": "正在准备中国域名和 IP 规则…",
   "routingModeChinaDataFailedHint": "暂时无法获取中国规则数据。规则模式仍已启用，未匹配流量会安全地回退到代理。",
+  "googlePlayPresetTitle": "中国 Play 商店规则",
+  "googlePlayPresetSubtitle": "将 Google Play 应用及相关域名通过当前代理。SagerNet geosite 在线下载、缓存并按日更新；数据暂不可用时，应用包名与明确域名规则仍生效。仅在“规则”模式下生效。",
   "customRoutingRulesTitle": "自定义域名和 IP 规则",
   "customRoutingRulesDescription": "自定义规则优先于中国直连规则；未匹配流量走代理。全局模式会忽略这些规则。可调整规则顺序来设置优先级。",
   "customRoutingRulesEmptyTitle": "还没有自定义规则",

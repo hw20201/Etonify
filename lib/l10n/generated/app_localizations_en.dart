@@ -3372,6 +3372,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'China rule data is unavailable. Rule mode remains active; unmatched traffic safely falls back to the proxy.';
 
   @override
+  String get googlePlayPresetTitle => 'China Play Store rules';
+
+  @override
+  String get googlePlayPresetSubtitle =>
+      'Route Google Play apps and related domains through the selected proxy. SagerNet geosites download to cache and are refreshed daily; app-package and explicit-domain rules remain active if geosite data is unavailable. Rules mode only.';
+
+  @override
   String get customRoutingRulesTitle => 'Custom domain and IP rules';
 
   @override

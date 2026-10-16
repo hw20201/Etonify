@@ -5,7 +5,7 @@ enum CustomRouteRuleType { domain, ip }
 
 enum CustomRouteAction { proxy, direct }
 
-const int maxCustomRouteRuleCount = 256;
+const int maxCustomRouteRuleCount = 259;
 
 final RegExp _domainLabelPattern = RegExp(
   r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$',

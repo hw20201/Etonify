@@ -11,6 +11,7 @@ typedef DownloadAdBlockRuleSetCommand = Future<AdBlockRuleSetStatus> Function();
 typedef DeleteAdBlockRuleSetCommand = Future<AdBlockRuleSetStatus> Function();
 typedef RefreshRoutingRuleDataCommand = Future<ChinaRouteDataStatus> Function();
 typedef SetTrafficRoutingModeCommand = void Function(TrafficRoutingMode value);
+typedef SetChinaPlayStorePresetEnabledCommand = void Function(bool value);
 typedef SetCustomRoutingRulesCommand =
     void Function(List<CustomRoutingRule> value);
 typedef PrepareChinaRouteDataCommand = Future<ChinaRouteDataStatus> Function();
@@ -57,6 +58,7 @@ class AppSettingsCommands {
   DeleteAdBlockRuleSetCommand? _deleteAdBlockRuleSet;
   RefreshRoutingRuleDataCommand? _refreshRoutingRuleData;
   SetTrafficRoutingModeCommand? _setTrafficRoutingMode;
+  SetChinaPlayStorePresetEnabledCommand? _setChinaPlayStorePresetEnabled;
   SetCustomRoutingRulesCommand? _setCustomRoutingRules;
   PrepareChinaRouteDataCommand? _prepareChinaRouteData;
   SetRussiaDnsDirectResolverCommand? _setRussiaDnsDirectResolver;
@@ -199,6 +201,7 @@ class AppSettingsCommands {
       _deleteAdBlockRuleSet != null &&
       _refreshRoutingRuleData != null &&
       _setTrafficRoutingMode != null &&
+      _setChinaPlayStorePresetEnabled != null &&
       _setCustomRoutingRules != null &&
       _prepareChinaRouteData != null &&
       _setRussiaDnsDirectResolver != null &&
@@ -214,6 +217,8 @@ class AppSettingsCommands {
     required DeleteAdBlockRuleSetCommand deleteAdBlockRuleSet,
     required RefreshRoutingRuleDataCommand refreshRoutingRuleData,
     required SetTrafficRoutingModeCommand setTrafficRoutingMode,
+    required SetChinaPlayStorePresetEnabledCommand
+    setChinaPlayStorePresetEnabled,
     required SetCustomRoutingRulesCommand setCustomRoutingRules,
     required PrepareChinaRouteDataCommand prepareChinaRouteData,
     required SetRussiaDnsDirectResolverCommand setRussiaDnsDirectResolver,
@@ -229,6 +234,7 @@ class AppSettingsCommands {
     _deleteAdBlockRuleSet = deleteAdBlockRuleSet;
     _refreshRoutingRuleData = refreshRoutingRuleData;
     _setTrafficRoutingMode = setTrafficRoutingMode;
+    _setChinaPlayStorePresetEnabled = setChinaPlayStorePresetEnabled;
     _setCustomRoutingRules = setCustomRoutingRules;
     _prepareChinaRouteData = prepareChinaRouteData;
     _setRussiaDnsDirectResolver = setRussiaDnsDirectResolver;
@@ -246,6 +252,7 @@ class AppSettingsCommands {
     _deleteAdBlockRuleSet = null;
     _refreshRoutingRuleData = null;
     _setTrafficRoutingMode = null;
+    _setChinaPlayStorePresetEnabled = null;
     _setCustomRoutingRules = null;
     _prepareChinaRouteData = null;
     _setRussiaDnsDirectResolver = null;
@@ -286,6 +293,9 @@ class AppSettingsCommands {
 
   void setTrafficRoutingMode(TrafficRoutingMode value) =>
       _setTrafficRoutingMode?.call(value);
+
+  void setChinaPlayStorePresetEnabled(bool value) =>
+      _setChinaPlayStorePresetEnabled?.call(value);
 
   void setCustomRoutingRules(List<CustomRoutingRule> value) =>
       _setCustomRoutingRules?.call(value);

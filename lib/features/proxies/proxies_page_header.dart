@@ -4,6 +4,38 @@ part of 'proxies_page.dart';
 /// out, so rows dissolve under it instead of stopping on a hard edge.
 const _kProxySheetHeaderEdgeFade = 10.0;
 
+final RegExp _activeProxyIpv4Endpoint = RegExp(
+  r'(?<![0-9A-Za-z.])(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]{1,5})?(?![0-9A-Za-z.])',
+);
+final RegExp _activeProxyIpv6Endpoint = RegExp(
+  r'\[[0-9A-Fa-f:.%]+\](?::[0-9]{1,5})?|(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}(?:%[A-Za-z0-9._-]+)?(?![0-9A-Fa-f:])',
+);
+
+String _safeActiveProxyTitle(
+  AppLocalizations l10n,
+  AppProxySummary proxy,
+  String unknownText,
+) {
+  final rawName = proxy.displayName.trim();
+  final isLowest = isLowestProxyTag(proxy.tag);
+  if (!isLowest &&
+      (rawName.isEmpty ||
+          rawName == proxy.tag.trim() ||
+          rawName == proxy.server.trim() ||
+          rawName == proxy.endpointLabel.trim())) {
+    return unknownText;
+  }
+
+  final safeTitle = _localizedProxyTitle(l10n, proxy)
+      .replaceAll(_activeProxyIpv6Endpoint, ' ')
+      .replaceAll(_activeProxyIpv4Endpoint, ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .replaceAll(RegExp(r'^[\s·|,]+'), '')
+      .replaceAll(RegExp(r'[\s·|,]+$'), '')
+      .trim();
+  return safeTitle.isEmpty ? unknownText : safeTitle;
+}
+
 /// Backdrop painted behind the pinned header, which list rows scroll under.
 ///
 /// Stays fully opaque across the whole header except for the last
@@ -108,7 +140,6 @@ class _ProxySheetHeader extends StatelessWidget {
     required this.scrollCollapse,
     required this.canFillScreen,
     required this.activeProxy,
-    required this.activeProxyHideIp,
     required this.l10n,
     required this.sort,
     required this.connected,
@@ -116,13 +147,11 @@ class _ProxySheetHeader extends StatelessWidget {
     required this.urlTestInFlight,
     this.urlTestInFlightListenable,
     this.urlTestProgressListenable,
-    required this.hapticEnabled,
     required this.speedBytesPerSecond,
     required this.trafficBytes,
     required this.trafficListenable,
     required this.onSortSelected,
     required this.onUrlTest,
-    required this.onRefreshIp,
     required this.onTap,
   });
 
@@ -131,7 +160,6 @@ class _ProxySheetHeader extends StatelessWidget {
   final double scrollCollapse;
   final bool canFillScreen;
   final AppProxySummary? activeProxy;
-  final bool activeProxyHideIp;
   final AppLocalizations l10n;
   final ProxySort sort;
   final bool connected;
@@ -139,13 +167,11 @@ class _ProxySheetHeader extends StatelessWidget {
   final bool urlTestInFlight;
   final ValueListenable<bool>? urlTestInFlightListenable;
   final ValueListenable<UrlTestProgressState>? urlTestProgressListenable;
-  final bool hapticEnabled;
   final double speedBytesPerSecond;
   final double trafficBytes;
   final ValueListenable<TrafficUiSnapshot>? trafficListenable;
   final ValueChanged<ProxySort> onSortSelected;
   final Future<void> Function() onUrlTest;
-  final VoidCallback? onRefreshIp;
   final VoidCallback? onTap;
 
   @override
@@ -197,12 +223,9 @@ class _ProxySheetHeader extends StatelessWidget {
                         ? _ActiveProxyLabel(
                             connected: connected,
                             proxy: activeProxy!,
-                            hideIp: activeProxyHideIp,
-                            hapticEnabled: hapticEnabled,
                             speedBytesPerSecond: speedBytesPerSecond,
                             trafficBytes: trafficBytes,
                             unknownText: '—',
-                            onRefreshIp: onRefreshIp,
                           )
                         : ValueListenableBuilder<TrafficUiSnapshot>(
                             valueListenable: trafficListenable!,
@@ -210,13 +233,10 @@ class _ProxySheetHeader extends StatelessWidget {
                               return _ActiveProxyLabel(
                                 connected: connected,
                                 proxy: activeProxy!,
-                                hideIp: activeProxyHideIp,
-                                hapticEnabled: hapticEnabled,
                                 speedBytesPerSecond:
                                     traffic.speedBytesPerSecond,
                                 trafficBytes: traffic.trafficBytes,
                                 unknownText: '—',
-                                onRefreshIp: onRefreshIp,
                               );
                             },
                           ),
@@ -433,75 +453,26 @@ class _ActiveProxyLabel extends StatelessWidget {
   const _ActiveProxyLabel({
     required this.connected,
     required this.proxy,
-    required this.hideIp,
-    required this.hapticEnabled,
     required this.speedBytesPerSecond,
     required this.trafficBytes,
     required this.unknownText,
-    required this.onRefreshIp,
   });
 
   final bool connected;
   final AppProxySummary proxy;
-  final bool hideIp;
-  final bool hapticEnabled;
   final double speedBytesPerSecond;
   final double trafficBytes;
   final String unknownText;
-  final VoidCallback? onRefreshIp;
-
-  String _maskIp(String ip) {
-    final parts = ip.split('.');
-    if (parts.length == 4) {
-      return '${parts[0]}.${parts[1]}.*.*';
-    }
-    if (ip.length > 8) {
-      return '${ip.substring(0, ip.length ~/ 2)}****';
-    }
-    return ip;
-  }
-
-  String get _displayIp {
-    if (!connected) return '—';
-    final ip = proxy.ip;
-    if (ip.isEmpty) return unknownText;
-    if (hideIp) return _maskIp(ip);
-    return ip;
-  }
-
-  void _refreshIp() {
-    if (!connected || onRefreshIp == null) return;
-    if (hapticEnabled) {
-      HapticFeedback.lightImpact();
-    }
-    onRefreshIp?.call();
-  }
-
-  Widget _ipDisplay(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = theme.colorScheme.onSurfaceVariant;
-    if (connected && proxy.ipChecking && proxy.ip.trim().isEmpty) {
-      return IpRefreshDots(
-        key: const ValueKey('ip-refresh-checking'),
-        color: color,
-      );
-    }
-    return Text(
-      _displayIp,
-      key: ValueKey(_displayIp),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.bodyMedium?.copyWith(color: color),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final title = _safeActiveProxyTitle(l10n, proxy, unknownText);
     final speedText = formatSpeed(connected ? speedBytesPerSecond : 0);
     final trafficText = formatBytes(connected ? trafficBytes : 0);
     return ConstrainedBox(
+      key: const ValueKey('active-proxy-bottom-label'),
       constraints: const BoxConstraints(minHeight: 74),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -544,49 +515,13 @@ class _ActiveProxyLabel extends StatelessWidget {
                           );
                         },
                         child: Text(
-                          _localizedProxyTitle(l10n, proxy),
-                          key: ValueKey(_localizedProxyTitle(l10n, proxy)),
+                          title,
+                          key: ValueKey('active-proxy-title:$title'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: connected ? _refreshIp : null,
-                    child: SizedBox(
-                      height: 24,
-                      width: double.infinity,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 220),
-                          switchInCurve: Curves.easeOutCubic,
-                          switchOutCurve: Curves.easeOutCubic,
-                          layoutBuilder: (currentChild, previousChildren) {
-                            return Stack(
-                              alignment: Alignment.centerLeft,
-                              children: [...previousChildren, ?currentChild],
-                            );
-                          },
-                          transitionBuilder: (child, animation) {
-                            return FadeTransition(
-                              opacity: animation,
-                              child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, 0.12),
-                                  end: Offset.zero,
-                                ).animate(animation),
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: _ipDisplay(context),
                         ),
                       ),
                     ),

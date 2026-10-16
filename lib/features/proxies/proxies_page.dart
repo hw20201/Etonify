@@ -20,7 +20,6 @@ import 'package:meow_client/models/subscription.dart';
 import 'package:meow_client/models/url_test_progress.dart';
 import 'package:meow_client/widgets/app_bottom_sheet_surface.dart';
 import 'package:meow_client/widgets/country_flag_badge.dart';
-import 'package:meow_client/widgets/ip_refresh_dots.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 
 import 'package:meow_client/features/proxies/proxy_list_ordering.dart';
@@ -398,7 +397,6 @@ class ProxiesPage extends StatefulWidget {
     required this.proxies,
     required this.selectedTag,
     this.activeProxy,
-    this.activeProxyHideIp = false,
     required this.connected,
     this.serverCount = 0,
     this.urlTestInFlight = false,
@@ -423,8 +421,6 @@ class ProxiesPage extends StatefulWidget {
     this.onRenameProxyChain,
     this.onRemoveProxyChain,
     this.isProxyChainTag,
-    this.onActiveProxyHideIpChanged,
-    this.onActiveProxyIpRefresh,
     this.embedded = false,
     this.sheetMetricsListenable,
     this.scrollController,
@@ -444,7 +440,6 @@ class ProxiesPage extends StatefulWidget {
   final List<AppProxySummary> proxies;
   final String selectedTag;
   final AppProxySummary? activeProxy;
-  final bool activeProxyHideIp;
   final bool connected;
   final int serverCount;
   final bool urlTestInFlight;
@@ -473,8 +468,6 @@ class ProxiesPage extends StatefulWidget {
   final Future<void> Function(String chainTag, String name)? onRenameProxyChain;
   final Future<void> Function(String chainTag)? onRemoveProxyChain;
   final bool Function(String tag)? isProxyChainTag;
-  final ValueChanged<bool>? onActiveProxyHideIpChanged;
-  final VoidCallback? onActiveProxyIpRefresh;
   final bool embedded;
   final ValueListenable<ProxyPanelMetrics>? sheetMetricsListenable;
   final ScrollController? scrollController;
@@ -1245,7 +1238,6 @@ class _ProxiesPageState extends State<ProxiesPage> {
                     scrollCollapse: effectiveScrollCollapse,
                     canFillScreen: effectiveSheetCanFillScreen,
                     activeProxy: widget.activeProxy,
-                    activeProxyHideIp: widget.activeProxyHideIp,
                     l10n: l10n,
                     sort: _sort,
                     connected: widget.connected,
@@ -1253,13 +1245,11 @@ class _ProxiesPageState extends State<ProxiesPage> {
                     urlTestInFlight: widget.urlTestInFlight,
                     urlTestInFlightListenable: widget.urlTestInFlightListenable,
                     urlTestProgressListenable: widget.urlTestProgressListenable,
-                    hapticEnabled: widget.hapticEnabled,
                     speedBytesPerSecond: widget.speedBytesPerSecond,
                     trafficBytes: widget.trafficBytes,
                     trafficListenable: widget.trafficListenable,
                     onSortSelected: _setSort,
                     onUrlTest: widget.onUrlTest,
-                    onRefreshIp: widget.onActiveProxyIpRefresh,
                     onTap: widget.onHeaderTap,
                   ),
                 );

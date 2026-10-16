@@ -3182,6 +3182,13 @@ class AppLocalizationsZh extends AppLocalizations {
       '暂时无法获取中国规则数据。规则模式仍已启用，未匹配流量会安全地回退到代理。';
 
   @override
+  String get googlePlayPresetTitle => '中国 Play 商店规则';
+
+  @override
+  String get googlePlayPresetSubtitle =>
+      '将 Google Play 应用及相关域名通过当前代理。SagerNet geosite 在线下载、缓存并按日更新；数据暂不可用时，应用包名与明确域名规则仍生效。仅在“规则”模式下生效。';
+
+  @override
   String get customRoutingRulesTitle => '自定义域名和 IP 规则';
 
   @override

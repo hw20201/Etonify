@@ -182,6 +182,30 @@ void main() {
     expect(tester.takeException(), isNull);
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
+  testWidgets(
+    'China Play Store preset is enabled by default and can be turned off',
+    (tester) async {
+      final controller = await _pumpPage(
+        tester,
+        const ChinaRouteDataStatus.unavailable(),
+        scrollTo: 'Правило магазина Google Play (Китай)',
+      );
+      expect(controller.chinaPlayStorePresetEnabled, isTrue);
+
+      final tile = find.ancestor(
+        of: find.text('Правило магазина Google Play (Китай)'),
+        matching: find.byType(SwitchListTile),
+      );
+      final toggle = find.descendant(of: tile, matching: find.byType(Switch));
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      expect(controller.chinaPlayStorePresetEnabled, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
+
   testWidgets('large text keeps the mode selector and rule entry reachable', (
     tester,
   ) async {
@@ -457,6 +481,7 @@ Future<AppSettingsController> _pumpPage(
   Future<AdBlockRuleSetStatus> Function()? deleteAdBlock,
   ValueChanged<bool>? onAdBlockEnabled,
   TrafficRoutingMode routingMode = TrafficRoutingMode.rules,
+  bool chinaPlayStorePresetEnabled = true,
   List<CustomRoutingRule> customRoutingRules = const [],
 }) async {
   await tester.binding.setSurfaceSize(const Size(420, 860));
@@ -466,6 +491,7 @@ Future<AppSettingsController> _pumpPage(
     ..blockLeaks = true
     ..adBlockEnabled = adBlockEnabled
     ..routingMode = routingMode
+    ..chinaPlayStorePresetEnabled = chinaPlayStorePresetEnabled
     ..customRoutingRules = customRoutingRules
     ..russiaDnsDirectResolver = 'udp://77.88.8.8'
     ..bypassLocalNetwork = true
@@ -483,6 +509,7 @@ Future<AppSettingsController> _pumpPage(
         deleteAdBlock ?? () async => const AdBlockRuleSetStatus.unavailable(),
     refreshRoutingRuleData: () async => routeStatus,
     setTrafficRoutingMode: controller.setRoutingMode,
+    setChinaPlayStorePresetEnabled: controller.setChinaPlayStorePresetEnabled,
     setCustomRoutingRules: controller.setCustomRoutingRules,
     prepareChinaRouteData: () async => routeStatus,
     setRussiaDnsDirectResolver: (_) {},

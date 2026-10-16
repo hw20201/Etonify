@@ -71,7 +71,7 @@ void main() {
       ).writeAsBytes(_validSrsBytes);
       await File(
         '${directory.path}/geoip-cn.srs',
-      ).writeAsBytes(Uint8List.fromList(<int>[0x00, 0x01, 0x02, 0x03, 0x04]));
+      ).writeAsBytes(_corruptSrsBytes());
 
       final status = await ChinaRouteDataService.instance.loadStatus();
 
@@ -102,6 +102,100 @@ void main() {
       expect(ChinaRouteDataService.instance.progress.value, isNull);
     });
   });
+
+  test(
+    'downloads both China rule sets from the SagerNet jsDelivr sources',
+    () async {
+      await _withIsolatedRouteStorage(() async {
+        final requested = <Uri>[];
+        final service = ChinaRouteDataService.forTesting(
+          downloadBytes: (uri) async {
+            requested.add(uri);
+            return Uint8List.fromList(_validSrsBytes);
+          },
+        );
+
+        final status = await service.ensureChinaRouteData(force: true);
+
+        expect(requested, [
+          Uri.parse(
+            'https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
+          ),
+          Uri.parse(
+            'https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs',
+          ),
+        ]);
+        expect(status.sourceName, 'SagerNet/sing-geosite + sing-geoip');
+        expect(status.chinaRouteDataAvailable, isTrue);
+      });
+    },
+  );
+
+  test('falls back to aliothlab when primary SRS validation fails', () async {
+    await _withIsolatedRouteStorage(() async {
+      final requested = <Uri>[];
+      final service = ChinaRouteDataService.forTesting(
+        downloadBytes: (uri) async {
+          requested.add(uri);
+          return uri.host == 'cdn.jsdelivr.net'
+              ? _corruptSrsBytes()
+              : Uint8List.fromList(_validSrsBytes);
+        },
+      );
+
+      final status = await service.ensureChinaRouteData(force: true);
+
+      expect(requested, [
+        Uri.parse(
+          'https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
+        ),
+        Uri.parse(
+          'https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs',
+        ),
+        Uri.parse(
+          'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geosite-cn.srs',
+        ),
+        Uri.parse(
+          'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geoip-cn.srs',
+        ),
+      ]);
+      expect(status.chinaRouteDataAvailable, isTrue);
+      expect(File(status.chinaGeositePath!).readAsBytesSync(), _validSrsBytes);
+    });
+  });
+
+  test(
+    'falls back to aliothlab when the primary source cannot be downloaded',
+    () async {
+      await _withIsolatedRouteStorage(() async {
+        final requested = <Uri>[];
+        final service = ChinaRouteDataService.forTesting(
+          downloadBytes: (uri) async {
+            requested.add(uri);
+            if (uri.host == 'cdn.jsdelivr.net') {
+              throw const SocketException('primary unavailable');
+            }
+            return Uint8List.fromList(_validSrsBytes);
+          },
+        );
+
+        final status = await service.ensureChinaRouteData(force: true);
+
+        expect(requested, [
+          Uri.parse(
+            'https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
+          ),
+          Uri.parse(
+            'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geosite-cn.srs',
+          ),
+          Uri.parse(
+            'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geoip-cn.srs',
+          ),
+        ]);
+        expect(status.chinaRouteDataAvailable, isTrue);
+      });
+    },
+  );
 
   test('status becomes due for refresh after 24 hours', () {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -137,18 +231,27 @@ void main() {
     },
   );
 
-  test('SRS validation checks the binary header and minimum length', () {
+  test('SRS validation checks version and complete bounded zlib payload', () {
     expect(isChinaRouteRuleSetValidForTest(_validSrsBytes), isTrue);
     expect(
       isChinaRouteRuleSetValidForTest(Uint8List.fromList([0x53, 0x52, 0x53])),
       isFalse,
     );
+    expect(isChinaRouteRuleSetValidForTest(_corruptSrsBytes()), isFalse);
     expect(
       isChinaRouteRuleSetValidForTest(
-        Uint8List.fromList([0x00, 0x00, 0x00, 1, 2]),
+        Uint8List.fromList(
+          _validSrsBytes.sublist(0, _validSrsBytes.length - 3),
+        ),
       ),
       isFalse,
     );
+    expect(isChinaRouteRuleSetValidForTest(_buildSrsBytes(<int>[0])), isFalse);
+    final unsupportedVersion = Uint8List.fromList(_validSrsBytes)..[3] = 6;
+    expect(isChinaRouteRuleSetValidForTest(unsupportedVersion), isFalse);
+    final oversized = Uint8List(4 * 1024 * 1024 + 1)
+      ..setRange(0, 4, <int>[0x53, 0x52, 0x53, 0x01]);
+    expect(isChinaRouteRuleSetValidForTest(oversized), isFalse);
   });
 
   test('update progress remains bounded for byte counts', () {
@@ -186,13 +289,17 @@ void main() {
   });
 }
 
-final Uint8List _validSrsBytes = Uint8List.fromList(<int>[
-  0x53,
-  0x52,
-  0x53,
-  0x02,
-  0x00,
-]);
+Uint8List _buildSrsBytes(List<int> uncompressedBody) => Uint8List.fromList(
+  <int>[0x53, 0x52, 0x53, 0x01, ...ZLibEncoder().convert(uncompressedBody)],
+);
+
+final Uint8List _validSrsBytes = _buildSrsBytes(<int>[0x01, 0x00, 0xff]);
+
+Uint8List _corruptSrsBytes() {
+  final bytes = Uint8List.fromList(_validSrsBytes);
+  bytes[bytes.length - 1] = bytes.last ^ 0xff;
+  return bytes;
+}
 
 Future<T> _withIsolatedRouteStorage<T>(Future<T> Function() action) async {
   final root = await Directory.systemTemp.createTemp('etonify-route-test-');

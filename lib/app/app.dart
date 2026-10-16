@@ -62,6 +62,7 @@ import 'package:meow_client/data/adblock/ad_block_rule_set_service.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
 import 'package:meow_client/data/routing/china_route_data_service.dart';
+import 'package:meow_client/data/routing/google_play_rule_set_data_service.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/data/subscription/subscription_store.dart';
@@ -181,6 +182,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
   late final SingboxRuntime _singboxRuntime;
   late final AppUpdateService _appUpdateService;
   late final ChinaRouteDataService _chinaRouteDataService;
+  late final GooglePlayRuleSetDataService _googlePlayRuleSetDataService;
   late final VpnLifecycleCommands _vpnLifecycleCommands;
   late final AppSettingsCommands _appSettingsCommands;
   late final ProxyLocationCoordinator _proxyLocationCoordinator;
@@ -195,6 +197,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
       const AdBlockRuleSetStatus.unavailable();
   ChinaRouteDataStatus _chinaRouteDataStatus =
       const ChinaRouteDataStatus.unavailable();
+  GooglePlayRuleSetStatus _googlePlayRuleSetStatus =
+      const GooglePlayRuleSetStatus.unavailable();
   List<Map<String, dynamic>> _installedAppsCache =
       const <Map<String, dynamic>>[];
   Future<List<Map<String, dynamic>>>? _installedAppsWarmupFuture;
@@ -2099,6 +2103,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     _singboxRuntime = ref.read(singboxRuntimeProvider);
     _appUpdateService = ref.read(appUpdateServiceProvider);
     _chinaRouteDataService = ref.read(chinaRouteDataServiceProvider);
+    _googlePlayRuleSetDataService = GooglePlayRuleSetDataService.instance;
     _vpnLifecycleCommands = ref.read(vpnLifecycleCommandsProvider);
     _appSettingsCommands = ref.read(appSettingsCommandsProvider);
     _appSettingsCommands.bindRoutingHandlers(
@@ -2108,6 +2113,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
       deleteAdBlockRuleSet: _deleteAdBlockRuleSet,
       refreshRoutingRuleData: _refreshChinaRouteData,
       setTrafficRoutingMode: _setTrafficRoutingMode,
+      setChinaPlayStorePresetEnabled: _setChinaPlayStorePresetEnabled,
       setCustomRoutingRules: _setCustomRoutingRules,
       prepareChinaRouteData: _prepareChinaRouteData,
       setRussiaDnsDirectResolver: _setRussiaDnsDirectResolver,
@@ -3203,6 +3209,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
     );
     var routeStatus = statuses.chinaRouteDataStatus;
     var chinaDataPrepared = false;
+    var googlePlayStatus = _googlePlayRuleSetStatus;
+    var googlePlayDataChanged = false;
     if (_routingMode == TrafficRoutingMode.rules &&
         !routeStatus.chinaRouteDataAvailable) {
       try {
@@ -3214,20 +3222,42 @@ class _MeowClientState extends ConsumerState<MeowClient>
         AppLogStore.warning('china routing data', 'Prepare failed: $error');
       }
     }
+    if (_routingMode == TrafficRoutingMode.rules &&
+        _settings.chinaPlayStorePresetEnabled) {
+      try {
+        googlePlayStatus = await _googlePlayRuleSetDataService.ensureRuleSets(
+          force: false,
+        );
+        googlePlayDataChanged =
+            _googlePlayRuleSetStatus.available != googlePlayStatus.available ||
+            _googlePlayRuleSetStatus.geositeGooglePlayPath !=
+                googlePlayStatus.geositeGooglePlayPath ||
+            _googlePlayRuleSetStatus.geositeGoogleCnPath !=
+                googlePlayStatus.geositeGoogleCnPath ||
+            _googlePlayRuleSetStatus.lastUpdatedMillis !=
+                googlePlayStatus.lastUpdatedMillis;
+      } catch (error) {
+        AppLogStore.warning(
+          'Google Play routing data',
+          'Prepare failed; explicit app/domain rules remain available: $error',
+        );
+      }
+    }
     if (!mounted) {
       return;
     }
     setState(() {
       _adBlockStatus = statuses.adBlockStatus;
       _chinaRouteDataStatus = routeStatus;
+      _googlePlayRuleSetStatus = googlePlayStatus;
       ref.read(adBlockStatusProvider.notifier).update(statuses.adBlockStatus);
       ref.read(chinaRouteDataStatusProvider.notifier).update(routeStatus);
     });
-    if (chinaDataPrepared &&
+    if ((chinaDataPrepared || googlePlayDataChanged) &&
         _connected &&
         _routingMode == TrafficRoutingMode.rules) {
       await _configCoordinator.emitCurrentConfigLogAsync(
-        'China route data prepared on startup',
+        'Routing rule data prepared on startup',
         restartRuntime: true,
         applyWhenNativeRunning: true,
         forceFullServiceRestart: true,
@@ -6417,6 +6447,17 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   void _setTrafficRoutingMode(TrafficRoutingMode value) {
     _applySettingsChange(() => _settings.setRoutingMode(value));
+    if (value == TrafficRoutingMode.rules &&
+        _settings.chinaPlayStorePresetEnabled) {
+      unawaited(_ensureGooglePlayRuleSetsAndApply());
+    }
+  }
+
+  void _setChinaPlayStorePresetEnabled(bool value) {
+    _applySettingsChange(() => _settings.setChinaPlayStorePresetEnabled(value));
+    if (value && _routingMode == TrafficRoutingMode.rules) {
+      unawaited(_ensureGooglePlayRuleSetsAndApply());
+    }
   }
 
   void _setCustomRoutingRules(List<CustomRoutingRule> value) {
@@ -6435,6 +6476,17 @@ class _MeowClientState extends ConsumerState<MeowClient>
     final status = await _chinaRouteDataService.ensureChinaRouteData(
       force: force,
     );
+    if (_routingMode == TrafficRoutingMode.rules &&
+        _settings.chinaPlayStorePresetEnabled) {
+      try {
+        await _updateGooglePlayRuleSetStatus(force: force);
+      } catch (error) {
+        AppLogStore.warning(
+          'Google Play routing data',
+          'Refresh failed; cached rules will be retained: $error',
+        );
+      }
+    }
     if (!mounted) return status;
     setState(() {
       _chinaRouteDataStatus = status;
@@ -6449,6 +6501,46 @@ class _MeowClientState extends ConsumerState<MeowClient>
       );
     }
     return status;
+  }
+
+  Future<bool> _updateGooglePlayRuleSetStatus({required bool force}) async {
+    final previous = _googlePlayRuleSetStatus;
+    final status = await _googlePlayRuleSetDataService.ensureRuleSets(
+      force: force,
+    );
+    if (!mounted) return false;
+    final changed =
+        previous.available != status.available ||
+        previous.geositeGooglePlayPath != status.geositeGooglePlayPath ||
+        previous.geositeGoogleCnPath != status.geositeGoogleCnPath ||
+        previous.lastUpdatedMillis != status.lastUpdatedMillis;
+    setState(() {
+      _googlePlayRuleSetStatus = status;
+    });
+    return changed;
+  }
+
+  Future<void> _ensureGooglePlayRuleSetsAndApply({bool force = false}) async {
+    try {
+      final changed = await _updateGooglePlayRuleSetStatus(force: force);
+      if (changed &&
+          mounted &&
+          _connected &&
+          _routingMode == TrafficRoutingMode.rules &&
+          _settings.chinaPlayStorePresetEnabled) {
+        await _configCoordinator.emitCurrentConfigLogAsync(
+          'Google Play geosite data prepared',
+          restartRuntime: true,
+          applyWhenNativeRunning: true,
+          forceFullServiceRestart: true,
+        );
+      }
+    } catch (error) {
+      AppLogStore.warning(
+        'Google Play routing data',
+        'Prepare failed; explicit app/domain rules remain available: $error',
+      );
+    }
   }
 
   void _setBypassLocalNetwork(bool value) {
@@ -7385,7 +7477,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
       routeDataRelease: routeData.releaseTag ?? routeData.versionTag,
       chinaGeositePath: routeData.chinaGeositePath,
       chinaGeoipPath: routeData.chinaGeoipPath,
+      googlePlayGeositePath: _googlePlayRuleSetStatus.geositeGooglePlayPath,
+      googleCnGeositePath: _googlePlayRuleSetStatus.geositeGoogleCnPath,
       routingMode: _routingMode,
+      chinaPlayStorePresetEnabled: _settings.chinaPlayStorePresetEnabled,
       customRoutingRules: _settings.customRoutingRules,
       bypassLocalNetwork: _bypassLocalNetwork,
       splitRoutingMode: _splitRoutingMode,
@@ -9298,7 +9393,6 @@ class _MeowClientState extends ConsumerState<MeowClient>
         groupChildrenByTag: _activeGroupChildrenByTag,
         selectedTag: _selectedProxyTag,
         activeProxy: _displayProxy,
-        hideActiveProxyIp: _hideServerIp,
         connected: _connected,
         serverCount: _activeProfileCache?.outboundsCount ?? 0,
         urlTestInFlight: _urlTestInFlight,
@@ -9323,7 +9417,6 @@ class _MeowClientState extends ConsumerState<MeowClient>
         runProxyUrlTest: _runProxyUrlTest,
         resolveVisibleProxyLocation: (tag, isVisible) =>
             unawaited(_resolveVisibleProxyLocation(tag, isVisible)),
-        refreshActiveProxyIp: _refreshActiveProxyIp,
         outboundForTag: _outboundForProxyTag,
         loadProxyChainTargetSources: _loadProxyChainTargetSources,
         loadProxyChainTargetsForSource: _loadProxyChainTargetsForSource,
@@ -9332,7 +9425,6 @@ class _MeowClientState extends ConsumerState<MeowClient>
         renameProxyChain: _renameProxyChain,
         removeProxyChain: _removeProxyChain,
         isProxyChainTag: _isProxyChainTag,
-        changeHideActiveProxyIp: _setHideServerIp,
       ),
     ).build(
       panelMetrics: panelMetrics,

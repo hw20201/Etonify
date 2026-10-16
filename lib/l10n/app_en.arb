@@ -1485,6 +1485,8 @@
   "routingModeGlobalDescription": "All traffic handled by Etonify uses the selected proxy. Domain/IP rules and local-network bypass are ignored; app-based split routing still applies.",
   "routingModePreparingChinaData": "Preparing China domain and IP rules…",
   "routingModeChinaDataFailedHint": "China rule data is unavailable. Rule mode remains active; unmatched traffic safely falls back to the proxy.",
+  "googlePlayPresetTitle": "China Play Store rules",
+  "googlePlayPresetSubtitle": "Route Google Play apps and related domains through the selected proxy. SagerNet geosites download to cache and are refreshed daily; app-package and explicit-domain rules remain active if geosite data is unavailable. Rules mode only.",
   "customRoutingRulesTitle": "Custom domain and IP rules",
   "customRoutingRulesDescription": "Custom rules take priority over China direct rules. Unmatched traffic uses the proxy. Rules are ignored in Global mode. Move rules to change their priority.",
   "customRoutingRulesEmptyTitle": "No custom rules yet",

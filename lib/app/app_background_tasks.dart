@@ -329,7 +329,10 @@ class SingboxConfigBuildInput {
     required this.adBlockAllowRuleSetPath,
     this.chinaGeositePath,
     this.chinaGeoipPath,
+    this.googlePlayGeositePath,
+    this.googleCnGeositePath,
     this.routingMode = TrafficRoutingMode.rules,
+    this.chinaPlayStorePresetEnabled = false,
     this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
@@ -378,7 +381,10 @@ class SingboxConfigBuildInput {
   final String? adBlockAllowRuleSetPath;
   final String? chinaGeositePath;
   final String? chinaGeoipPath;
+  final String? googlePlayGeositePath;
+  final String? googleCnGeositePath;
   final TrafficRoutingMode routingMode;
+  final bool chinaPlayStorePresetEnabled;
   final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
@@ -1005,7 +1011,10 @@ SingboxConfigBuildResult buildSingboxConfig(SingboxConfigBuildInput input) {
     adBlockAllowRuleSetPath: input.adBlockAllowRuleSetPath,
     chinaGeositePath: input.chinaGeositePath,
     chinaGeoipPath: input.chinaGeoipPath,
+    googlePlayGeositePath: input.googlePlayGeositePath,
+    googleCnGeositePath: input.googleCnGeositePath,
     routingMode: input.routingMode,
+    chinaPlayStorePresetEnabled: input.chinaPlayStorePresetEnabled,
     customRoutingRules: input.customRoutingRules,
     bypassLocalNetwork: input.bypassLocalNetwork,
     splitRoutingMode: input.splitRoutingMode,

@@ -118,9 +118,12 @@ class DeepLinkImportSheet extends StatelessWidget {
                                 if (name != null && name.isNotEmpty) ...[
                                   Text(
                                     copy.nameLabel,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
                                   ),
                                   const Gap(4),
                                   Text(name, style: theme.textTheme.titleSmall),
@@ -137,13 +140,17 @@ class DeepLinkImportSheet extends StatelessWidget {
                                   _summarizeUrl(preview.resolvedUrl),
                                   style: theme.textTheme.bodyMedium,
                                 ),
-                                if (preview.sourceUrl != preview.resolvedUrl) ...[
+                                if (preview.sourceUrl !=
+                                    preview.resolvedUrl) ...[
                                   const Gap(12),
                                   Text(
                                     l10n.deepLinkImportSourceLabel,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
                                   ),
                                   const Gap(4),
                                   SelectableText(

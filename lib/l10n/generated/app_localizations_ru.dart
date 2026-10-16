@@ -3376,6 +3376,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Данные правил Китая пока недоступны. Режим правил включен, не совпавший трафик безопасно идет через прокси.';
 
   @override
+  String get googlePlayPresetTitle => 'Правило магазина Google Play (Китай)';
+
+  @override
+  String get googlePlayPresetSubtitle =>
+      'Направлять приложения Google Play и связанные домены через выбранный прокси. Geosite SagerNet загружаются в кэш и обновляются ежедневно; правила по пакетам приложений и явным доменам продолжают действовать, если geosite недоступны. Только в режиме правил.';
+
+  @override
   String get customRoutingRulesTitle => 'Свои правила доменов и IP';
 
   @override
