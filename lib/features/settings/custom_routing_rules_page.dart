@@ -314,6 +314,11 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
   late final TextEditingController _valueController;
   late CustomRouteRuleType _type;
   late CustomRouteAction _action;
+  _ExpandField? _openField;
+
+  void _toggleField(_ExpandField field) {
+    setState(() => _openField = _openField == field ? null : field);
+  }
 
   @override
   void initState() {
@@ -366,9 +371,6 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final existing = widget.initialRule != null;
-    final theme = Theme.of(context);
-    final surfaceTheme = theme.extension<AppSurfaceTheme>();
-    final menuRadius = BorderRadius.circular(surfaceTheme?.mediumRadius ?? 22);
     return AlertDialog(
       title: Text(
         existing
@@ -381,27 +383,22 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<CustomRouteRuleType>(
-                initialValue: _type,
-                elevation: 2,
-                dropdownColor: theme.colorScheme.surfaceContainerLow,
-                borderRadius: menuRadius,
-                decoration: InputDecoration(
-                  labelText: l10n.customRoutingRuleType,
-                ),
-                items: [
-                  DropdownMenuItem(
+              _InlineSelectField<CustomRouteRuleType>(
+                labelText: l10n.customRoutingRuleType,
+                value: _type,
+                expanded: _openField == _ExpandField.type,
+                onToggle: () => _toggleField(_ExpandField.type),
+                options: [
+                  _SelectOption(
                     value: CustomRouteRuleType.domain,
-                    child: Text(l10n.customRoutingRuleDomain),
+                    label: l10n.customRoutingRuleDomain,
                   ),
-                  DropdownMenuItem(
+                  _SelectOption(
                     value: CustomRouteRuleType.ip,
-                    child: Text(l10n.customRoutingRuleIp),
+                    label: l10n.customRoutingRuleIp,
                   ),
                 ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _type = value);
-                },
+                onChanged: (value) => setState(() => _type = value),
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -423,27 +420,22 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
                 onFieldSubmitted: (_) => _save(l10n),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<CustomRouteAction>(
-                initialValue: _action,
-                elevation: 2,
-                dropdownColor: theme.colorScheme.surfaceContainerLow,
-                borderRadius: menuRadius,
-                decoration: InputDecoration(
-                  labelText: l10n.customRoutingRuleTarget,
-                ),
-                items: [
-                  DropdownMenuItem(
+              _InlineSelectField<CustomRouteAction>(
+                labelText: l10n.customRoutingRuleTarget,
+                value: _action,
+                expanded: _openField == _ExpandField.action,
+                onToggle: () => _toggleField(_ExpandField.action),
+                options: [
+                  _SelectOption(
                     value: CustomRouteAction.proxy,
-                    child: Text(l10n.customRoutingRuleProxy),
+                    label: l10n.customRoutingRuleProxy,
                   ),
-                  DropdownMenuItem(
+                  _SelectOption(
                     value: CustomRouteAction.direct,
-                    child: Text(l10n.customRoutingRuleDirect),
+                    label: l10n.customRoutingRuleDirect,
                   ),
                 ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _action = value);
-                },
+                onChanged: (value) => setState(() => _action = value),
               ),
             ],
           ),
@@ -457,6 +449,126 @@ class _CustomRoutingRuleDialogState extends State<_CustomRoutingRuleDialog> {
         FilledButton(
           onPressed: () => _save(l10n),
           child: Text(l10n.customRoutingRuleSave),
+        ),
+      ],
+    );
+  }
+}
+
+/// Which inline selector is currently expanded inside [_CustomRoutingRuleDialog].
+enum _ExpandField { type, action }
+
+/// A single selectable option for [_InlineSelectField].
+class _SelectOption<T> {
+  const _SelectOption({required this.value, required this.label});
+
+  final T value;
+  final String label;
+}
+
+/// A dropdown replacement that expands inline instead of opening a native
+/// popup menu. The closed trigger is an [InputDecorator] identical to the
+/// surrounding text fields, and the expanded option list reuses the same
+/// input decoration (fill, radius, border, padding), so the popup reads as
+/// a visual continuation of the box rather than a detached system menu.
+class _InlineSelectField<T> extends StatelessWidget {
+  const _InlineSelectField({
+    required this.labelText,
+    required this.value,
+    required this.options,
+    required this.expanded,
+    required this.onToggle,
+    required this.onChanged,
+  });
+
+  final String labelText;
+  final T value;
+  final List<_SelectOption<T>> options;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surfaceTheme = theme.extension<AppSurfaceTheme>();
+    final borderRadius =
+        BorderRadius.circular(surfaceTheme?.smallRadius ?? 16);
+    final inputTheme = theme.inputDecorationTheme;
+    final currentLabel = options
+        .firstWhere((option) => option.value == value,
+            orElse: () => options.first)
+        .label;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onToggle,
+            borderRadius: borderRadius,
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: labelText,
+                suffixIcon: Icon(
+                  expanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                ),
+              ),
+              child: Text(currentLabel),
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: expanded
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: ClipRRect(
+                    borderRadius: borderRadius,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: inputTheme.fillColor,
+                        borderRadius: borderRadius,
+                        border: Border.all(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final option in options)
+                            InkWell(
+                              onTap: () => onChanged(option.value),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(option.label),
+                                    ),
+                                    if (option.value == value)
+                                      Icon(
+                                        Icons.check,
+                                        size: 20,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
       ],
     );
