@@ -244,6 +244,9 @@ jobs:
           flutter analyze --fatal-infos
           flutter test
 
+      - name: Test Android release APK verifier
+        run: bash scripts/verify_android_release_apk_test.sh
+
       - name: Build signed arm64 Release APK
         shell: bash
         env:

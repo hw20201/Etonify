@@ -67,7 +67,20 @@ if (( 10#$actual_version_code <= 10#$minimum_version_code )); then
 fi
 
 signature_info="$("$apksigner" verify --verbose --print-certs "$apk" 2>&1)"
-actual_certificate_sha256="$(printf '%s\n' "$signature_info" | awk '/Signer #1 certificate SHA-256 digest:/ { sub(/^.*digest:[[:space:]]*/, ""); gsub(/:/, ""); gsub(/[[:space:]]/, ""); print tolower($0); exit }')"
+certificate_sha256_values="$(printf '%s\n' "$signature_info" | awk '/certificate SHA-256 digest:/ { sub(/^.*certificate SHA-256 digest:[[:space:]]*/, ""); gsub(/:/, ""); gsub(/[[:space:]]/, ""); print tolower($0) }' | sort -u)"
+if [[ -z "$certificate_sha256_values" ]]; then
+  echo "No certificate SHA-256 digest found in apksigner output." >&2
+  exit 1
+fi
+if [[ "$certificate_sha256_values" == *$'\n'* ]]; then
+  echo "APK contains multiple distinct signing certificate SHA-256 digests." >&2
+  exit 1
+fi
+actual_certificate_sha256="$certificate_sha256_values"
+if [[ ! "$actual_certificate_sha256" =~ ^[0-9a-f]{64}$ ]]; then
+  echo "apksigner returned an invalid certificate SHA-256 digest." >&2
+  exit 1
+fi
 if [[ "$actual_certificate_sha256" != "$expected_certificate_sha256" ]]; then
   echo "APK signing certificate does not match the existing release certificate." >&2
   exit 1
