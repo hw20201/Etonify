@@ -269,6 +269,7 @@ class ActiveProxyFooter extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
+                                  fontSize: 24,
                                 ),
                               ),
                             ),
