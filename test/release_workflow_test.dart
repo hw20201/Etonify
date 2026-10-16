@@ -24,6 +24,8 @@ void main() {
     expect(workflow, contains("startsWith(github.ref, 'refs/tags/v')"));
     expect(workflow, contains("inputs.release_tag == ''"));
     expect(workflow, contains("inputs.release_tag != ''"));
+    expect(workflow, contains("github.ref == 'refs/heads/release/v0.3.101'"));
+    expect(workflow, contains("inputs.release_tag == 'v0.3.101'"));
     expect(workflow, contains(r'ref: ${{ inputs.release_tag || github.ref }}'));
     expect(workflow, contains(r'RELEASE_TAG_INPUT: ${{ inputs.release_tag }}'));
     expect(workflow, contains("github.ref == 'refs/heads/master'"));
@@ -38,6 +40,17 @@ void main() {
       workflow,
       contains('run: bash scripts/verify_android_release_apk_test.sh'),
     );
+    final releaseJobStart = workflow.indexOf('  draft-tag-release:');
+    final analyzeIndex = workflow.indexOf(
+      '      - name: Analyze and test',
+      releaseJobStart,
+    );
+    final pinnedVerifierIndex = workflow.indexOf(
+      '      - name: Checkout pinned APK verifier reference',
+      releaseJobStart,
+    );
+    expect(analyzeIndex, greaterThan(releaseJobStart));
+    expect(pinnedVerifierIndex, greaterThan(analyzeIndex));
     expect(workflow, contains('MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"'));
     expect(workflow, contains('secrets.ANDROID_KEYSTORE_BASE64'));
     expect(workflow, contains('secrets.ANDROID_KEYSTORE_PASSWORD'));
