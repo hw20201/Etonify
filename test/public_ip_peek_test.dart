@@ -174,4 +174,70 @@ void main() {
       controller.dispose();
     },
   );
+
+  testWidgets('wraps long country and provider values on narrow screens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const location = 'Singapore · Singapore - North East Region';
+    const provider = 'Amazon Technologies Inc. Asia Pacific';
+    final controller = PublicIpController(
+      load: () async => const PublicIpInfo(
+        ip: '13.214.126.247',
+        countryCode: 'SG',
+        country: 'Singapore',
+        region: 'Singapore - North East Region',
+        city: 'Singapore - North East Region',
+        organization: 'Amazon.com, Inc.',
+        asn: 'AS16509',
+        isp: provider,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: Center(
+            child: PublicIpPeek(
+              controller: controller,
+              connected: true,
+              hideIp: false,
+              hapticEnabled: false,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('outbound-ip-capsule')));
+    await tester.pumpAndSettle();
+
+    final card = find.byKey(const ValueKey('outbound-ip-details-card'));
+    final countryText = find.descendant(
+      of: card,
+      matching: find.text(location),
+    );
+    final providerText = find.descendant(
+      of: card,
+      matching: find.text(provider),
+    );
+    expect(countryText, findsOneWidget);
+    expect(providerText, findsOneWidget);
+    for (final finder in <Finder>[countryText, providerText]) {
+      final text = tester.widget<Text>(finder);
+      expect(text.maxLines, isNull);
+      expect(text.overflow, TextOverflow.visible);
+    }
+    final layoutException = tester.takeException();
+    expect(layoutException, isNull, reason: '$layoutException');
+    controller.dispose();
+  });
 }

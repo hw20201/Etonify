@@ -487,6 +487,7 @@ class _PublicIpDetailsCard extends StatelessWidget {
                               countryCode: currentInfo.countryCode,
                               size: 20,
                             ),
+                            allowWrap: true,
                           ),
                           _InfoRowData(
                             l10n.homeOutboundIpAddress,
@@ -502,6 +503,7 @@ class _PublicIpDetailsCard extends StatelessWidget {
                             _InfoRowData(
                               l10n.homeOutboundIpIsp,
                               currentInfo.isp,
+                              allowWrap: true,
                             ),
                           _InfoRowData(
                             l10n.homeOutboundIpOrganization,
