@@ -376,8 +376,9 @@ class _ProxySheetHeader extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: onTap,
-                      tooltip: MaterialLocalizations.of(context)
-                          .backButtonTooltip,
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).backButtonTooltip,
                       icon: const Icon(FluentIcons.chevron_left_24_regular),
                     ),
                   ),

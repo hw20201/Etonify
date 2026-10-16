@@ -189,9 +189,7 @@ class DeepLinkImportCoordinator {
     }..remove('');
 
     for (final sub in existingList) {
-      final subUrls = <String>{
-        _normalizeUrl(sub.url),
-      }..remove('');
+      final subUrls = <String>{_normalizeUrl(sub.url)}..remove('');
 
       if (targetUrls.any(subUrls.contains)) {
         return sub;

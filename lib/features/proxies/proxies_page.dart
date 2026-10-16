@@ -346,8 +346,10 @@ class _ProxyLatencyDotsState extends State<ProxyLatencyDots> {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: widget.color, fontWeight: FontWeight.w700);
+    final style = Theme.of(context).textTheme.labelMedium?.copyWith(
+      color: widget.color,
+      fontWeight: FontWeight.w700,
+    );
     return Text(
       '.' * _proxyLatencyClock.visibleCount,
       key: ValueKey(_proxyLatencyClock.visibleCount),
@@ -976,8 +978,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.transparent,
-        barrierLabel: MaterialLocalizations.of(context)
-            .modalBarrierDismissLabel,
+        barrierLabel: MaterialLocalizations.of(
+          context,
+        ).modalBarrierDismissLabel,
         transitionDuration: const Duration(milliseconds: 440),
         reverseTransitionDuration: const Duration(milliseconds: 500),
         pageBuilder: (context, animation, secondaryAnimation) =>

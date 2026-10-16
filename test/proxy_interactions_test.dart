@@ -214,8 +214,9 @@ void main() {
   testWidgets(
     'collapsed production active-proxy title stays safe during node-switch animation',
     (tester) async {
-      var active = _proxy('warsaw-tag')
-          .copyWith(displayName: 'Warsaw 01', ip: '198.51.100.24');
+      var active = _proxy(
+        'warsaw-tag',
+      ).copyWith(displayName: 'Warsaw 01', ip: '198.51.100.24');
       late StateSetter updateActive;
 
       await tester.pumpWidget(

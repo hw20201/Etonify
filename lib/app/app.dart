@@ -2621,8 +2621,9 @@ class _MeowClientState extends ConsumerState<MeowClient>
         if (!mounted || context == null) return;
         AppNotice.show(
           context,
-          AppLocalizations.of(context)
-              .updatesDeleteCachedApkDone(result.deletedFiles),
+          AppLocalizations.of(
+            context,
+          ).updatesDeleteCachedApkDone(result.deletedFiles),
           tone: AppNoticeTone.success,
         );
       });
@@ -8139,8 +8140,9 @@ class _MeowClientState extends ConsumerState<MeowClient>
       unawaited(
         _showNoValidOutboundsDialog(
           title: AppLocalizations.of(context).noValidOutboundsTitle,
-          message: AppLocalizations.of(context)
-              .noValidOutboundsAfterDropInvalidMessage,
+          message: AppLocalizations.of(
+            context,
+          ).noValidOutboundsAfterDropInvalidMessage,
         ),
       );
     }
@@ -8754,8 +8756,9 @@ class _MeowClientState extends ConsumerState<MeowClient>
     }
     final affectedTags = _proxyRuntime
         .markMissingStartupMeasurementsUnavailable(
-          _expectedLatencyTagsForSession('')
-              .where((tag) => !_latencyCoordinator.isChecking(tag)),
+          _expectedLatencyTagsForSession(
+            '',
+          ).where((tag) => !_latencyCoordinator.isChecking(tag)),
         );
     AppLogStore.info(
       'latency',

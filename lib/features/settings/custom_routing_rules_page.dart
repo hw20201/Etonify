@@ -492,12 +492,13 @@ class _InlineSelectField<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final surfaceTheme = theme.extension<AppSurfaceTheme>();
-    final borderRadius =
-        BorderRadius.circular(surfaceTheme?.smallRadius ?? 16);
+    final borderRadius = BorderRadius.circular(surfaceTheme?.smallRadius ?? 16);
     final inputTheme = theme.inputDecorationTheme;
     final currentLabel = options
-        .firstWhere((option) => option.value == value,
-            orElse: () => options.first)
+        .firstWhere(
+          (option) => option.value == value,
+          orElse: () => options.first,
+        )
         .label;
 
     return Column(
@@ -533,9 +534,7 @@ class _InlineSelectField<T> extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: inputTheme.fillColor,
                         borderRadius: borderRadius,
-                        border: Border.all(
-                          color: theme.colorScheme.outline,
-                        ),
+                        border: Border.all(color: theme.colorScheme.outline),
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -550,9 +549,7 @@ class _InlineSelectField<T> extends StatelessWidget {
                                 ),
                                 child: Row(
                                   children: [
-                                    Expanded(
-                                      child: Text(option.label),
-                                    ),
+                                    Expanded(child: Text(option.label)),
                                     if (option.value == value)
                                       Icon(
                                         Icons.check,
