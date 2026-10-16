@@ -17,7 +17,6 @@ void main() {
       groupChildrenByTag: const {},
       selectedTag: '',
       activeProxy: null,
-      hideActiveProxyIp: false,
       connected: connected,
       hapticEnabled: true,
       trafficAvailable: trafficAvailable,

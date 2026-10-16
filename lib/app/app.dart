@@ -2621,9 +2621,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
         if (!mounted || context == null) return;
         AppNotice.show(
           context,
-          AppLocalizations.of(
-            context,
-          ).updatesDeleteCachedApkDone(result.deletedFiles),
+          AppLocalizations.of(context)
+              .updatesDeleteCachedApkDone(result.deletedFiles),
           tone: AppNoticeTone.success,
         );
       });
@@ -8140,9 +8139,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
       unawaited(
         _showNoValidOutboundsDialog(
           title: AppLocalizations.of(context).noValidOutboundsTitle,
-          message: AppLocalizations.of(
-            context,
-          ).noValidOutboundsAfterDropInvalidMessage,
+          message: AppLocalizations.of(context)
+              .noValidOutboundsAfterDropInvalidMessage,
         ),
       );
     }
@@ -8756,9 +8754,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
     }
     final affectedTags = _proxyRuntime
         .markMissingStartupMeasurementsUnavailable(
-          _expectedLatencyTagsForSession(
-            '',
-          ).where((tag) => !_latencyCoordinator.isChecking(tag)),
+          _expectedLatencyTagsForSession('')
+              .where((tag) => !_latencyCoordinator.isChecking(tag)),
         );
     AppLogStore.info(
       'latency',
@@ -9289,7 +9286,6 @@ class _MeowClientState extends ConsumerState<MeowClient>
         groupChildrenByTag: _activeGroupChildrenByTag,
         selectedTag: _selectedProxyTag,
         activeProxy: _displayProxy,
-        hideActiveProxyIp: _hideServerIp,
         connected: _connected,
         serverCount: _activeProfileCache?.outboundsCount ?? 0,
         urlTestInFlight: _urlTestInFlight,
@@ -9314,7 +9310,6 @@ class _MeowClientState extends ConsumerState<MeowClient>
         runProxyUrlTest: _runProxyUrlTest,
         resolveVisibleProxyLocation: (tag, isVisible) =>
             unawaited(_resolveVisibleProxyLocation(tag, isVisible)),
-        refreshActiveProxyIp: _refreshActiveProxyIp,
         outboundForTag: _outboundForProxyTag,
         loadProxyChainTargetSources: _loadProxyChainTargetSources,
         loadProxyChainTargetsForSource: _loadProxyChainTargetsForSource,
@@ -9323,7 +9318,6 @@ class _MeowClientState extends ConsumerState<MeowClient>
         renameProxyChain: _renameProxyChain,
         removeProxyChain: _removeProxyChain,
         isProxyChainTag: _isProxyChainTag,
-        changeHideActiveProxyIp: _setHideServerIp,
       ),
     ).build(
       panelMetrics: panelMetrics,

@@ -4186,6 +4186,11 @@ void main() {
 
       final dns = config['dns'] as Map<String, dynamic>;
       expect(dns['strategy'], 'prefer_ipv6');
+      final route = config['route'] as Map<String, dynamic>;
+      expect(route['default_domain_resolver'], {
+        'server': 'dns-local',
+        'strategy': 'prefer_ipv4',
+      });
 
       final servers = dns['servers'] as List<dynamic>;
       final fakeIpServer =

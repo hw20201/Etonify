@@ -15,7 +15,6 @@ class ProxiesPresentationData {
     required this.groupChildrenByTag,
     required this.selectedTag,
     required this.activeProxy,
-    required this.hideActiveProxyIp,
     required this.connected,
     this.serverCount = 0,
     this.urlTestInFlight = false,
@@ -38,7 +37,6 @@ class ProxiesPresentationData {
   final Map<String, List<AppProxySummary>> groupChildrenByTag;
   final String selectedTag;
   final AppProxySummary? activeProxy;
-  final bool hideActiveProxyIp;
   final bool connected;
   final int serverCount;
   final bool urlTestInFlight;
@@ -71,7 +69,6 @@ class ProxiesPresentationCallbacks {
     required this.runUrlTest,
     this.runProxyUrlTest,
     required this.resolveVisibleProxyLocation,
-    required this.refreshActiveProxyIp,
     required this.outboundForTag,
     required this.loadProxyChainTargetSources,
     required this.loadProxyChainTargetsForSource,
@@ -80,7 +77,6 @@ class ProxiesPresentationCallbacks {
     required this.renameProxyChain,
     required this.removeProxyChain,
     required this.isProxyChainTag,
-    required this.changeHideActiveProxyIp,
   });
 
   final ValueChanged<ProxySort> changeSort;
@@ -89,7 +85,6 @@ class ProxiesPresentationCallbacks {
   final Future<void> Function(String tag)? runProxyUrlTest;
   final void Function(String tag, ValueGetter<bool> isVisible)
   resolveVisibleProxyLocation;
-  final VoidCallback refreshActiveProxyIp;
   final Outbound? Function(String tag) outboundForTag;
   final Future<List<AppProfileSummary>> Function() loadProxyChainTargetSources;
   final Future<List<AppProxySummary>> Function(String subscriptionId)
@@ -100,7 +95,6 @@ class ProxiesPresentationCallbacks {
   final Future<void> Function(String chainTag, String name) renameProxyChain;
   final Future<void> Function(String chainTag) removeProxyChain;
   final bool Function(String tag) isProxyChainTag;
-  final ValueChanged<bool> changeHideActiveProxyIp;
 }
 
 class ProxiesPresentationBuilder {
@@ -124,7 +118,6 @@ class ProxiesPresentationBuilder {
       groupChildrenByTag: data.groupChildrenByTag,
       selectedTag: data.selectedTag,
       activeProxy: data.activeProxy,
-      activeProxyHideIp: data.hideActiveProxyIp,
       connected: data.connected,
       serverCount: data.serverCount,
       urlTestInFlight: data.urlTestInFlight,
@@ -141,7 +134,6 @@ class ProxiesPresentationBuilder {
       onUrlTest: callbacks.runUrlTest,
       onProxyUrlTest: callbacks.runProxyUrlTest,
       onVisibleProxyNeedsLocation: callbacks.resolveVisibleProxyLocation,
-      onActiveProxyIpRefresh: callbacks.refreshActiveProxyIp,
       outboundForTag: callbacks.outboundForTag,
       loadProxyChainTargetSources: callbacks.loadProxyChainTargetSources,
       loadProxyChainTargetsForSource: callbacks.loadProxyChainTargetsForSource,
@@ -150,7 +142,6 @@ class ProxiesPresentationBuilder {
       onRenameProxyChain: callbacks.renameProxyChain,
       onRemoveProxyChain: callbacks.removeProxyChain,
       isProxyChainTag: callbacks.isProxyChainTag,
-      onActiveProxyHideIpChanged: callbacks.changeHideActiveProxyIp,
       runtimeStates: data.runtimeStates,
       loading: data.proxyListLoading,
       embedded: true,

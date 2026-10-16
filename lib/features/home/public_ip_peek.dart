@@ -131,96 +131,110 @@ class _PublicIpPeekState extends State<PublicIpPeek>
               child: Semantics(
                 button: true,
                 expanded: _expanded,
+                hidden: _expanded,
                 label: '${l10n.homeOutboundIpExpand}: $displayedIp',
                 child: Tooltip(
                   message: _expanded
                       ? l10n.homeOutboundIpCollapse
                       : l10n.homeOutboundIpExpand,
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(999),
-                    child: InkWell(
-                      key: const ValueKey('outbound-ip-capsule'),
-                      onTap: _togglePanel,
-                      borderRadius: BorderRadius.circular(999),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 260),
-                        curve: Curves.easeOutCubic,
-                        constraints: const BoxConstraints(
-                          minWidth: 150,
-                          minHeight: 42,
-                          maxWidth: 280,
-                        ),
-                        padding: const EdgeInsetsDirectional.only(
-                          start: 20,
-                          end: 13,
-                          top: 7,
-                          bottom: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHigh
-                              .withValues(alpha: _expanded ? .52 : .22),
+                  child: AnimatedOpacity(
+                    key: const ValueKey('outbound-ip-capsule-visibility'),
+                    opacity: _expanded ? 0 : 1,
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    child: IgnorePointer(
+                      ignoring: _expanded,
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(999),
+                        child: InkWell(
+                          key: const ValueKey('outbound-ip-capsule'),
+                          onTap: _togglePanel,
                           borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: accent.withValues(
-                              alpha: _expanded ? .88 : .64,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 260),
+                            curve: Curves.easeOutCubic,
+                            constraints: const BoxConstraints(
+                              minWidth: 150,
+                              minHeight: 42,
+                              maxWidth: 280,
                             ),
-                            width: _expanded ? 1.5 : 1.1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: accent.withValues(
-                                alpha: _expanded ? .2 : .08,
+                            padding: const EdgeInsetsDirectional.only(
+                              start: 20,
+                              end: 13,
+                              top: 7,
+                              bottom: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHigh
+                                  .withValues(alpha: _expanded ? .52 : .22),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: accent.withValues(
+                                  alpha: _expanded ? .88 : .64,
+                                ),
+                                width: _expanded ? 1.5 : 1.1,
                               ),
-                              blurRadius: _expanded ? 22 : 12,
-                              spreadRadius: _expanded ? 1 : 0,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accent.withValues(
+                                    alpha: _expanded ? .2 : .08,
+                                  ),
+                                  blurRadius: _expanded ? 22 : 12,
+                                  spreadRadius: _expanded ? 1 : 0,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Flexible(
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 260),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) =>
-                                    FadeTransition(
-                                      opacity: animation,
-                                      child: SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: const Offset(0, .12),
-                                          end: Offset.zero,
-                                        ).animate(animation),
-                                        child: child,
-                                      ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 260),
+                                    switchInCurve: Curves.easeOutCubic,
+                                    switchOutCurve: Curves.easeInCubic,
+                                    transitionBuilder: (child, animation) =>
+                                        FadeTransition(
+                                          opacity: animation,
+                                          child: SlideTransition(
+                                            position: Tween<Offset>(
+                                              begin: const Offset(0, .12),
+                                              end: Offset.zero,
+                                            ).animate(animation),
+                                            child: child,
+                                          ),
+                                        ),
+                                    child: Text(
+                                      displayedIp,
+                                      key: ValueKey(displayedIp),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: .1,
+                                          ),
                                     ),
-                                child: Text(
-                                  displayedIp,
-                                  key: ValueKey(displayedIp),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: theme.colorScheme.onSurface,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: .1,
                                   ),
                                 ),
-                              ),
+                                const Gap(8),
+                                AnimatedRotation(
+                                  key: const ValueKey(
+                                    'outbound-ip-capsule-chevron',
+                                  ),
+                                  turns: _expanded ? .5 : 0,
+                                  duration: const Duration(milliseconds: 260),
+                                  curve: Curves.easeOutCubic,
+                                  child: Icon(
+                                    Icons.expand_more_rounded,
+                                    size: 22,
+                                    color: accent,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const Gap(8),
-                            AnimatedRotation(
-                              turns: _expanded ? .25 : 0,
-                              duration: const Duration(milliseconds: 260),
-                              curve: Curves.easeOutCubic,
-                              child: Icon(
-                                Icons.chevron_right_rounded,
-                                size: 22,
-                                color: accent,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -261,9 +275,18 @@ class _PublicIpPeekState extends State<PublicIpPeek>
         children: [
           Positioned.fill(
             child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
+              behavior: HitTestBehavior.opaque,
               onTap: _closePanel,
-              child: const SizedBox.expand(),
+              child: AnimatedBuilder(
+                animation: _panelCurve,
+                builder: (context, _) => ColoredBox(
+                  key: const ValueKey('outbound-ip-overlay-backdrop'),
+                  color: theme.colorScheme.scrim.withValues(
+                    alpha: .12 * _panelCurve.value,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              ),
             ),
           ),
           CompositedTransformFollower(
@@ -364,9 +387,7 @@ class _PublicIpDetailsCard extends StatelessWidget {
         return DecoratedBox(
           key: const ValueKey('outbound-ip-details-card'),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow.withValues(
-              alpha: isDark ? .97 : .99,
-            ),
+            color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: accent.withValues(alpha: .72),
@@ -487,6 +508,7 @@ class _PublicIpDetailsCard extends StatelessWidget {
                             currentInfo.organization.isEmpty
                                 ? l10n.notAvailableShort
                                 : currentInfo.organization,
+                            allowWrap: true,
                           ),
                           _InfoRowData(
                             l10n.homeOutboundIpAsn,
@@ -583,11 +605,17 @@ class _LookupStatus extends StatelessWidget {
 
 @immutable
 class _InfoRowData {
-  const _InfoRowData(this.label, this.value, {this.leading});
+  const _InfoRowData(
+    this.label,
+    this.value, {
+    this.leading,
+    this.allowWrap = false,
+  });
 
   final String label;
   final String value;
   final Widget? leading;
+  final bool allowWrap;
 }
 
 class _InfoSection extends StatelessWidget {
@@ -657,6 +685,9 @@ class _InfoRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
       child: Row(
+        crossAxisAlignment: row.allowWrap
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           Expanded(
             flex: 4,
@@ -673,12 +704,19 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             flex: 6,
             child: Row(
+              crossAxisAlignment: row.allowWrap
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (row.leading != null) ...[row.leading!, const Gap(6)],
                 Flexible(
                   child: Text(
                     row.value,
+                    maxLines: row.allowWrap ? null : 1,
+                    overflow: row.allowWrap
+                        ? TextOverflow.visible
+                        : TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface,

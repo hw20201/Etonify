@@ -104,12 +104,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.release_tag || github.ref }}
+          fetch-depth: 0
 
       - name: Validate version tag
         shell: bash
         env:
           RELEASE_TAG_INPUT: ${{ inputs.release_tag }}
         run: |
+          set -euo pipefail
           release_tag="${GITHUB_REF_NAME}"
           if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
             release_tag="${RELEASE_TAG_INPUT}"
@@ -119,8 +121,63 @@ jobs:
             echo "::error title=Invalid version tag::Use an existing tag such as v0.3.9."
             exit 1
           fi
+          pubspec_version="$(sed -nE 's/^version:[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' pubspec.yaml | head -n1)"
+          python3 - "$release_tag" "$pubspec_version" <<'PY'
+          import re
+          import subprocess
+          import sys
+
+          release_tag, pubspec_version = sys.argv[1:]
+          current_match = re.fullmatch(r"(\d+(?:\.\d+){1,3})\+(\d+)", pubspec_version)
+          tag_match = re.fullmatch(r"v(\d+(?:\.\d+){1,3})(?:[._-][0-9A-Za-z]+)*", release_tag)
+          if current_match is None or tag_match is None:
+              raise SystemExit("::error title=Invalid version source::pubspec.yaml must contain a numeric version and build number, and release tags must use numeric versions.")
+
+          current_name = current_match.group(1)
+          current_build = int(current_match.group(2))
+          if tag_match.group(1) != current_name:
+              raise SystemExit(f"::error title=Version mismatch::Tag {release_tag} does not match pubspec.yaml version {current_name}.")
+
+          current_tuple = tuple(int(part) for part in current_name.split("."))
+          candidates = []
+          for name in subprocess.check_output(["git", "tag", "--merged", "HEAD"], text=True).splitlines():
+              match = re.fullmatch(r"v(\d+(?:\.\d+){1,3})(?:[._-][0-9A-Za-z]+)*", name)
+              if match is None:
+                  continue
+              parts = tuple(int(part) for part in match.group(1).split("."))
+              if parts < current_tuple:
+                  candidates.append((parts, name))
+          if not candidates:
+              raise SystemExit("::error title=Previous version missing::No earlier version tag is reachable from this commit.")
+
+          previous_tag = max(candidates)[1]
+          previous_yaml = subprocess.check_output(["git", "show", f"{previous_tag}:pubspec.yaml"], text=True)
+          previous_match = re.search(r"^version:\s*(\d+(?:\.\d+){1,3})\+(\d+)\s*$", previous_yaml, re.MULTILINE)
+          if previous_match is None:
+              raise SystemExit(f"::error title=Previous version invalid::{previous_tag} has no numeric pubspec build number.")
+          previous_build = int(previous_match.group(2))
+          if current_build <= previous_build:
+              raise SystemExit(f"::error title=Build number not increased::pubspec.yaml build number {current_build} must be greater than {previous_tag} build number {previous_build}.")
+          print(f"Version source verified: {release_tag}, pubspec build number {current_build} > {previous_tag} build number {previous_build}.")
+          PY
           echo "RELEASE_TAG=${release_tag}" >> "$GITHUB_ENV"
           echo "RELEASE_VERSION=${version}" >> "$GITHUB_ENV"
+
+      - name: Verify tag target matches checked-out commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          checked_out_sha="$(git rev-parse HEAD)"
+          tag_target_sha="$(git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}")"
+          if [ "$checked_out_sha" != "$tag_target_sha" ]; then
+            echo "::error title=Tag checkout mismatch::Checked out ${checked_out_sha}, but ${RELEASE_TAG} points to ${tag_target_sha}. Refusing to build."
+            exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$checked_out_sha" != "$GITHUB_SHA" ]; then
+            echo "::error title=Tag event SHA mismatch::Workflow event SHA ${GITHUB_SHA} differs from checked-out commit ${checked_out_sha}. Refusing to build."
+            exit 1
+          fi
+          echo "Verified ${RELEASE_TAG} target and checked-out commit: ${checked_out_sha}"
 
       - name: Validate Android signing secrets
         shell: bash
@@ -193,7 +250,7 @@ jobs:
           MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"
         run: |
           set -euo pipefail
-          flutter build apk --release --build-name "${RELEASE_VERSION}" --target-platform android-arm64 --split-per-abi
+          flutter build apk --release --target-platform android-arm64 --split-per-abi
           apk="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
           output="etonify-v${RELEASE_VERSION}-arm64-v8a.apk"
           mkdir -p build/release-apk
