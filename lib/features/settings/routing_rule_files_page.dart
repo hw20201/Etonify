@@ -297,6 +297,7 @@ class _RoutingRuleFilesPageState extends State<RoutingRuleFilesPage> {
                   trailingIcon: Icons.open_in_new_rounded,
                   onTap: _openSource,
                   link: true,
+                  valueBelowTitle: true,
                 ),
                 _RouteMetadataTile(
                   icon: Icons.event_rounded,
@@ -395,6 +396,7 @@ class _RouteMetadataTile extends StatelessWidget {
     this.trailingIcon,
     this.onTap,
     this.link = false,
+    this.valueBelowTitle = false,
   });
 
   final IconData icon;
@@ -403,11 +405,46 @@ class _RouteMetadataTile extends StatelessWidget {
   final IconData? trailingIcon;
   final VoidCallback? onTap;
   final bool link;
+  final bool valueBelowTitle;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: onTap == null ? cs.onSurface : cs.primary,
+      fontWeight: FontWeight.w600,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final Widget? trailing;
+    if (valueBelowTitle) {
+      final icon = trailingIcon;
+      trailing = icon == null ? null : Icon(icon, size: 18, color: cs.primary);
+    } else {
+      trailing = ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * .48,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: valueStyle,
+              ),
+            ),
+            if (trailingIcon case final icon?) ...[
+              const Gap(6),
+              Icon(icon, size: 18, color: cs.primary),
+            ],
+          ],
+        ),
+      );
+    }
     return Semantics(
       link: link,
       button: onTap != null && !link,
@@ -427,33 +464,15 @@ class _RouteMetadataTile extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        trailing: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: MediaQuery.sizeOf(context).width * .48,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: onTap == null ? cs.onSurface : cs.primary,
-                    fontWeight: FontWeight.w600,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-              if (trailingIcon case final icon?) ...[
-                const Gap(6),
-                Icon(icon, size: 18, color: cs.primary),
-              ],
-            ],
-          ),
-        ),
+        subtitle: valueBelowTitle
+            ? Text(
+                value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: valueStyle,
+              )
+            : null,
+        trailing: trailing,
       ),
     );
   }

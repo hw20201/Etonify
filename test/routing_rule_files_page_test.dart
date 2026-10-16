@@ -88,7 +88,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Источник'), findsOneWidget);
-    expect(find.text('aliothlab/rule-set'), findsOneWidget);
+    expect(find.text('SagerNet/sing-geosite + sing-geoip'), findsOneWidget);
     expect(find.byIcon(Icons.open_in_new_rounded), findsOneWidget);
     expect(find.text('Версия'), findsOneWidget);
     expect(find.text('26.08.2026 16:35'), findsOneWidget);

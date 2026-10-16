@@ -103,6 +103,100 @@ void main() {
     });
   });
 
+  test(
+    'downloads both China rule sets from the SagerNet jsDelivr sources',
+    () async {
+      await _withIsolatedRouteStorage(() async {
+        final requested = <Uri>[];
+        final service = ChinaRouteDataService.forTesting(
+          downloadBytes: (uri) async {
+            requested.add(uri);
+            return Uint8List.fromList(_validSrsBytes);
+          },
+        );
+
+        final status = await service.ensureChinaRouteData(force: true);
+
+        expect(requested, [
+          Uri.parse(
+            'https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
+          ),
+          Uri.parse(
+            'https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs',
+          ),
+        ]);
+        expect(status.sourceName, 'SagerNet/sing-geosite + sing-geoip');
+        expect(status.chinaRouteDataAvailable, isTrue);
+      });
+    },
+  );
+
+  test('falls back to aliothlab when primary SRS validation fails', () async {
+    await _withIsolatedRouteStorage(() async {
+      final requested = <Uri>[];
+      final service = ChinaRouteDataService.forTesting(
+        downloadBytes: (uri) async {
+          requested.add(uri);
+          return uri.host == 'cdn.jsdelivr.net'
+              ? Uint8List.fromList(<int>[0, 1, 2, 3])
+              : Uint8List.fromList(_validSrsBytes);
+        },
+      );
+
+      final status = await service.ensureChinaRouteData(force: true);
+
+      expect(requested, [
+        Uri.parse(
+          'https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
+        ),
+        Uri.parse(
+          'https://cdn.jsdelivr.net/gh/SagerNet/sing-geoip@rule-set/geoip-cn.srs',
+        ),
+        Uri.parse(
+          'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geosite-cn.srs',
+        ),
+        Uri.parse(
+          'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geoip-cn.srs',
+        ),
+      ]);
+      expect(status.chinaRouteDataAvailable, isTrue);
+      expect(File(status.chinaGeositePath!).readAsBytesSync(), _validSrsBytes);
+    });
+  });
+
+  test(
+    'falls back to aliothlab when the primary source cannot be downloaded',
+    () async {
+      await _withIsolatedRouteStorage(() async {
+        final requested = <Uri>[];
+        final service = ChinaRouteDataService.forTesting(
+          downloadBytes: (uri) async {
+            requested.add(uri);
+            if (uri.host == 'cdn.jsdelivr.net') {
+              throw const SocketException('primary unavailable');
+            }
+            return Uint8List.fromList(_validSrsBytes);
+          },
+        );
+
+        final status = await service.ensureChinaRouteData(force: true);
+
+        expect(requested, [
+          Uri.parse(
+            'https://cdn.jsdelivr.net/gh/SagerNet/sing-geosite@rule-set/geosite-cn.srs',
+          ),
+          Uri.parse(
+            'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geosite-cn.srs',
+          ),
+          Uri.parse(
+            'https://raw.githubusercontent.com/aliothlab/rule-set/main/rules/geoip-cn.srs',
+          ),
+        ]);
+        expect(status.chinaRouteDataAvailable, isTrue);
+      });
+    },
+  );
+
   test('status becomes due for refresh after 24 hours', () {
     final now = DateTime.now().millisecondsSinceEpoch;
     final fresh = ChinaRouteDataStatus(
