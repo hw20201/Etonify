@@ -2776,7 +2776,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeOutboundIpHint.
   ///
   /// In en, this message translates to:
-  /// **'Third-party lookup; for reference only'**
+  /// **'Third-party IP lookup; for reference only'**
   String get homeOutboundIpHint;
 
   /// No description provided for @homeOutboundIpExpand.
@@ -2815,23 +2815,11 @@ abstract class AppLocalizations {
   /// **'IP address'**
   String get homeOutboundIpAddress;
 
-  /// No description provided for @homeOutboundIpRiskScore.
+  /// No description provided for @homeOutboundIpCountry.
   ///
   /// In en, this message translates to:
-  /// **'Risk score'**
-  String get homeOutboundIpRiskScore;
-
-  /// No description provided for @homeOutboundIpNetworkType.
-  ///
-  /// In en, this message translates to:
-  /// **'Network type'**
-  String get homeOutboundIpNetworkType;
-
-  /// No description provided for @homeOutboundIpRiskFlags.
-  ///
-  /// In en, this message translates to:
-  /// **'Detection flags'**
-  String get homeOutboundIpRiskFlags;
+  /// **'Country / region'**
+  String get homeOutboundIpCountry;
 
   /// No description provided for @homeOutboundIpNetworkSection.
   ///
@@ -2863,72 +2851,6 @@ abstract class AppLocalizations {
   /// **'Source'**
   String get homeOutboundIpSource;
 
-  /// No description provided for @homeOutboundIpRiskNone.
-  ///
-  /// In en, this message translates to:
-  /// **'None'**
-  String get homeOutboundIpRiskNone;
-
-  /// No description provided for @homeOutboundIpTypeRegular.
-  ///
-  /// In en, this message translates to:
-  /// **'Regular'**
-  String get homeOutboundIpTypeRegular;
-
-  /// No description provided for @homeOutboundIpTypeMobile.
-  ///
-  /// In en, this message translates to:
-  /// **'Mobile network'**
-  String get homeOutboundIpTypeMobile;
-
-  /// No description provided for @homeOutboundIpTypeVpn.
-  ///
-  /// In en, this message translates to:
-  /// **'VPN exit'**
-  String get homeOutboundIpTypeVpn;
-
-  /// No description provided for @homeOutboundIpTypeTor.
-  ///
-  /// In en, this message translates to:
-  /// **'Tor exit'**
-  String get homeOutboundIpTypeTor;
-
-  /// No description provided for @homeOutboundIpTypeProxy.
-  ///
-  /// In en, this message translates to:
-  /// **'Proxy'**
-  String get homeOutboundIpTypeProxy;
-
-  /// No description provided for @homeOutboundIpTypeDatacenter.
-  ///
-  /// In en, this message translates to:
-  /// **'Datacenter'**
-  String get homeOutboundIpTypeDatacenter;
-
-  /// No description provided for @homeOutboundIpFlagVpn.
-  ///
-  /// In en, this message translates to:
-  /// **'VPN'**
-  String get homeOutboundIpFlagVpn;
-
-  /// No description provided for @homeOutboundIpFlagProxy.
-  ///
-  /// In en, this message translates to:
-  /// **'Proxy'**
-  String get homeOutboundIpFlagProxy;
-
-  /// No description provided for @homeOutboundIpFlagTor.
-  ///
-  /// In en, this message translates to:
-  /// **'Tor'**
-  String get homeOutboundIpFlagTor;
-
-  /// No description provided for @homeOutboundIpFlagDatacenter.
-  ///
-  /// In en, this message translates to:
-  /// **'Datacenter'**
-  String get homeOutboundIpFlagDatacenter;
-
   /// No description provided for @homeOutboundIpSourceIpQuery.
   ///
   /// In en, this message translates to:
@@ -2940,6 +2862,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ip-api.com'**
   String get homeOutboundIpSourceIpApi;
+
+  /// No description provided for @homeOutboundIpSourceIpWho.
+  ///
+  /// In en, this message translates to:
+  /// **'ipwho.is'**
+  String get homeOutboundIpSourceIpWho;
+
+  /// No description provided for @ipLookupSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'IP lookup source'**
+  String get ipLookupSourceTitle;
+
+  /// No description provided for @ipLookupSourceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the site used to look up your public IP location'**
+  String get ipLookupSourceDescription;
+
+  /// No description provided for @ipLookupSourceDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a lookup site'**
+  String get ipLookupSourceDialogTitle;
+
+  /// No description provided for @ipLookupSourceIpQuerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTPS · no API key required'**
+  String get ipLookupSourceIpQuerySubtitle;
+
+  /// No description provided for @ipLookupSourceIpApiSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP only · non-commercial · 45 requests/min'**
+  String get ipLookupSourceIpApiSubtitle;
+
+  /// No description provided for @ipLookupSourceIpWhoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free tier · up to 1,000 requests/day'**
+  String get ipLookupSourceIpWhoSubtitle;
 
   /// No description provided for @trafficDashboardDownloadTotal.
   ///

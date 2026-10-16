@@ -298,8 +298,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final controller = PublicIpController(
-      load: () async =>
-          const PublicIpInfo(ip: '2001:db8:abcd:1234::1', countryCode: 'SE'),
+      load: () async => const PublicIpInfo(
+        ip: '2001:db8:abcd:1234::1',
+        countryCode: 'SE',
+        country: 'Sweden',
+        city: 'Stockholm',
+      ),
     );
     final notifier = ValueNotifier(snapshot(hideIp: true));
     addTearDown(notifier.dispose);
@@ -312,6 +316,10 @@ void main() {
     expect(find.text('2001:db8:abcd:1234::1'), findsNothing);
     expect(
       find.descendant(of: card, matching: find.textContaining('****')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: card, matching: find.textContaining('Sweden')),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);

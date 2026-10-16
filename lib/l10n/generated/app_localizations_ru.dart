@@ -1514,7 +1514,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeOutboundIpTitle => 'Внешний IP';
 
   @override
-  String get homeOutboundIpHint => 'Данные стороннего API, только для справки';
+  String get homeOutboundIpHint =>
+      'Сторонний сервис определения IP; только для справки';
 
   @override
   String get homeOutboundIpExpand => 'Показать сведения о внешнем IP';
@@ -1535,13 +1536,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeOutboundIpAddress => 'IP-адрес';
 
   @override
-  String get homeOutboundIpRiskScore => 'Оценка риска';
-
-  @override
-  String get homeOutboundIpNetworkType => 'Тип сети';
-
-  @override
-  String get homeOutboundIpRiskFlags => 'Признаки';
+  String get homeOutboundIpCountry => 'Страна / регион';
 
   @override
   String get homeOutboundIpNetworkSection => 'Сеть';
@@ -1559,43 +1554,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get homeOutboundIpSource => 'Источник';
 
   @override
-  String get homeOutboundIpRiskNone => 'Нет';
-
-  @override
-  String get homeOutboundIpTypeRegular => 'Обычный';
-
-  @override
-  String get homeOutboundIpTypeMobile => 'Мобильная сеть';
-
-  @override
-  String get homeOutboundIpTypeVpn => 'VPN-выход';
-
-  @override
-  String get homeOutboundIpTypeTor => 'Выход Tor';
-
-  @override
-  String get homeOutboundIpTypeProxy => 'Прокси';
-
-  @override
-  String get homeOutboundIpTypeDatacenter => 'Дата-центр';
-
-  @override
-  String get homeOutboundIpFlagVpn => 'VPN';
-
-  @override
-  String get homeOutboundIpFlagProxy => 'Прокси';
-
-  @override
-  String get homeOutboundIpFlagTor => 'Tor';
-
-  @override
-  String get homeOutboundIpFlagDatacenter => 'Дата-центр';
-
-  @override
   String get homeOutboundIpSourceIpQuery => 'ipquery.io';
 
   @override
   String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
+  String get homeOutboundIpSourceIpWho => 'ipwho.is';
+
+  @override
+  String get ipLookupSourceTitle => 'Источник проверки IP';
+
+  @override
+  String get ipLookupSourceDescription =>
+      'Выберите сайт для определения общедоступного IP и местоположения';
+
+  @override
+  String get ipLookupSourceDialogTitle => 'Выберите сервис';
+
+  @override
+  String get ipLookupSourceIpQuerySubtitle => 'HTTPS · ключ API не требуется';
+
+  @override
+  String get ipLookupSourceIpApiSubtitle =>
+      'Только HTTP · некоммерческое использование · 45 запросов/мин';
+
+  @override
+  String get ipLookupSourceIpWhoSubtitle =>
+      'Бесплатный тариф · до 1 000 запросов в день';
 
   @override
   String get trafficDashboardDownloadTotal => 'Скачано';

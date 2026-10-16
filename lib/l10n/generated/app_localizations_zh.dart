@@ -1450,7 +1450,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeOutboundIpTitle => '出站 IP';
 
   @override
-  String get homeOutboundIpHint => '依赖第三方 API，仅供参考';
+  String get homeOutboundIpHint => '通过第三方网站查询 IP，仅供参考';
 
   @override
   String get homeOutboundIpExpand => '查看出站 IP 详情';
@@ -1471,13 +1471,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeOutboundIpAddress => 'IP 地址';
 
   @override
-  String get homeOutboundIpRiskScore => '风险评分';
-
-  @override
-  String get homeOutboundIpNetworkType => '类型';
-
-  @override
-  String get homeOutboundIpRiskFlags => '命中标记';
+  String get homeOutboundIpCountry => '国家 / 地区';
 
   @override
   String get homeOutboundIpNetworkSection => '网络';
@@ -1495,43 +1489,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeOutboundIpSource => '采用来源';
 
   @override
-  String get homeOutboundIpRiskNone => '无';
-
-  @override
-  String get homeOutboundIpTypeRegular => '普通';
-
-  @override
-  String get homeOutboundIpTypeMobile => '移动网络';
-
-  @override
-  String get homeOutboundIpTypeVpn => 'VPN 出口';
-
-  @override
-  String get homeOutboundIpTypeTor => 'Tor 出口';
-
-  @override
-  String get homeOutboundIpTypeProxy => '代理';
-
-  @override
-  String get homeOutboundIpTypeDatacenter => '机房';
-
-  @override
-  String get homeOutboundIpFlagVpn => 'VPN';
-
-  @override
-  String get homeOutboundIpFlagProxy => '代理';
-
-  @override
-  String get homeOutboundIpFlagTor => 'Tor';
-
-  @override
-  String get homeOutboundIpFlagDatacenter => '机房';
-
-  @override
   String get homeOutboundIpSourceIpQuery => 'ipquery.io';
 
   @override
   String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
+  String get homeOutboundIpSourceIpWho => 'ipwho.is';
+
+  @override
+  String get ipLookupSourceTitle => 'IP 检测源';
+
+  @override
+  String get ipLookupSourceDescription => '选择用于查询公网 IP 位置的网站';
+
+  @override
+  String get ipLookupSourceDialogTitle => '选择查询网站';
+
+  @override
+  String get ipLookupSourceIpQuerySubtitle => 'HTTPS · 无需 API 密钥';
+
+  @override
+  String get ipLookupSourceIpApiSubtitle => '仅 HTTP · 非商业用途 · 每分钟最多 45 次';
+
+  @override
+  String get ipLookupSourceIpWhoSubtitle => '免费版每天最多 1,000 次';
 
   @override
   String get trafficDashboardDownloadTotal => '已下载';

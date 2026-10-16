@@ -2,6 +2,7 @@ import 'dart:io' show InternetAddress, InternetAddressType, Platform;
 import 'dart:math';
 import 'dart:convert';
 import 'package:meow_client/models/core_settings.dart';
+import 'package:meow_client/models/public_ip_source.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:meow_client/core/platform/android_files_dir.dart';
 import 'package:meow_client/data/local/hive_storage_diagnostics.dart';
@@ -161,6 +162,7 @@ class AppSettingsState {
     this.notificationTrafficDisplayMode = NotificationTrafficDisplayMode.speed,
     this.notificationTrafficRefreshSeconds = 2,
     required this.hideServerIp,
+    this.publicIpSource = PublicIpSource.ipQuery,
     this.sendHwidToProviders = true,
     this.hwidDefaultNoticeShown = true,
     required this.progressiveBlurEnabled,
@@ -237,6 +239,7 @@ class AppSettingsState {
   final NotificationTrafficDisplayMode notificationTrafficDisplayMode;
   final int notificationTrafficRefreshSeconds;
   final bool hideServerIp;
+  final PublicIpSource publicIpSource;
   final bool sendHwidToProviders;
   final bool hwidDefaultNoticeShown;
   final bool progressiveBlurEnabled;
@@ -313,6 +316,7 @@ class AppSettingsState {
     NotificationTrafficDisplayMode? notificationTrafficDisplayMode,
     int? notificationTrafficRefreshSeconds,
     bool? hideServerIp,
+    PublicIpSource? publicIpSource,
     bool? sendHwidToProviders,
     bool? hwidDefaultNoticeShown,
     bool? progressiveBlurEnabled,
@@ -396,6 +400,7 @@ class AppSettingsState {
           notificationTrafficRefreshSeconds ??
           this.notificationTrafficRefreshSeconds,
       hideServerIp: hideServerIp ?? this.hideServerIp,
+      publicIpSource: publicIpSource ?? this.publicIpSource,
       sendHwidToProviders: sendHwidToProviders ?? this.sendHwidToProviders,
       hwidDefaultNoticeShown:
           hwidDefaultNoticeShown ?? this.hwidDefaultNoticeShown,
@@ -538,6 +543,7 @@ abstract class AppSettingsStore {
   static const _notificationTrafficRefreshSecondsKey =
       'notification_traffic_refresh_seconds';
   static const _hideServerIpKey = 'hide_server_ip';
+  static const _publicIpSourceKey = 'public_ip_source';
   // Local consent: intentionally excluded from safeExportKeys.
   static const _sendHwidToProvidersKey = 'send_hwid_to_providers';
   static const _hwidDefaultNoticeShownKey = 'hwid_default_notice_shown';
@@ -626,6 +632,7 @@ abstract class AppSettingsStore {
     _notificationTrafficDisplayModeKey,
     _notificationTrafficRefreshSecondsKey,
     _hideServerIpKey,
+    _publicIpSourceKey,
     _proxySortKey,
     _memoryLimitEnabledKey,
     _memoryLimitWarningDismissedKey,
@@ -815,6 +822,7 @@ abstract class AppSettingsStore {
           },
       notificationTrafficRefreshSeconds: notificationTrafficRefreshSeconds,
       hideServerIp: boolValue(_hideServerIpKey, defaultValue: false),
+      publicIpSource: PublicIpSource.fromStorage(map[_publicIpSourceKey]),
       sendHwidToProviders: boolValue(
         _sendHwidToProvidersKey,
         defaultValue: true,
@@ -1045,6 +1053,7 @@ abstract class AppSettingsStore {
           .notificationTrafficRefreshSeconds
           .toString(),
       _hideServerIpKey: state.hideServerIp ? '1' : '0',
+      _publicIpSourceKey: state.publicIpSource.name,
       _sendHwidToProvidersKey: state.sendHwidToProviders ? '1' : '0',
       _hwidDefaultNoticeShownKey: state.hwidDefaultNoticeShown ? '1' : '0',
       _progressiveBlurEnabledKey: state.progressiveBlurEnabled ? '1' : '0',

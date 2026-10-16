@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:meow_client/features/home/public_ip_controller.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
+import 'package:meow_client/widgets/country_flag_badge.dart';
 
 /// A compact public-IP capsule that opens a themed, anchored detail card.
 class PublicIpPeek extends StatefulWidget {
@@ -337,31 +338,17 @@ class _PublicIpDetailsCard extends StatelessWidget {
     return ip.length > 8 ? '${ip.substring(0, ip.length ~/ 2)}****' : '****';
   }
 
-  String _networkType(AppLocalizations l10n, PublicIpNetworkType type) {
-    return switch (type) {
-      PublicIpNetworkType.regular => l10n.homeOutboundIpTypeRegular,
-      PublicIpNetworkType.mobile => l10n.homeOutboundIpTypeMobile,
-      PublicIpNetworkType.vpn => l10n.homeOutboundIpTypeVpn,
-      PublicIpNetworkType.tor => l10n.homeOutboundIpTypeTor,
-      PublicIpNetworkType.proxy => l10n.homeOutboundIpTypeProxy,
-      PublicIpNetworkType.datacenter => l10n.homeOutboundIpTypeDatacenter,
-    };
-  }
-
-  String _riskFlags(AppLocalizations l10n, PublicIpInfo info) {
-    final flags = <String>[
-      if (info.isVpn) l10n.homeOutboundIpFlagVpn,
-      if (info.isProxy) l10n.homeOutboundIpFlagProxy,
-      if (info.isTor) l10n.homeOutboundIpFlagTor,
-      if (info.isDatacenter) l10n.homeOutboundIpFlagDatacenter,
-    ];
-    return flags.isEmpty ? l10n.homeOutboundIpRiskNone : flags.join(' · ');
+  String _countryLocation(AppLocalizations l10n, PublicIpInfo info) {
+    return info.locationLabel.isEmpty
+        ? l10n.notAvailableShort
+        : info.locationLabel;
   }
 
   String _sourceLabel(AppLocalizations l10n, PublicIpSource source) {
     return switch (source) {
       PublicIpSource.ipQuery => l10n.homeOutboundIpSourceIpQuery,
       PublicIpSource.ipApi => l10n.homeOutboundIpSourceIpApi,
+      PublicIpSource.ipWho => l10n.homeOutboundIpSourceIpWho,
     };
   }
 
@@ -473,22 +460,16 @@ class _PublicIpDetailsCard extends StatelessWidget {
                         title: l10n.homeOutboundIpBasicSection,
                         rows: [
                           _InfoRowData(
+                            l10n.homeOutboundIpCountry,
+                            _countryLocation(l10n, currentInfo),
+                            leading: CountryFlagBadge(
+                              countryCode: currentInfo.countryCode,
+                              size: 20,
+                            ),
+                          ),
+                          _InfoRowData(
                             l10n.homeOutboundIpAddress,
                             _maskedIp(currentInfo.ip),
-                          ),
-                          _InfoRowData(
-                            l10n.homeOutboundIpRiskScore,
-                            currentInfo.riskScore == null
-                                ? l10n.notAvailableShort
-                                : '${currentInfo.riskScore} / 100',
-                          ),
-                          _InfoRowData(
-                            l10n.homeOutboundIpNetworkType,
-                            _networkType(l10n, currentInfo.networkType),
-                          ),
-                          _InfoRowData(
-                            l10n.homeOutboundIpRiskFlags,
-                            _riskFlags(l10n, currentInfo),
                           ),
                         ],
                       ),
@@ -602,10 +583,11 @@ class _LookupStatus extends StatelessWidget {
 
 @immutable
 class _InfoRowData {
-  const _InfoRowData(this.label, this.value);
+  const _InfoRowData(this.label, this.value, {this.leading});
 
   final String label;
   final String value;
+  final Widget? leading;
 }
 
 class _InfoSection extends StatelessWidget {
@@ -690,15 +672,23 @@ class _InfoRow extends StatelessWidget {
           const Gap(12),
           Expanded(
             flex: 6,
-            child: Text(
-              row.value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (row.leading != null) ...[row.leading!, const Gap(6)],
+                Flexible(
+                  child: Text(
+                    row.value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

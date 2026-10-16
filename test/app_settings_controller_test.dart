@@ -6,6 +6,7 @@ import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 import 'package:meow_client/features/settings/settings_dns_page.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
+import 'package:meow_client/models/public_ip_source.dart';
 
 void main() {
   test(
@@ -63,6 +64,35 @@ void main() {
     expect(controller.autoConnectOnLaunch, isTrue);
     expect(controller.setAutoConnectOnLaunch(true).changed, isFalse);
   });
+  test(
+    'IP lookup source is a lightweight preference, not a VPN config change',
+    () {
+      final controller = AppSettingsController();
+      expect(controller.publicIpSource, PublicIpSource.ipQuery);
+
+      final change = controller.setPublicIpSource(PublicIpSource.ipWho);
+      expect(change.changed, isTrue);
+      expect(change.configReason, isNull);
+      expect(change.restartRuntime, isFalse);
+      expect(controller.publicIpSource, PublicIpSource.ipWho);
+      expect(
+        controller.setPublicIpSource(PublicIpSource.ipWho).changed,
+        isFalse,
+      );
+      expect(
+        controller
+            .toState(
+              onboardingCompleted: false,
+              acceptedLegalVersion: '',
+              acceptedLegalAtMillis: null,
+              activeProfileId: '',
+              selectedProxyTag: '',
+            )
+            .publicIpSource,
+        PublicIpSource.ipWho,
+      );
+    },
+  );
   test('HWID switch updates request policy without restarting the core', () {
     addTearDown(() => SubscriptionFetcher.configureHwidSharing(false));
     final controller = AppSettingsController();

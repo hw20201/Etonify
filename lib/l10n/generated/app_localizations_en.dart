@@ -1517,7 +1517,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeOutboundIpTitle => 'Outbound IP';
 
   @override
-  String get homeOutboundIpHint => 'Third-party lookup; for reference only';
+  String get homeOutboundIpHint => 'Third-party IP lookup; for reference only';
 
   @override
   String get homeOutboundIpExpand => 'Show outbound IP details';
@@ -1538,13 +1538,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeOutboundIpAddress => 'IP address';
 
   @override
-  String get homeOutboundIpRiskScore => 'Risk score';
-
-  @override
-  String get homeOutboundIpNetworkType => 'Network type';
-
-  @override
-  String get homeOutboundIpRiskFlags => 'Detection flags';
+  String get homeOutboundIpCountry => 'Country / region';
 
   @override
   String get homeOutboundIpNetworkSection => 'Network';
@@ -1562,43 +1556,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeOutboundIpSource => 'Source';
 
   @override
-  String get homeOutboundIpRiskNone => 'None';
-
-  @override
-  String get homeOutboundIpTypeRegular => 'Regular';
-
-  @override
-  String get homeOutboundIpTypeMobile => 'Mobile network';
-
-  @override
-  String get homeOutboundIpTypeVpn => 'VPN exit';
-
-  @override
-  String get homeOutboundIpTypeTor => 'Tor exit';
-
-  @override
-  String get homeOutboundIpTypeProxy => 'Proxy';
-
-  @override
-  String get homeOutboundIpTypeDatacenter => 'Datacenter';
-
-  @override
-  String get homeOutboundIpFlagVpn => 'VPN';
-
-  @override
-  String get homeOutboundIpFlagProxy => 'Proxy';
-
-  @override
-  String get homeOutboundIpFlagTor => 'Tor';
-
-  @override
-  String get homeOutboundIpFlagDatacenter => 'Datacenter';
-
-  @override
   String get homeOutboundIpSourceIpQuery => 'ipquery.io';
 
   @override
   String get homeOutboundIpSourceIpApi => 'ip-api.com';
+
+  @override
+  String get homeOutboundIpSourceIpWho => 'ipwho.is';
+
+  @override
+  String get ipLookupSourceTitle => 'IP lookup source';
+
+  @override
+  String get ipLookupSourceDescription =>
+      'Choose the site used to look up your public IP location';
+
+  @override
+  String get ipLookupSourceDialogTitle => 'Choose a lookup site';
+
+  @override
+  String get ipLookupSourceIpQuerySubtitle => 'HTTPS · no API key required';
+
+  @override
+  String get ipLookupSourceIpApiSubtitle =>
+      'HTTP only · non-commercial · 45 requests/min';
+
+  @override
+  String get ipLookupSourceIpWhoSubtitle =>
+      'Free tier · up to 1,000 requests/day';
 
   @override
   String get trafficDashboardDownloadTotal => 'Downloaded';

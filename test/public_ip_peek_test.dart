@@ -17,11 +17,11 @@ void main() {
       load: () async => const PublicIpInfo(
         ip: '57.181.118.111',
         countryCode: 'JP',
+        country: 'Japan',
+        city: 'Tokyo',
         organization: 'Amazon.com, Inc.',
         asn: 'AS16509',
         isp: 'Amazon ISP',
-        riskScore: 3,
-        isDatacenter: true,
       ),
     );
 
@@ -65,9 +65,12 @@ void main() {
       find.descendant(of: card, matching: find.text('Amazon.com, Inc.')),
       findsOneWidget,
     );
+    expect(find.text('国家 / 地区'), findsOneWidget);
+    expect(find.textContaining('Japan'), findsOneWidget);
     expect(find.text('AS16509'), findsOneWidget);
     expect(find.text('ipquery.io'), findsOneWidget);
-    expect(find.text('机房'), findsNWidgets(2));
+    expect(find.textContaining('纯净'), findsNothing);
+    expect(find.textContaining('VPN'), findsNothing);
     expect(tester.getRect(card).bottom, lessThan(tester.getRect(capsule).top));
     expect(tester.takeException(), isNull);
 
@@ -79,13 +82,12 @@ void main() {
   });
 
   testWidgets(
-    'respects the hide-IP preference and identifies the backup source',
+    'respects the hide-IP preference and identifies the selected source',
     (tester) async {
       final controller = PublicIpController(
         load: () async => const PublicIpInfo(
           ip: '2001:db8:abcd:1234::1',
           source: PublicIpSource.ipApi,
-          isProxy: true,
         ),
       );
 

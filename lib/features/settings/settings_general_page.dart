@@ -4,6 +4,7 @@ import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/features/settings/settings_notification_page.dart';
 import 'package:meow_client/features/settings/battery_optimization_tile.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
+import 'package:meow_client/models/public_ip_source.dart';
 import 'package:meow_client/features/settings/subscription_background_tile.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
@@ -68,6 +69,8 @@ class SettingsGeneralPage extends StatelessWidget {
     required this.currentNotificationTrafficDisplayMode,
     required this.currentNotificationTrafficRefreshSeconds,
     required this.currentHideServerIp,
+    this.currentPublicIpSource = PublicIpSource.ipQuery,
+    this.onPublicIpSourceChanged,
     this.currentSendHwidToProviders = true,
     this.onSendHwidToProvidersChanged,
     this.currentAutoConnectOnLaunch = false,
@@ -94,6 +97,8 @@ class SettingsGeneralPage extends StatelessWidget {
   final NotificationTrafficDisplayMode currentNotificationTrafficDisplayMode;
   final int currentNotificationTrafficRefreshSeconds;
   final bool currentHideServerIp;
+  final PublicIpSource currentPublicIpSource;
+  final ValueChanged<PublicIpSource>? onPublicIpSourceChanged;
   final bool currentSendHwidToProviders;
   final ValueChanged<bool>? onSendHwidToProvidersChanged;
   final bool currentAutoConnectOnLaunch;
@@ -272,6 +277,10 @@ class SettingsGeneralPage extends StatelessWidget {
                     value: currentAutoConnectOnLaunch,
                     onChanged: onAutoConnectOnLaunchChanged,
                   ),
+                  _PublicIpSourceTile(
+                    value: currentPublicIpSource,
+                    onChanged: onPublicIpSourceChanged,
+                  ),
                   if (showBatteryOptimizationSettings)
                     const BatteryOptimizationTile(),
                   if (showQuickSettingsTileAction)
@@ -349,6 +358,93 @@ class SettingsGeneralPage extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Section label
 // ---------------------------------------------------------------------------
+
+class _PublicIpSourceTile extends StatefulWidget {
+  const _PublicIpSourceTile({required this.value, required this.onChanged});
+
+  final PublicIpSource value;
+  final ValueChanged<PublicIpSource>? onChanged;
+
+  @override
+  State<_PublicIpSourceTile> createState() => _PublicIpSourceTileState();
+}
+
+class _PublicIpSourceTileState extends State<_PublicIpSourceTile> {
+  late PublicIpSource _value = widget.value;
+
+  @override
+  void didUpdateWidget(covariant _PublicIpSourceTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) _value = widget.value;
+  }
+
+  String _sourceName(AppLocalizations l10n) => switch (_value) {
+    PublicIpSource.ipQuery => l10n.homeOutboundIpSourceIpQuery,
+    PublicIpSource.ipApi => l10n.homeOutboundIpSourceIpApi,
+    PublicIpSource.ipWho => l10n.homeOutboundIpSourceIpWho,
+  };
+
+  Future<void> _choose(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await showModalBottomSheet<PublicIpSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => _RadioSheet<PublicIpSource>(
+        title: l10n.ipLookupSourceDialogTitle,
+        current: _value,
+        items: [
+          RadioChoice(
+            value: PublicIpSource.ipQuery,
+            label: l10n.homeOutboundIpSourceIpQuery,
+            subtitle: l10n.ipLookupSourceIpQuerySubtitle,
+          ),
+          RadioChoice(
+            value: PublicIpSource.ipApi,
+            label: l10n.homeOutboundIpSourceIpApi,
+            subtitle: l10n.ipLookupSourceIpApiSubtitle,
+          ),
+          RadioChoice(
+            value: PublicIpSource.ipWho,
+            label: l10n.homeOutboundIpSourceIpWho,
+            subtitle: l10n.ipLookupSourceIpWhoSubtitle,
+          ),
+        ],
+      ),
+    );
+    if (result == null || !mounted) return;
+    widget.onChanged?.call(result);
+    setState(() => _value = result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return ListTile(
+      key: const ValueKey('public-ip-source'),
+      leading: SettingsLeadingIcon(
+        icon: Icons.public_rounded,
+        color: colorScheme.primary,
+      ),
+      title: Text(l10n.ipLookupSourceTitle),
+      subtitle: Text(l10n.ipLookupSourceDescription),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _sourceName(l10n),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded),
+        ],
+      ),
+      onTap: widget.onChanged == null ? null : () => _choose(context),
+    );
+  }
+}
 
 class _AutoConnectTile extends StatefulWidget {
   const _AutoConnectTile({required this.value, required this.onChanged});

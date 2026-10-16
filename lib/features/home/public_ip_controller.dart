@@ -6,6 +6,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:meow_client/models/public_ip_source.dart';
+
+export 'package:meow_client/models/public_ip_source.dart';
 
 @immutable
 class PublicIpInfo {
@@ -18,12 +21,6 @@ class PublicIpInfo {
     this.organization = '',
     this.asn = '',
     this.isp = '',
-    this.riskScore,
-    this.isMobile = false,
-    this.isVpn = false,
-    this.isTor = false,
-    this.isProxy = false,
-    this.isDatacenter = false,
     this.source = PublicIpSource.ipQuery,
   });
 
@@ -35,29 +32,26 @@ class PublicIpInfo {
   final String organization;
   final String asn;
   final String isp;
-  final int? riskScore;
-  final bool isMobile;
-  final bool isVpn;
-  final bool isTor;
-  final bool isProxy;
-  final bool isDatacenter;
   final PublicIpSource source;
 
-  PublicIpNetworkType get networkType {
-    if (isTor) return PublicIpNetworkType.tor;
-    if (isVpn) return PublicIpNetworkType.vpn;
-    if (isProxy) return PublicIpNetworkType.proxy;
-    if (isDatacenter) return PublicIpNetworkType.datacenter;
-    if (isMobile) return PublicIpNetworkType.mobile;
-    return PublicIpNetworkType.regular;
+  String get locationLabel {
+    final countryLabel = country.isNotEmpty ? country : countryCode;
+    final places = <String>[];
+    for (final place in [region, city]) {
+      if (place.isNotEmpty &&
+          !places.any(
+            (existing) => existing.toLowerCase() == place.toLowerCase(),
+          )) {
+        places.add(place);
+      }
+    }
+    return [if (countryLabel.isNotEmpty) countryLabel, ...places].join(' · ');
   }
 
   factory PublicIpInfo.fromIpQueryJson(Map<String, dynamic> json) {
     final ip = _validatedIp(json['ip']);
     final isp = _asMap(json['isp']);
     final location = _asMap(json['location']);
-    final risk = _asMap(json['risk']);
-    final score = risk['risk_score'];
     return PublicIpInfo(
       ip: ip,
       countryCode: _countryCode(location['country_code']),
@@ -65,16 +59,8 @@ class PublicIpInfo {
       city: _text(location['city']),
       region: _text(location['state']),
       organization: _text(isp['org']),
-      asn: _text(isp['asn']),
+      asn: _normalizeAsn(isp['asn']),
       isp: _text(isp['isp']),
-      riskScore: score is num && score >= 0 && score <= 100
-          ? score.toInt()
-          : null,
-      isMobile: risk['is_mobile'] == true,
-      isVpn: risk['is_vpn'] == true,
-      isTor: risk['is_tor'] == true,
-      isProxy: risk['is_proxy'] == true,
-      isDatacenter: risk['is_datacenter'] == true,
       source: PublicIpSource.ipQuery,
     );
   }
@@ -83,13 +69,6 @@ class PublicIpInfo {
     if (json['status'] != 'success') {
       throw const FormatException('IP-API lookup was not successful');
     }
-    final asValue = _text(json['as']);
-    final asn =
-        RegExp(
-          r'^(AS\d+)\b',
-          caseSensitive: false,
-        ).firstMatch(asValue)?.group(1) ??
-        '';
     return PublicIpInfo(
       ip: _validatedIp(json['query']),
       countryCode: _countryCode(json['countryCode']),
@@ -97,19 +76,33 @@ class PublicIpInfo {
       city: _text(json['city']),
       region: _text(json['regionName']),
       organization: _text(json['org']),
-      asn: asn,
+      asn: _normalizeAsn(json['as']),
       isp: _text(json['isp']),
-      isMobile: json['mobile'] == true,
-      isProxy: json['proxy'] == true,
-      isDatacenter: json['hosting'] == true,
       source: PublicIpSource.ipApi,
     );
   }
+
+  factory PublicIpInfo.fromIpWhoJson(Map<String, dynamic> json) {
+    if (json['success'] == false) {
+      final message = _text(json['message']);
+      throw FormatException(
+        message.isEmpty ? 'ipwho.is lookup was not successful' : message,
+      );
+    }
+    final connection = _asMap(json['connection']);
+    return PublicIpInfo(
+      ip: _validatedIp(json['ip']),
+      countryCode: _countryCode(json['country_code']),
+      country: _text(json['country']),
+      city: _text(json['city']),
+      region: _text(json['region']),
+      organization: _text(connection['org']),
+      asn: _normalizeAsn(connection['asn']),
+      isp: _text(connection['isp']),
+      source: PublicIpSource.ipWho,
+    );
+  }
 }
-
-enum PublicIpSource { ipQuery, ipApi }
-
-enum PublicIpNetworkType { regular, mobile, vpn, tor, proxy, datacenter }
 
 String _text(Object? value) => value is String ? value.trim() : '';
 
@@ -122,6 +115,21 @@ Map<String, dynamic> _asMap(Object? value) {
 String _countryCode(Object? value) {
   final code = _text(value).toUpperCase();
   return RegExp(r'^[A-Z]{2}$').hasMatch(code) && code != 'XX' ? code : '';
+}
+
+String _normalizeAsn(Object? value) {
+  if (value is num) {
+    return value > 0 ? 'AS${value.toInt()}' : '';
+  }
+  final text = _text(value);
+  if (text.isEmpty) return '';
+  final token = RegExp(
+    r'^(?:AS)?\d+\b',
+    caseSensitive: false,
+  ).firstMatch(text)?.group(0);
+  if (token == null) return text;
+  final normalized = token.toUpperCase();
+  return normalized.startsWith('AS') ? normalized : 'AS$normalized';
 }
 
 String _validatedIp(Object? value) {
@@ -140,10 +148,8 @@ class _HttpPayload {
   final String body;
 }
 
-/// Queries the public egress IP through the normal OS network route.
-///
-/// ipquery.io is the HTTPS primary. ip-api.com is a last-resort HTTP-only
-/// fallback, so Android cleartext access is limited to that exact host.
+/// Queries exactly the selected provider so the chosen destination is explicit
+/// and a failed provider never silently sends the user's IP to another service.
 class PublicIpLookup {
   PublicIpLookup({http.Client Function()? clientFactory})
     : _clientFactory = clientFactory ?? http.Client.new;
@@ -157,57 +163,72 @@ class PublicIpLookup {
   int _generation = 0;
   DateTime? _ipApiBlockedUntil;
 
-  Future<PublicIpInfo> load() async {
+  Future<PublicIpInfo> load({
+    PublicIpSource source = PublicIpSource.ipQuery,
+  }) async {
     final generation = ++_generation;
-    Object? primaryError;
+    late final Uri uri;
+    late final String host;
+    late final String accept;
+    var observeIpApiRateLimit = false;
 
-    try {
-      final ipPayload = await _request(
-        Uri.https('api.ipquery.io', '/'),
-        generation,
-        accept: 'text/plain',
-      );
-      _requireOk(ipPayload, 'ipquery.io');
-      final ip = _validatedIp(ipPayload.body);
-      final detailsPayload = await _request(
-        Uri.https('api.ipquery.io', '/$ip', {'format': 'json'}),
-        generation,
-        accept: 'application/json',
-      );
-      _requireOk(detailsPayload, 'ipquery.io');
-      final json = _decodeJson(detailsPayload.body);
-      final result = PublicIpInfo.fromIpQueryJson(json);
-      if (generation != _generation) throw StateError('IP request cancelled');
-      return result;
-    } catch (error) {
-      if (generation != _generation) throw StateError('IP request cancelled');
-      primaryError = error;
-    }
-
-    final blockedUntil = _ipApiBlockedUntil;
-    if (blockedUntil != null && DateTime.now().isBefore(blockedUntil)) {
-      throw primaryError;
-    }
-
-    try {
-      final fallbackPayload = await _request(
-        Uri.http('ip-api.com', '/json/', const {
+    switch (source) {
+      case PublicIpSource.ipQuery:
+        final ipPayload = await _request(
+          Uri.https('api.ipquery.io', '/'),
+          generation,
+          accept: 'text/plain',
+        );
+        _requireOk(ipPayload, 'ipquery.io');
+        final ip = _validatedIp(ipPayload.body);
+        final detailsPayload = await _request(
+          Uri.https('api.ipquery.io', '/$ip', {'format': 'json'}),
+          generation,
+          accept: 'application/json',
+        );
+        _requireOk(detailsPayload, 'ipquery.io');
+        final result = PublicIpInfo.fromIpQueryJson(
+          _decodeJson(detailsPayload.body),
+        );
+        if (generation != _generation) throw StateError('IP request cancelled');
+        return result;
+      case PublicIpSource.ipApi:
+        final blockedUntil = _ipApiBlockedUntil;
+        if (blockedUntil != null && DateTime.now().isBefore(blockedUntil)) {
+          throw HttpException(
+            'ip-api.com rate limited; try again after ${blockedUntil.toIso8601String()}',
+          );
+        }
+        uri = Uri.http('ip-api.com', '/json/', const {
           'fields':
-              'status,message,query,country,countryCode,regionName,city,isp,org,as,mobile,proxy,hosting',
-        }),
-        generation,
-        accept: 'application/json',
-        observeIpApiRateLimit: true,
-      );
-      _requireOk(fallbackPayload, 'ip-api.com');
-      final json = _decodeJson(fallbackPayload.body);
-      final result = PublicIpInfo.fromIpApiJson(json);
-      if (generation != _generation) throw StateError('IP request cancelled');
-      return result;
-    } catch (error) {
-      if (generation != _generation) throw StateError('IP request cancelled');
-      Error.throwWithStackTrace(error, StackTrace.current);
+              'status,message,query,country,countryCode,regionName,city,isp,org,as',
+        });
+        host = 'ip-api.com';
+        accept = 'application/json';
+        observeIpApiRateLimit = true;
+        break;
+      case PublicIpSource.ipWho:
+        uri = Uri.https('ipwho.is', '/');
+        host = 'ipwho.is';
+        accept = 'application/json';
+        break;
     }
+
+    final payload = await _request(
+      uri,
+      generation,
+      accept: accept,
+      observeIpApiRateLimit: observeIpApiRateLimit,
+    );
+    _requireOk(payload, host);
+    final json = _decodeJson(payload.body);
+    final result = switch (source) {
+      PublicIpSource.ipQuery => throw StateError('unreachable IP query path'),
+      PublicIpSource.ipApi => PublicIpInfo.fromIpApiJson(json),
+      PublicIpSource.ipWho => PublicIpInfo.fromIpWhoJson(json),
+    };
+    if (generation != _generation) throw StateError('IP request cancelled');
+    return result;
   }
 
   Future<_HttpPayload> _request(
@@ -291,10 +312,12 @@ class PublicIpController extends ChangeNotifier {
   PublicIpController({
     Future<PublicIpInfo> Function()? load,
     VoidCallback? cancel,
+    PublicIpSource Function()? sourceProvider,
   }) {
     if (load == null) {
       final lookup = PublicIpLookup();
-      _load = lookup.load;
+      _load = () =>
+          lookup.load(source: sourceProvider?.call() ?? PublicIpSource.ipQuery);
       _cancel = lookup.cancel;
     } else {
       _load = load;
@@ -339,6 +362,20 @@ class PublicIpController extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+
+  /// Discards data from the old provider and makes the new source immediately
+  /// refreshable, including when a previous lookup is still in flight.
+  void invalidateForSourceChange() {
+    if (_disposed) return;
+    _generation++;
+    _cancel();
+    _cooldown?.cancel();
+    _cooldown = null;
+    _info = null;
+    _loading = false;
+    _failed = false;
+    notifyListeners();
   }
 
   void cancel() {

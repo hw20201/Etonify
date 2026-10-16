@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow_client/models/core_settings.dart';
+import 'package:meow_client/models/public_ip_source.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
@@ -133,6 +134,7 @@ class AppSettingsController {
       NotificationTrafficDisplayMode.speed;
   int notificationTrafficRefreshSeconds = 2;
   bool hideServerIp = false;
+  PublicIpSource publicIpSource = PublicIpSource.ipQuery;
   bool sendHwidToProviders = true;
   String proxySort = 'source';
   bool progressiveBlurEnabled = false;
@@ -222,6 +224,7 @@ class AppSettingsController {
       notificationTrafficDisplayMode: notificationTrafficDisplayMode,
       notificationTrafficRefreshSeconds: notificationTrafficRefreshSeconds,
       hideServerIp: hideServerIp,
+      publicIpSource: publicIpSource,
       sendHwidToProviders: sendHwidToProviders,
       hwidDefaultNoticeShown: hwidDefaultNoticeShown,
       progressiveBlurEnabled: progressiveBlurEnabled,
@@ -300,6 +303,7 @@ class AppSettingsController {
     notificationTrafficDisplayMode = state.notificationTrafficDisplayMode;
     notificationTrafficRefreshSeconds = state.notificationTrafficRefreshSeconds;
     hideServerIp = state.hideServerIp;
+    publicIpSource = state.publicIpSource;
     sendHwidToProviders = state.sendHwidToProviders;
     hwidDefaultNoticeShown = state.hwidDefaultNoticeShown;
     SubscriptionFetcher.configureHwidSharing(sendHwidToProviders);
@@ -455,6 +459,12 @@ class AppSettingsController {
     }
     hideServerIp = value;
     return const AppSettingsChange(changed: true, publishTraffic: true);
+  }
+
+  AppSettingsChange setPublicIpSource(PublicIpSource value) {
+    if (publicIpSource == value) return const AppSettingsChange.none();
+    publicIpSource = value;
+    return const AppSettingsChange(changed: true);
   }
 
   AppSettingsChange setSendHwidToProviders(bool value) {

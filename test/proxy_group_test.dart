@@ -4163,7 +4163,7 @@ void main() {
   );
 
   test(
-    'vpnEnableIpv6: true includes IPv6 in TUN, sets DNS strategy to prefer_ipv4, and enables AAAA in fakeip',
+    'vpnEnableIpv6: true routes IPv6 and prefers AAAA with fakeip enabled',
     () {
       final builder = _defaultBuilder(
         const Subscription(
@@ -4185,7 +4185,7 @@ void main() {
       expect(tunIn['address'], ['172.19.0.1/30', 'fdfe:dcba:9876::1/126']);
 
       final dns = config['dns'] as Map<String, dynamic>;
-      expect(dns['strategy'], 'prefer_ipv4');
+      expect(dns['strategy'], 'prefer_ipv6');
 
       final servers = dns['servers'] as List<dynamic>;
       final fakeIpServer =

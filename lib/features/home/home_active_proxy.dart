@@ -267,7 +267,7 @@ class ActiveProxyFooter extends StatelessWidget {
                                 key: ValueKey(proxy.displayName),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleMedium?.copyWith(
+                                style: theme.textTheme.titleLarge?.copyWith(
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
