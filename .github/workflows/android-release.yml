@@ -122,6 +122,22 @@ jobs:
           echo "RELEASE_TAG=${release_tag}" >> "$GITHUB_ENV"
           echo "RELEASE_VERSION=${version}" >> "$GITHUB_ENV"
 
+      - name: Verify tag target matches checked-out commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          checked_out_sha="$(git rev-parse HEAD)"
+          tag_target_sha="$(git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}")"
+          if [ "$checked_out_sha" != "$tag_target_sha" ]; then
+            echo "::error title=Tag checkout mismatch::Checked out ${checked_out_sha}, but ${RELEASE_TAG} points to ${tag_target_sha}. Refusing to build."
+            exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$checked_out_sha" != "$GITHUB_SHA" ]; then
+            echo "::error title=Tag event SHA mismatch::Workflow event SHA ${GITHUB_SHA} differs from checked-out commit ${checked_out_sha}. Refusing to build."
+            exit 1
+          fi
+          echo "Verified ${RELEASE_TAG} target and checked-out commit: ${checked_out_sha}"
+
       - name: Validate Android signing secrets
         shell: bash
         env:

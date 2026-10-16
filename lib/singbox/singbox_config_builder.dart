@@ -327,6 +327,8 @@ class SingboxConfigBuilder {
             ],
           'final': dnsFinal,
           'cache_capacity': 4096,
+          // Prefer IPv6 rather than forcing ipv6_only, so dual-stack callers
+          // retain IPv4 fallback when one address family is unreachable.
           if (vpnInboundEnabled)
             'strategy': vpnEnableIpv6 ? 'prefer_ipv6' : 'ipv4_only',
         },
@@ -404,7 +406,14 @@ class SingboxConfigBuilder {
           // on public UDP/DoT reachability and can create a bootstrap failure.
           // Android's current network DNS is the reliable bootstrap resolver;
           // user DNS choices still handle routed application queries above.
-          'default_domain_resolver': 'dns-local',
+          // With IPv6 enabled, prefer IPv4 only for proxy endpoints while
+          // retaining IPv6 as a fallback on dual-stack networks.
+          'default_domain_resolver': vpnInboundEnabled && vpnEnableIpv6
+              ? <String, Object>{
+                  'server': 'dns-local',
+                  'strategy': 'prefer_ipv4',
+                }
+              : 'dns-local',
           if (chinaRouteDataActive || adBlockActive)
             'rule_set': [
               if (chinaRouteDataActive) ...[

@@ -133,7 +133,6 @@ class AppBootstrapController {
       state = _fallbackSettingsState();
     }
 
-    final appVersionInfo = await appVersionInfoFuture;
     if (state.splitRoutingSchemaVersion < 1) {
       state = state.copyWith(
         splitRoutingSchemaVersion: 1,
@@ -150,8 +149,11 @@ class AppBootstrapController {
     }
     // The native capability bridge is needed for migration planning, but it
     // must not compete with encrypted Hive I/O during cold start. On slower
-    // devices that contention was visible as a blank 1–3 second launch.
-    final coreCapabilities = await _readCoreCapabilities();
+    // devices that contention was visible as a blank 1–3 second launch. Once
+    // storage is settled, read it alongside the already-started version query.
+    final coreCapabilitiesFuture = _readCoreCapabilities();
+    final appVersionInfo = await appVersionInfoFuture;
+    final coreCapabilities = await coreCapabilitiesFuture;
     final migration = CoreConfigMigration.plan(
       state: state,
       capabilities: coreCapabilities,

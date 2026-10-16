@@ -115,6 +115,45 @@ void main() {
     expect(result.coreCapabilities, same(LibboxCapabilities.incompatible));
   });
 
+  test(
+    'reads version and core metadata concurrently after storage settles',
+    () async {
+      final version = Completer<AppVersionInfo>();
+      final capabilities = Completer<LibboxCapabilities>();
+      var versionStarted = false;
+      var capabilitiesStarted = false;
+      final controller = AppBootstrapController(
+        fallbackClientVersionLabel: '0.3.0',
+        loadAppVersionInfo: () {
+          versionStarted = true;
+          return version.future;
+        },
+        loadCoreCapabilities: () {
+          capabilitiesStarted = true;
+          return capabilities.future;
+        },
+      );
+
+      final loading = controller.load(providedStore: MemoryAppSettingsStore());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(versionStarted, isTrue);
+      expect(capabilitiesStarted, isTrue);
+
+      version.complete(
+        const AppVersionInfo(
+          packageName: 'com.etonify.meow_client',
+          versionName: '0.3.0',
+          versionCode: 12,
+        ),
+      );
+      capabilities.complete(LibboxCapabilities.bundledLegacy);
+      final result = await loading;
+      expect(result.appVersionInfo.versionName, '0.3.0');
+      expect(result.coreCapabilities, same(LibboxCapabilities.bundledLegacy));
+    },
+  );
+
   test('opens encrypted storage before the core capability bridge', () async {
     final order = <String>[];
     final storageReady = Completer<void>();

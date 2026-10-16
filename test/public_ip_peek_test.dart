@@ -19,7 +19,7 @@ void main() {
         countryCode: 'JP',
         country: 'Japan',
         city: 'Tokyo',
-        organization: 'Amazon.com, Inc.',
+        organization: 'Amazon Data Services LLC - Global Infrastructure',
         asn: 'AS16509',
         isp: 'Amazon ISP',
       ),
@@ -48,6 +48,14 @@ void main() {
     final capsule = find.byKey(const ValueKey('outbound-ip-capsule'));
     expect(capsule, findsOneWidget);
     expect(find.text('57.181.118.111'), findsOneWidget);
+    expect(
+      tester
+          .widget<AnimatedRotation>(
+            find.byKey(const ValueKey('outbound-ip-capsule-chevron')),
+          )
+          .turns,
+      0,
+    );
     expect(find.text('IP 检测'), findsNothing);
     expect(
       find.byKey(const ValueKey('outbound-ip-details-card')),
@@ -60,10 +68,46 @@ void main() {
 
     final card = find.byKey(const ValueKey('outbound-ip-details-card'));
     expect(card, findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('outbound-ip-overlay-backdrop')),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<AnimatedOpacity>(
+            find.byKey(const ValueKey('outbound-ip-capsule-visibility')),
+          )
+          .opacity,
+      0,
+    );
+    expect(
+      tester
+          .widget<AnimatedRotation>(
+            find.byKey(const ValueKey('outbound-ip-capsule-chevron')),
+          )
+          .turns,
+      .5,
+    );
     expect(find.text('出站 IP'), findsOneWidget);
     expect(
-      find.descendant(of: card, matching: find.text('Amazon.com, Inc.')),
+      find.descendant(
+        of: card,
+        matching: find.text('Amazon Data Services LLC - Global Infrastructure'),
+      ),
       findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(
+              of: card,
+              matching: find.text(
+                'Amazon Data Services LLC - Global Infrastructure',
+              ),
+            ),
+          )
+          .maxLines,
+      isNull,
     );
     expect(find.text('国家 / 地区'), findsOneWidget);
     expect(find.textContaining('Japan'), findsOneWidget);
