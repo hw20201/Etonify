@@ -679,8 +679,6 @@ class _InfoRow extends StatelessWidget {
                 Flexible(
                   child: Text(
                     row.value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface,
