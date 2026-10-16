@@ -92,7 +92,7 @@ jobs:
   draft-tag-release:
     if: >-
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master' && inputs.release_tag != '')
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/feat/v0.3.100-routing-data-resilience' && inputs.release_tag == 'v0.3.100')
     name: Build signed tag APK and create draft Release
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -178,6 +178,16 @@ jobs:
             exit 1
           fi
           echo "Verified ${RELEASE_TAG} target and checked-out commit: ${checked_out_sha}"
+
+      - name: Checkout repaired APK verifier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 841f6a63b3398aff50ef502cab93efd91a78406b
+          path: verifier-fix
+      - name: Test repaired APK verifier
+        run: bash verifier-fix/scripts/verify_android_release_apk_test.sh
+      - name: Use repaired APK verifier for the fixed tag build
+        run: install -m 755 verifier-fix/scripts/verify_android_release_apk.sh scripts/verify_android_release_apk.sh
 
       - name: Validate Android signing secrets
         shell: bash
