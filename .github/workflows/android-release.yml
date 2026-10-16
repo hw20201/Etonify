@@ -257,6 +257,28 @@ jobs:
           cp "$apk" "build/release-apk/${output}"
           ls -lah build/release-apk/*.apk
 
+      - name: Verify signed APK package, version and certificate before draft
+        shell: bash
+        env:
+          MINIMUM_UPGRADE_VERSION_CODE: "4046"
+          EXPECTED_RELEASE_CERT_SHA256: "f1e431ddbefe3496db75f264a0dd02472c7a4be704f8f78c7bd834c146f9f665"
+        run: |
+          set -euo pipefail
+          version_values="$(sed -nE 's/^version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)[[:space:]]*$/\1 \2/p' pubspec.yaml | head -n1)"
+          if [[ -z "$version_values" ]]; then
+            echo "::error title=Invalid version source::Could not read a numeric version and build number from pubspec.yaml."
+            exit 1
+          fi
+          read -r pubspec_version pubspec_build_number <<< "$version_values"
+          if [[ "$pubspec_version" != "$RELEASE_VERSION" ]]; then
+            echo "::error title=Version mismatch::APK source version $pubspec_version does not match tag version $RELEASE_VERSION."
+            exit 1
+          fi
+          scripts/verify_android_release_apk.sh \
+            "build/release-apk/etonify-v${RELEASE_VERSION}-arm64-v8a.apk" \
+            "$pubspec_version" "$pubspec_build_number" \
+            "$MINIMUM_UPGRADE_VERSION_CODE" "$EXPECTED_RELEASE_CERT_SHA256"
+
       - name: Create or update draft GitHub Release
         shell: bash
         env:
@@ -269,11 +291,16 @@ jobs:
           Signed Android arm64 APK built from ${source_sha}.
           This Release is a draft and has not been published.
           EOF
-          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+          if gh release view "${RELEASE_TAG}" --json isDraft --jq .isDraft >/tmp/release-draft-state.txt 2>/dev/null; then
+            if [[ "$(cat /tmp/release-draft-state.txt)" != "true" ]]; then
+              echo "::error title=Published release protected::Refusing to modify a non-draft release."
+              exit 1
+            fi
             gh release edit "${RELEASE_TAG}" --title "${RELEASE_TAG}" --notes-file "$notes_file" --draft
             gh release upload "${RELEASE_TAG}" build/release-apk/*.apk --clobber
           else
             gh release create "${RELEASE_TAG}" build/release-apk/*.apk \
+              --verify-tag \
               --draft \
               --title "${RELEASE_TAG}" \
               --notes-file "$notes_file"
