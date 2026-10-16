@@ -5957,6 +5957,18 @@ abstract class AppLocalizations {
   /// **'China rule data is unavailable. Rule mode remains active; unmatched traffic safely falls back to the proxy.'**
   String get routingModeChinaDataFailedHint;
 
+  /// No description provided for @googlePlayPresetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'China Play Store rules'**
+  String get googlePlayPresetTitle;
+
+  /// No description provided for @googlePlayPresetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Route Google Play apps and related domains through the selected proxy. SagerNet geosites download to cache and are refreshed daily; app-package and explicit-domain rules remain active if geosite data is unavailable. Rules mode only.'**
+  String get googlePlayPresetSubtitle;
+
   /// No description provided for @customRoutingRulesTitle.
   ///
   /// In en, this message translates to:

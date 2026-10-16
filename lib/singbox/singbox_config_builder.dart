@@ -5,6 +5,7 @@ import 'package:meow_client/core/lowest_proxy_groups.dart';
 import 'package:meow_client/core/proxy_selection_catalog.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/google_play_routing_preset.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/subscription/outbound_support.dart';
 import 'package:meow_client/data/subscription/outbound_schema.dart';
@@ -57,7 +58,10 @@ class SingboxConfigBuilder {
     this.adBlockAllowRuleSetPath,
     this.chinaGeositePath,
     this.chinaGeoipPath,
+    this.googlePlayGeositePath,
+    this.googleCnGeositePath,
     this.routingMode = TrafficRoutingMode.rules,
+    this.chinaPlayStorePresetEnabled = false,
     this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
@@ -104,7 +108,10 @@ class SingboxConfigBuilder {
   final String? adBlockAllowRuleSetPath;
   final String? chinaGeositePath;
   final String? chinaGeoipPath;
+  final String? googlePlayGeositePath;
+  final String? googleCnGeositePath;
   final TrafficRoutingMode routingMode;
+  final bool chinaPlayStorePresetEnabled;
   final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
@@ -191,6 +198,12 @@ class SingboxConfigBuilder {
       ...selectionCatalog.manualSelectionTags,
     }.toList(growable: false);
     final hasProxies = outboundTags.isNotEmpty;
+    final chinaPlayStorePresetActive =
+        rulesModeActive && chinaPlayStorePresetEnabled && hasProxies;
+    final googlePlayGeositesActive =
+        chinaPlayStorePresetActive &&
+        _validRuleSetPath(googlePlayGeositePath) &&
+        _validRuleSetPath(googleCnGeositePath);
     final normalizedSplitRoutingPackages = _normalizedSplitRoutingPackages();
     final tunSplitActive =
         vpnInboundEnabled &&
@@ -287,7 +300,8 @@ class SingboxConfigBuilder {
           ],
           if ((rulesModeActive &&
                   (chinaRouteDataActive ||
-                      activeCustomDomainRules.isNotEmpty)) ||
+                      activeCustomDomainRules.isNotEmpty ||
+                      chinaPlayStorePresetActive)) ||
               adBlockActive ||
               fakeIpActive)
             'rules': [
@@ -309,6 +323,24 @@ class SingboxConfigBuilder {
                       ? 'dns-direct'
                       : 'dns-remote',
                 ),
+              if (chinaPlayStorePresetActive)
+                {
+                  'package_name': googlePlayPresetPackageNames,
+                  'action': 'route',
+                  'server': 'dns-remote',
+                },
+              if (chinaPlayStorePresetActive)
+                {
+                  'domain_suffix': googlePlayPresetDomainSuffixes,
+                  'action': 'route',
+                  'server': 'dns-remote',
+                },
+              if (googlePlayGeositesActive)
+                {
+                  'rule_set': googlePlayPresetGeositeTags,
+                  'action': 'route',
+                  'server': 'dns-remote',
+                },
               if (chinaRouteDataActive)
                 {
                   'rule_set': 'cn-geosite-cn',
@@ -414,7 +446,7 @@ class SingboxConfigBuilder {
                   'strategy': 'prefer_ipv4',
                 }
               : 'dns-local',
-          if (chinaRouteDataActive || adBlockActive)
+          if (chinaRouteDataActive || adBlockActive || googlePlayGeositesActive)
             'rule_set': [
               if (chinaRouteDataActive) ...[
                 {
@@ -442,6 +474,20 @@ class SingboxConfigBuilder {
                   'tag': 'adblock-block',
                   'path': adBlockBlockRuleSetPath,
                 },
+              if (googlePlayGeositesActive) ...[
+                {
+                  'type': 'local',
+                  'tag': googlePlayPresetGeositeTag,
+                  'format': 'binary',
+                  'path': googlePlayGeositePath,
+                },
+                {
+                  'type': 'local',
+                  'tag': googleCnPresetGeositeTag,
+                  'format': 'binary',
+                  'path': googleCnGeositePath,
+                },
+              ],
             ],
           'rules': [
             {'action': 'sniff'},
@@ -469,6 +515,19 @@ class SingboxConfigBuilder {
                     ? 'direct'
                     : 'select',
               ),
+            if (chinaPlayStorePresetActive)
+              {
+                'package_name': googlePlayPresetPackageNames,
+                'outbound': 'select',
+              },
+            if (chinaPlayStorePresetActive)
+              {
+                'domain_suffix': googlePlayPresetDomainSuffixes,
+                'outbound': 'select',
+              },
+            if (googlePlayGeositesActive)
+              for (final tag in googlePlayPresetGeositeTags)
+                {'rule_set': tag, 'outbound': 'select'},
             if (rulesModeActive && bypassLocalNetwork)
               {'ip_is_private': true, 'outbound': 'direct'},
             if (adBlockAllowActive)

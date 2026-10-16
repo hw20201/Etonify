@@ -245,6 +245,21 @@ void main() {
     );
   });
 
+  test('Play Store preset defaults on and persists an explicit off value', () {
+    final store = _TestSettingsStore();
+    final defaults = store.mapState(const <String, dynamic>{});
+    expect(defaults.chinaPlayStorePresetEnabled, isTrue);
+
+    final disabled = defaults.copyWith(chinaPlayStorePresetEnabled: false);
+    final encoded = store.stateToMap(disabled);
+    expect(encoded['china_play_store_preset_enabled'], '0');
+    expect(store.mapState(encoded).chinaPlayStorePresetEnabled, isFalse);
+    expect(
+      store.stateToSafeExportMap(disabled)['china_play_store_preset_enabled'],
+      '0',
+    );
+  });
+
   test('persists and bounds notification traffic refresh seconds', () {
     final store = _TestSettingsStore();
     final state = store.mapState(const <String, dynamic>{

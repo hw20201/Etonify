@@ -285,12 +285,14 @@ void main() {
 
     final blockLeaks = controller.setBlockLeaks(!controller.blockLeaks);
     final adBlock = controller.setAdBlockEnabled(true);
+    final playStorePreset = controller.setChinaPlayStorePresetEnabled(false);
     final bypassLan = controller.setBypassLocalNetwork(
       !controller.bypassLocalNetwork,
     );
 
     expect(blockLeaks.forceFullServiceRestart, isTrue);
     expect(adBlock.forceFullServiceRestart, isTrue);
+    expect(playStorePreset.forceFullServiceRestart, isTrue);
     expect(bypassLan.forceFullServiceRestart, isTrue);
   });
 

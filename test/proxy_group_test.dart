@@ -8,6 +8,7 @@ import 'package:meow_client/core/proxy_selection_catalog.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/backup/etonify_backup_service.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
+import 'package:meow_client/data/routing/google_play_routing_preset.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/subscription/subscription_parser.dart';
 import 'package:meow_client/data/subscription/subscription_store.dart';
@@ -3331,6 +3332,154 @@ void main() {
   });
 
   test(
+    'Google Play preset proxies apps and domains before China direct rules',
+    () {
+      const subscription = Subscription(
+        id: 'google-play-routing',
+        name: 'Google Play routing',
+        url: 'https://example.com/sub',
+        outbounds: [
+          Outbound(
+            tag: 'node',
+            name: 'Node',
+            config: {
+              'type': 'vless',
+              'tag': 'node',
+              'server': 'node.example.com',
+              'server_port': 443,
+              'uuid': 'node-uuid',
+            },
+          ),
+        ],
+      );
+      final config = _defaultBuilder(
+        subscription,
+        chinaPlayStorePresetEnabled: true,
+        chinaGeositePath: _testRuleSetPath('geosite-cn.srs'),
+        chinaGeoipPath: _testRuleSetPath('geoip-cn.srs'),
+        googlePlayGeositePath: _testRuleSetPath('geosite-google-play.srs'),
+        googleCnGeositePath: _testRuleSetPath('geosite-google@cn.srs'),
+        customRoutingRules: [
+          CustomRoutingRule.create(
+            type: CustomRouteRuleType.domain,
+            value: 'dl.google.com',
+            action: CustomRouteAction.proxy,
+          ),
+        ],
+      ).build();
+
+      final route = (config['route'] as Map).cast<String, dynamic>();
+      final routeRules = (route['rules'] as List).cast<Map<dynamic, dynamic>>();
+      final playPackageIndex = routeRules.indexWhere(
+        (rule) =>
+            (rule['package_name'] as List?)?.contains('com.android.vending') ??
+            false,
+      );
+      final playDomainIndex = routeRules.indexWhere(
+        (rule) =>
+            (rule['domain_suffix'] as List?)?.contains('googleapis.cn') ??
+            false,
+      );
+      final geositeGoogleCnIndex = routeRules.indexWhere(
+        (rule) => rule['rule_set'] == googleCnPresetGeositeTag,
+      );
+      final chinaDomainIndex = routeRules.indexWhere(
+        (rule) => rule['rule_set'] == 'cn-geosite-cn',
+      );
+      final dlDomainIndex = routeRules.indexWhere(
+        (rule) =>
+            (rule['domain_suffix'] as List?)?.contains('dl.google.com') ??
+            false,
+      );
+
+      expect(route['final'], 'select');
+      expect(dlDomainIndex, lessThan(chinaDomainIndex));
+      expect(playPackageIndex, greaterThan(dlDomainIndex));
+      expect(playDomainIndex, greaterThan(playPackageIndex));
+      expect(geositeGoogleCnIndex, greaterThan(playDomainIndex));
+      expect(geositeGoogleCnIndex, lessThan(chinaDomainIndex));
+
+      final ruleSetTags = (route['rule_set'] as List)
+          .cast<Map<dynamic, dynamic>>()
+          .map((ruleSet) => ruleSet['tag'])
+          .toList();
+      expect(ruleSetTags, containsAll(googlePlayPresetGeositeTags));
+
+      final dnsRules = ((config['dns'] as Map)['rules'] as List)
+          .cast<Map<dynamic, dynamic>>();
+      final dnsGoogleCnIndex = dnsRules.indexWhere(
+        (rule) => rule['rule_set'] == googleCnPresetGeositeTag,
+      );
+      final dnsChinaIndex = dnsRules.indexWhere(
+        (rule) => rule['rule_set'] == 'cn-geosite-cn',
+      );
+      final dnsPlayPackageRule = dnsRules.firstWhere(
+        (rule) =>
+            (rule['package_name'] as List?)?.contains('com.android.vending') ??
+            false,
+      );
+      final dnsDlRule = dnsRules.firstWhere(
+        (rule) =>
+            (rule['domain_suffix'] as List?)?.contains('dl.google.com') ??
+            false,
+      );
+      expect(dnsGoogleCnIndex, lessThan(dnsChinaIndex));
+      expect(dnsPlayPackageRule['server'], 'dns-remote');
+      expect(dnsDlRule['server'], 'dns-remote');
+    },
+  );
+
+  test('Play preset remains VPN-safe when dynamic geosite cache is absent', () {
+    const subscription = Subscription(
+      id: 'google-play-routing-no-cache',
+      name: 'Google Play routing without geosite cache',
+      url: 'https://example.com/sub',
+      outbounds: [
+        Outbound(
+          tag: 'node',
+          name: 'Node',
+          config: {
+            'type': 'vless',
+            'tag': 'node',
+            'server': 'node.example.com',
+            'server_port': 443,
+            'uuid': 'node-uuid',
+          },
+        ),
+      ],
+    );
+    final config = _defaultBuilder(
+      subscription,
+      chinaPlayStorePresetEnabled: true,
+    ).build();
+    final route = (config['route'] as Map).cast<String, dynamic>();
+    final routeRules = (route['rules'] as List).cast<Map<dynamic, dynamic>>();
+    final tags = (route['rule_set'] as List? ?? const <Object>[])
+        .whereType<Map<dynamic, dynamic>>()
+        .map((ruleSet) => ruleSet['tag'])
+        .toList();
+
+    expect(
+      routeRules.any(
+        (rule) =>
+            (rule['package_name'] as List?)?.contains('com.android.vending') ??
+            false,
+      ),
+      isTrue,
+    );
+    expect(
+      routeRules.any(
+        (rule) =>
+            (rule['domain_suffix'] as List?)?.contains('googleapis.cn') ??
+            false,
+      ),
+      isTrue,
+    );
+    expect(tags, isNot(contains(googlePlayPresetGeositeTag)));
+    expect(tags, isNot(contains(googleCnPresetGeositeTag)));
+  });
+
+  test(
     'split routing is ignored without VPN TUN so proxy-only stays proxied',
     () {
       const subscription = Subscription(
@@ -4230,6 +4379,7 @@ SingboxConfigBuilder _defaultBuilder(
   String selectedProxyTag = '',
   bool markAllServersRussia = false,
   TrafficRoutingMode routingMode = TrafficRoutingMode.rules,
+  bool chinaPlayStorePresetEnabled = false,
   List<CustomRoutingRule> customRoutingRules = const <CustomRoutingRule>[],
   String urlTestUrl = 'https://www.gstatic.com/generate_204',
   int urlTestIntervalSeconds = 180,
@@ -4260,6 +4410,8 @@ SingboxConfigBuilder _defaultBuilder(
   String russiaDnsDirectResolver = defaultRussiaDnsDirectResolver,
   String? chinaGeositePath,
   String? chinaGeoipPath,
+  String? googlePlayGeositePath,
+  String? googleCnGeositePath,
   LibboxCapabilities capabilities = LibboxCapabilities.bundledLegacy,
 }) {
   return SingboxConfigBuilder(
@@ -4292,7 +4444,10 @@ SingboxConfigBuilder _defaultBuilder(
     adBlockAllowRuleSetPath: adBlockAllowRuleSetPath,
     chinaGeositePath: chinaGeositePath,
     chinaGeoipPath: chinaGeoipPath,
+    googlePlayGeositePath: googlePlayGeositePath,
+    googleCnGeositePath: googleCnGeositePath,
     routingMode: routingMode,
+    chinaPlayStorePresetEnabled: chinaPlayStorePresetEnabled,
     customRoutingRules: customRoutingRules,
     bypassLocalNetwork: true,
     splitRoutingMode: splitRoutingMode,

@@ -241,6 +241,7 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
     final routingMode = settings.routingMode;
     final splitRoutingMode = settings.splitRoutingMode;
     final adBlockEnabled = settings.adBlockEnabled;
+    final chinaPlayStorePresetEnabled = settings.chinaPlayStorePresetEnabled;
 
     final adBlockStatus = ref.watch(adBlockStatusProvider);
     final chinaRouteDataStatus = ref.watch(chinaRouteDataStatusProvider);
@@ -372,6 +373,24 @@ class _SettingsRoutingPageState extends ConsumerState<SettingsRoutingPage> {
                         : null,
                   ),
                 ],
+              ),
+            ),
+            const Gap(settingsIslandGap),
+            Card(
+              margin: EdgeInsets.zero,
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                secondary: SettingsLeadingIcon(
+                  icon: Icons.shopping_bag_outlined,
+                  color: cs.primary,
+                ),
+                title: Text(l10n.googlePlayPresetTitle),
+                subtitle: Text(l10n.googlePlayPresetSubtitle),
+                value: chinaPlayStorePresetEnabled,
+                onChanged: commands.setChinaPlayStorePresetEnabled,
               ),
             ),
             const Gap(settingsIslandGap),

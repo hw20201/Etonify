@@ -2,7 +2,7 @@ part of 'app_background_tasks.dart';
 
 // Bump when config generation/validation semantics change, even if the native
 // contract stays the same. Only one entry is retained, in private app storage.
-const _configCacheSchema = 4;
+const _configCacheSchema = 5;
 
 Future<String> singboxConfigFingerprintInBackground(
   SingboxConfigBuildInput input,
@@ -21,6 +21,8 @@ Future<String> _configFingerprint(
     input.adBlockAllowRuleSetPath,
     input.chinaGeositePath,
     input.chinaGeoipPath,
+    input.googlePlayGeositePath,
+    input.googleCnGeositePath,
   ].whereType<String>().where((path) => path.isNotEmpty).toSet()) {
     final file = File(path);
     rules[path] = await file.exists()
@@ -67,7 +69,10 @@ Future<String> _configFingerprint(
     'adBlockAllowRuleSetPath': input.adBlockAllowRuleSetPath,
     'chinaGeositePath': input.chinaGeositePath,
     'chinaGeoipPath': input.chinaGeoipPath,
+    'googlePlayGeositePath': input.googlePlayGeositePath,
+    'googleCnGeositePath': input.googleCnGeositePath,
     'routingMode': input.routingMode.storageValue,
+    'chinaPlayStorePresetEnabled': input.chinaPlayStorePresetEnabled,
     'customRoutingRules': input.customRoutingRules
         .map((rule) => rule.toJson())
         .toList(growable: false),

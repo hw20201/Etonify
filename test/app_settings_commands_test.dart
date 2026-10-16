@@ -16,6 +16,7 @@ void main() {
       var deleted = false;
       var refreshed = false;
       var routingMode = TrafficRoutingMode.rules;
+      var chinaPlayStorePresetEnabled = false;
       var preparedChinaData = false;
       List<CustomRoutingRule>? customRules;
       var directResolver = '';
@@ -41,6 +42,8 @@ void main() {
         },
         setTrafficRoutingMode: (TrafficRoutingMode value) =>
             routingMode = value,
+        setChinaPlayStorePresetEnabled: (value) =>
+            chinaPlayStorePresetEnabled = value,
         setCustomRoutingRules: (List<CustomRoutingRule> value) =>
             customRules = value,
         prepareChinaRouteData: () async {
@@ -76,6 +79,9 @@ void main() {
 
       commands.setTrafficRoutingMode(TrafficRoutingMode.global);
       expect(routingMode, TrafficRoutingMode.global);
+
+      commands.setChinaPlayStorePresetEnabled(true);
+      expect(chinaPlayStorePresetEnabled, isTrue);
 
       final customRule = CustomRoutingRule.create(
         type: CustomRouteRuleType.domain,

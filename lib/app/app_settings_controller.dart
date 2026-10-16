@@ -39,6 +39,7 @@ class AppSettingsImpactRegistry {
     'block leaks changed',
     'adblock changed',
     'traffic routing mode changed',
+    'Google Play preset changed',
     'custom routing rules changed',
     'bypass local network changed',
     'split routing mode changed',
@@ -172,6 +173,7 @@ class AppSettingsController {
   int locationLookupConcurrency = appSettingsStandardLocationLookupConcurrency;
   bool blockLeaks = false;
   bool adBlockEnabled = false;
+  bool chinaPlayStorePresetEnabled = true;
   TrafficRoutingMode routingMode = TrafficRoutingMode.rules;
   List<CustomRoutingRule> customRoutingRules = const <CustomRoutingRule>[];
   bool bypassLocalNetwork = true;
@@ -269,6 +271,7 @@ class AppSettingsController {
       locationLookupConcurrency: locationLookupConcurrency,
       blockLeaks: blockLeaks,
       adBlockEnabled: adBlockEnabled,
+      chinaPlayStorePresetEnabled: chinaPlayStorePresetEnabled,
       routingMode: routingMode,
       customRoutingRules: customRoutingRules,
       bypassLocalNetwork: bypassLocalNetwork,
@@ -365,6 +368,7 @@ class AppSettingsController {
         .toInt();
     blockLeaks = state.blockLeaks;
     adBlockEnabled = state.adBlockEnabled;
+    chinaPlayStorePresetEnabled = state.chinaPlayStorePresetEnabled;
     routingMode = state.routingMode;
     customRoutingRules = CustomRoutingRule.normalizeCustomRoutingRules(
       state.customRoutingRules,
@@ -948,6 +952,17 @@ class AppSettingsController {
     return const AppSettingsChange(
       changed: true,
       configReason: 'traffic routing mode changed',
+    );
+  }
+
+  AppSettingsChange setChinaPlayStorePresetEnabled(bool value) {
+    if (chinaPlayStorePresetEnabled == value) {
+      return const AppSettingsChange.none();
+    }
+    chinaPlayStorePresetEnabled = value;
+    return const AppSettingsChange(
+      changed: true,
+      configReason: 'Google Play preset changed',
     );
   }
 

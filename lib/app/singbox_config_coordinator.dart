@@ -134,7 +134,10 @@ class SingboxConfigCoordinatorSnapshot {
     required this.routeDataRelease,
     this.chinaGeositePath,
     this.chinaGeoipPath,
+    this.googlePlayGeositePath,
+    this.googleCnGeositePath,
     this.routingMode = TrafficRoutingMode.rules,
+    this.chinaPlayStorePresetEnabled = false,
     this.customRoutingRules = const <CustomRoutingRule>[],
     required this.bypassLocalNetwork,
     required this.splitRoutingMode,
@@ -186,7 +189,10 @@ class SingboxConfigCoordinatorSnapshot {
   final String? routeDataRelease;
   final String? chinaGeositePath;
   final String? chinaGeoipPath;
+  final String? googlePlayGeositePath;
+  final String? googleCnGeositePath;
   final TrafficRoutingMode routingMode;
+  final bool chinaPlayStorePresetEnabled;
   final List<CustomRoutingRule> customRoutingRules;
   final bool bypassLocalNetwork;
   final SplitRoutingMode splitRoutingMode;
@@ -1110,7 +1116,10 @@ class SingboxConfigCoordinator {
       adBlockAllowRuleSetPath: snapshot.adBlockAllowRuleSetPath,
       chinaGeositePath: snapshot.chinaGeositePath,
       chinaGeoipPath: snapshot.chinaGeoipPath,
+      googlePlayGeositePath: snapshot.googlePlayGeositePath,
+      googleCnGeositePath: snapshot.googleCnGeositePath,
       routingMode: snapshot.routingMode,
+      chinaPlayStorePresetEnabled: snapshot.chinaPlayStorePresetEnabled,
       customRoutingRules: snapshot.customRoutingRules,
       bypassLocalNetwork: snapshot.bypassLocalNetwork,
       splitRoutingMode: snapshot.splitRoutingMode,
