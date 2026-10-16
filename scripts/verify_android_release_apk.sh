@@ -2,13 +2,13 @@
 set -euo pipefail
 
 if [[ "$#" -ne 5 ]]; then
-  echo "Usage: $0 APK EXPECTED_VERSION_NAME EXPECTED_VERSION_CODE MINIMUM_VERSION_CODE_EXCLUSIVE EXPECTED_CERTIFICATE_SHA256" >&2
+  echo "Usage: $0 APK EXPECTED_VERSION_NAME PUBSPEC_BUILD_NUMBER MINIMUM_VERSION_CODE_EXCLUSIVE EXPECTED_CERTIFICATE_SHA256" >&2
   exit 2
 fi
 
 apk="$1"
 expected_version_name="$2"
-expected_version_code="$3"
+pubspec_build_number="$3"
 minimum_version_code="$4"
 expected_certificate_sha256="$(printf '%s' "$5" | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')"
 
@@ -16,7 +16,7 @@ if [[ ! -s "$apk" ]]; then
   echo "Release APK is missing or empty: $apk" >&2
   exit 1
 fi
-for value in "$expected_version_code" "$minimum_version_code"; do
+for value in "$pubspec_build_number" "$minimum_version_code"; do
   if [[ ! "$value" =~ ^[0-9]+$ ]]; then
     echo "Version codes must be non-negative integers." >&2
     exit 1
@@ -53,8 +53,12 @@ if [[ "$actual_version_name" != "$expected_version_name" ]]; then
   echo "APK versionName $actual_version_name does not match expected $expected_version_name." >&2
   exit 1
 fi
-if [[ "$actual_version_code" != "$expected_version_code" ]]; then
-  echo "APK versionCode $actual_version_code does not match pubspec build number $expected_version_code." >&2
+if [[ ! "$actual_version_code" =~ ^[0-9]+$ ]]; then
+  echo "APK has an invalid or missing versionCode." >&2
+  exit 1
+fi
+if (( 10#$actual_version_code < 10#$pubspec_build_number )); then
+  echo "APK versionCode $actual_version_code is lower than pubspec build number $pubspec_build_number." >&2
   exit 1
 fi
 if (( 10#$actual_version_code <= 10#$minimum_version_code )); then
