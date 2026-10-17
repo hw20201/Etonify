@@ -3355,4 +3355,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String runtimeDiagnosticsSaved(String uri) {
     return '诊断记录已保存：$uri';
   }
+
+  @override
+  String get latencyMeasurementModeTitle => '延迟测量方式';
+
+  @override
+  String get latencyMeasurementModeUnified => '统一 URLTest 测量';
+
+  @override
+  String get latencyMeasurementModeRealUrl => '真实 URL 测量';
+
+  @override
+  String get latencyMeasurementModeDescription =>
+      '仅影响手动测速及其显示；内核自动选路仍使用 URLTest。';
+
+  @override
+  String get realUrlLatencyDescription =>
+      '真实 URL 延迟通过指定节点执行 HTTPS GET 并获取小响应；总耗时包含排队/跨层调用、连接、TLS 和响应体（最多 64 KiB）。它与 URLTest 分开，仅用于手动测量，不影响自动选路。原生接口可能跟随最多 5 次 HTTPS 跳转。';
+
+  @override
+  String get sortByRealUrlLatency => '按真实 URL 延迟';
 }

@@ -7,6 +7,7 @@ import 'package:meow_client/data/update/app_update_channel.dart';
 import 'package:meow_client/features/settings/settings_dns_page.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/models/public_ip_source.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 
 void main() {
   test(
@@ -539,4 +540,40 @@ void main() {
     expect(controller.accentColorHex, equals('default'));
     expect(controller.setAccentColor('nonsense').changed, isFalse);
   });
+
+  test(
+    'latency measurement mode setter saves state and ignores same value',
+    () {
+      final controller = AppSettingsController();
+      expect(
+        controller.latencyMeasurementMode,
+        LatencyMeasurementMode.unifiedUrlTest,
+      );
+      expect(
+        controller
+            .setLatencyMeasurementMode(LatencyMeasurementMode.realUrl)
+            .changed,
+        isTrue,
+      );
+      expect(controller.latencyMeasurementMode, LatencyMeasurementMode.realUrl);
+      expect(
+        controller
+            .setLatencyMeasurementMode(LatencyMeasurementMode.realUrl)
+            .changed,
+        isFalse,
+      );
+      expect(
+        controller
+            .toState(
+              onboardingCompleted: false,
+              acceptedLegalVersion: '',
+              acceptedLegalAtMillis: null,
+              activeProfileId: '',
+              selectedProxyTag: '',
+            )
+            .latencyMeasurementMode,
+        LatencyMeasurementMode.realUrl,
+      );
+    },
+  );
 }

@@ -3558,4 +3558,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String runtimeDiagnosticsSaved(String uri) {
     return 'Диагностика сохранена: $uri';
   }
+
+  @override
+  String get latencyMeasurementModeTitle => 'Режим измерения задержки';
+
+  @override
+  String get latencyMeasurementModeUnified => 'Единое измерение URLTest';
+
+  @override
+  String get latencyMeasurementModeRealUrl => 'Измерение реального URL';
+
+  @override
+  String get latencyMeasurementModeDescription =>
+      'Влияет только на ручное измерение задержки и его отображение; автоматический выбор маршрута ядром по-прежнему использует URLTest.';
+
+  @override
+  String get realUrlLatencyDescription =>
+      'Задержка реального URL измеряется HTTPS GET с небольшим ответом через выбранный узел. Общее время включает очередь/межслойные вызовы, соединение, TLS и тело ответа (до 64 КиБ). Отдельно от URLTest; только ручные измерения, не влияет на автоматический выбор маршрута. Нативный интерфейс может следовать до 5 HTTPS-перенаправлениям.';
+
+  @override
+  String get sortByRealUrlLatency => 'Задержка реального URL';
 }

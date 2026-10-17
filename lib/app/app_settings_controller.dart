@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow_client/models/core_settings.dart';
 import 'package:meow_client/models/public_ip_source.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
@@ -136,6 +137,8 @@ class AppSettingsController {
   int notificationTrafficRefreshSeconds = 2;
   bool hideServerIp = false;
   PublicIpSource publicIpSource = PublicIpSource.ipQuery;
+  LatencyMeasurementMode latencyMeasurementMode =
+      LatencyMeasurementMode.unifiedUrlTest;
   bool sendHwidToProviders = true;
   String proxySort = 'source';
   bool progressiveBlurEnabled = false;
@@ -227,6 +230,7 @@ class AppSettingsController {
       notificationTrafficRefreshSeconds: notificationTrafficRefreshSeconds,
       hideServerIp: hideServerIp,
       publicIpSource: publicIpSource,
+      latencyMeasurementMode: latencyMeasurementMode,
       sendHwidToProviders: sendHwidToProviders,
       hwidDefaultNoticeShown: hwidDefaultNoticeShown,
       progressiveBlurEnabled: progressiveBlurEnabled,
@@ -307,6 +311,7 @@ class AppSettingsController {
     notificationTrafficRefreshSeconds = state.notificationTrafficRefreshSeconds;
     hideServerIp = state.hideServerIp;
     publicIpSource = state.publicIpSource;
+    latencyMeasurementMode = state.latencyMeasurementMode;
     sendHwidToProviders = state.sendHwidToProviders;
     hwidDefaultNoticeShown = state.hwidDefaultNoticeShown;
     SubscriptionFetcher.configureHwidSharing(sendHwidToProviders);
@@ -468,6 +473,12 @@ class AppSettingsController {
   AppSettingsChange setPublicIpSource(PublicIpSource value) {
     if (publicIpSource == value) return const AppSettingsChange.none();
     publicIpSource = value;
+    return const AppSettingsChange(changed: true);
+  }
+
+  AppSettingsChange setLatencyMeasurementMode(LatencyMeasurementMode value) {
+    if (latencyMeasurementMode == value) return const AppSettingsChange.none();
+    latencyMeasurementMode = value;
     return const AppSettingsChange(changed: true);
   }
 

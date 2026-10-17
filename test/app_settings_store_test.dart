@@ -7,6 +7,7 @@ import 'package:meow_client/data/local/app_settings_store.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 import 'package:meow_client/models/public_ip_source.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 
 void main() {
   test(
@@ -619,6 +620,29 @@ void main() {
     expect(shouldCompactAppSettingsBox(25, 25), isTrue);
     expect(shouldCompactAppSettingsBox(20, 25), isTrue);
     expect(shouldCompactAppSettingsBox(50, 50), isTrue);
+  });
+  test('latency measurement mode defaults, persists, restores and exports', () {
+    final store = _TestSettingsStore();
+    final defaults = store.mapState(const {});
+    expect(
+      defaults.latencyMeasurementMode,
+      LatencyMeasurementMode.unifiedUrlTest,
+    );
+    final selected = defaults.copyWith(
+      latencyMeasurementMode: LatencyMeasurementMode.realUrl,
+    );
+    final stored = store.stateToSafeExportMap(selected);
+    expect(stored['latency_measurement_mode'], 'realUrl');
+    expect(
+      store.mapState(stored).latencyMeasurementMode,
+      LatencyMeasurementMode.realUrl,
+    );
+    expect(
+      store.mapState(const {
+        'latency_measurement_mode': 'unknown',
+      }).latencyMeasurementMode,
+      LatencyMeasurementMode.unifiedUrlTest,
+    );
   });
 }
 

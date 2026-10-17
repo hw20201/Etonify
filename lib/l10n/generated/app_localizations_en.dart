@@ -3551,4 +3551,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String runtimeDiagnosticsSaved(String uri) {
     return 'Diagnostics saved: $uri';
   }
+
+  @override
+  String get latencyMeasurementModeTitle => 'Latency measurement';
+
+  @override
+  String get latencyMeasurementModeUnified => 'Unified URLTest measurement';
+
+  @override
+  String get latencyMeasurementModeRealUrl => 'Real URL measurement';
+
+  @override
+  String get latencyMeasurementModeDescription =>
+      'Only affects manual latency measurements and their display. Automatic core route selection continues to use URLTest.';
+
+  @override
+  String get realUrlLatencyDescription =>
+      'Real URL latency uses an HTTPS GET with a small response through the selected node. Total time includes queueing/cross-layer calls, connection, TLS, and response body (up to 64 KiB). Separate from URLTest; manual measurements only, no effect on automatic route selection. The native interface may follow up to 5 HTTPS redirects.';
+
+  @override
+  String get sortByRealUrlLatency => 'Real URL latency';
 }

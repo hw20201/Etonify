@@ -1,6 +1,6 @@
 # HTTPS 小响应测量器
 
-这是独立的开发测量工具，不接入 UI、生产下载或自动选路，不修改版本、路由、DNS 或系统代理。它测量小响应 HTTPS GET，不代表浏览器整页加载，也不是纯网络 RTT。
+本文首先介绍独立的命令行开发测量工具；应用内的模式选择见下节。命令行工具不接入生产下载或自动选路，不修改版本、路由、DNS 或系统代理。它测量小响应 HTTPS GET，不代表浏览器整页加载，也不是纯网络 RTT。
 
 ## 两组数字不能混在一起
 
@@ -43,3 +43,11 @@
 `test/https_latency_probe_test.dart` 使用本地 TLS 服务，覆盖成功与复用、服务端关闭导致重连、拒绝不受信证书、禁止重定向、声明/流式超限、响应头/响应体整体超时及输入边界。`test/fixtures/https_probe/` 的证书和私钥仅为公开的 localhost 测试夹具，绝不能用于生产；只有测试 client 明确信任它，不关闭证书校验。
 
 参考：[Dart HttpClient](https://api.dart.dev/dart-io/HttpClient-class.html)（HTTPS、持久连接与默认环境代理）、[HttpConnectionInfo](https://api.dart.dev/dart-io/HttpConnectionInfo-class.html)（连接信息）。
+
+## 应用内：通用 → 延迟测量方式
+
+默认保留“统一 URLTest 测量”，使用现有 sing-box HEAD 测量和自动选路逻辑。可改选“真实 URL 测量”，手动的全量、组和单节点测速使用现有 `fetchUrlViaOutbound` 发送 HTTPS GET，指定被测节点，不修改 selector、路由规则、DNS 或系统代理，也不回退直连。未连接时复用无入站的临时 probe runtime；连接 VPN 时可暂停并在新 runtime 上续测。
+
+真实模式记录一次完整的小响应 GET 总耗时，包含原生请求排队、跨层调用、节点连接、TLS、服务端处理与响应体读取；不是浏览器整页时间、纯 RTT 或已确认连接复用的 warm 值。每次请求使用新的 HTTP transport；原生实现最多跟随 5 次跳转，禁止 HTTPS 降级到 HTTP。仅 2xx 成功，响应上限 64 KiB，每请求超时限制为 1–30 秒，并发限制为 1–10。沿用当前配置的测试地址（订阅值优先），只接受不带用户信息、query 或 fragment 的 HTTPS 地址；不满足条件时显示失败，不偷偷换目标。
+
+两种模式各自显示结果，不把 GET 结果写入 URLTest 历史、订阅历史延迟或内核自动选路。真实结果仅保留在当前进程，按配置版本、订阅和物理网络隔离；测量方式设置会持久化。切换模式取消旧任务，清空真实结果；取消不能中断已送入原生的单次 GET，但会停止派发后续任务，并丢弃迟到结果。内核自动 URLTest 与通知栏仍保持既有口径。

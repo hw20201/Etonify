@@ -25,6 +25,8 @@ import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 import 'package:meow_client/features/proxies/proxy_list_ordering.dart';
 import 'package:meow_client/features/proxies/proxy_latency_button.dart';
 import 'package:meow_client/features/proxies/proxy_panel_shell.dart';
+import 'package:meow_client/features/proxies/latency_measurement_scope.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 
 part 'proxies_page_chains.dart';
 part 'proxies_page_group_sheet.dart';
@@ -57,9 +59,16 @@ Duration _runtimeResortInterval(int proxyCount) {
 
 enum _ProxyChainAction { edit, rename, remove }
 
-String _proxySortLabel(AppLocalizations l10n, ProxySort sort) => switch (sort) {
+String _proxySortLabel(
+  AppLocalizations l10n,
+  ProxySort sort,
+  LatencyMeasurementMode mode,
+) => switch (sort) {
   ProxySort.source => l10n.sortByDefault,
-  ProxySort.latency => l10n.sortByLatency,
+  ProxySort.latency =>
+    mode == LatencyMeasurementMode.realUrl
+        ? l10n.sortByRealUrlLatency
+        : l10n.sortByLatency,
   ProxySort.working => l10n.sortByWorking,
   ProxySort.name => l10n.sortByName,
   ProxySort.country => l10n.sortByCountry,
@@ -144,8 +153,13 @@ Future<void> _showProxySortPicker(
   BuildContext context, {
   required AppLocalizations l10n,
   required ProxySort current,
+  LatencyMeasurementMode? latencyMeasurementMode,
   required ValueChanged<ProxySort> onSelected,
 }) async {
+  final effectiveMode =
+      latencyMeasurementMode ??
+      LatencyMeasurementScope.maybeOf(context) ??
+      LatencyMeasurementMode.unifiedUrlTest;
   final result = await showModalBottomSheet<ProxySort>(
     context: context,
     showDragHandle: true,
@@ -173,7 +187,7 @@ Future<void> _showProxySortPicker(
                       RadioListTile<ProxySort>(
                         value: sort,
                         secondary: Icon(_proxySortIcon(sort)),
-                        title: Text(_proxySortLabel(l10n, sort)),
+                        title: Text(_proxySortLabel(l10n, sort, effectiveMode)),
                         contentPadding: EdgeInsets.zero,
                       ),
                   ],
@@ -961,6 +975,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
   }
 
   Future<void> _openGroupOutbounds(AppProxySummary group, Rect _) async {
+    final measurementMode =
+        LatencyMeasurementScope.maybeOf(context) ??
+        LatencyMeasurementMode.unifiedUrlTest;
     final children = _groupChildren(group);
     if (children.isEmpty) {
       return;
@@ -984,38 +1001,41 @@ class _ProxiesPageState extends State<ProxiesPage> {
         transitionDuration: const Duration(milliseconds: 440),
         reverseTransitionDuration: const Duration(milliseconds: 500),
         pageBuilder: (context, animation, secondaryAnimation) =>
-            ValueListenableBuilder<_GroupPanelSnapshot?>(
-              valueListenable: _groupPanelSnapshot,
-              builder: (context, snapshot, _) {
-                if (snapshot == null) return const SizedBox.shrink();
-                return _GroupOutboundsSheet(
-                  group: snapshot.groupFor(group.tag) ?? group,
-                  children: snapshot.childrenByTag[group.tag] ?? children,
-                  groupChildrenByTag: snapshot.childrenByTag,
-                  selectedTag: snapshot.selectedTag,
-                  progressiveBlurEnabled: widget.progressiveBlurEnabled,
-                  runtimeStates: widget.runtimeStates,
-                  routeAnimation: animation,
-                  onSelected: widget.onSelected,
-                  onProxyUrlTest: widget.connected
-                      ? widget.onProxyUrlTest
-                      : null,
-                  onVisibleProxyNeedsLocation: widget.connected
-                      ? widget.onVisibleProxyNeedsLocation
-                      : null,
-                  outboundForTag: widget.outboundForTag,
-                  initialSort: _sort,
-                  onSortChanged: (value) {
-                    if (_sort != value && mounted) {
-                      setState(() {
-                        _sort = value;
-                        _rebuildVisibleItems();
-                      });
-                    }
-                    widget.onSortChanged?.call(value);
-                  },
-                );
-              },
+            LatencyMeasurementScope(
+              mode: measurementMode,
+              child: ValueListenableBuilder<_GroupPanelSnapshot?>(
+                valueListenable: _groupPanelSnapshot,
+                builder: (context, snapshot, _) {
+                  if (snapshot == null) return const SizedBox.shrink();
+                  return _GroupOutboundsSheet(
+                    group: snapshot.groupFor(group.tag) ?? group,
+                    children: snapshot.childrenByTag[group.tag] ?? children,
+                    groupChildrenByTag: snapshot.childrenByTag,
+                    selectedTag: snapshot.selectedTag,
+                    progressiveBlurEnabled: widget.progressiveBlurEnabled,
+                    runtimeStates: widget.runtimeStates,
+                    routeAnimation: animation,
+                    onSelected: widget.onSelected,
+                    onProxyUrlTest: widget.connected
+                        ? widget.onProxyUrlTest
+                        : null,
+                    onVisibleProxyNeedsLocation: widget.connected
+                        ? widget.onVisibleProxyNeedsLocation
+                        : null,
+                    outboundForTag: widget.outboundForTag,
+                    initialSort: _sort,
+                    onSortChanged: (value) {
+                      if (_sort != value && mounted) {
+                        setState(() {
+                          _sort = value;
+                          _rebuildVisibleItems();
+                        });
+                      }
+                      widget.onSortChanged?.call(value);
+                    },
+                  );
+                },
+              ),
             ),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return child;
@@ -1122,6 +1142,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
               context,
               l10n: l10n,
               current: _sort,
+              latencyMeasurementMode:
+                  LatencyMeasurementScope.maybeOf(context) ??
+                  LatencyMeasurementMode.unifiedUrlTest,
               onSelected: _setSort,
             ),
             icon: const Icon(FluentIcons.arrow_sort_24_regular),

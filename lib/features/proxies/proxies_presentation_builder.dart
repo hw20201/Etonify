@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:meow_client/features/proxies/proxies_page.dart';
+import 'package:meow_client/features/proxies/latency_measurement_scope.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 import 'package:meow_client/features/proxies/proxy_panel_shell.dart';
 import 'package:meow_client/models/app_view_models.dart';
 import 'package:meow_client/models/proxy_runtime_visual_state.dart';
@@ -30,6 +32,7 @@ class ProxiesPresentationData {
     required this.progressiveBlurEnabled,
     required this.runtimeStates,
     this.proxyListLoading = false,
+    this.latencyMeasurementMode = LatencyMeasurementMode.unifiedUrlTest,
   });
 
   final String profileId;
@@ -52,6 +55,7 @@ class ProxiesPresentationData {
   final bool progressiveBlurEnabled;
   final ProxyRuntimeVisualStore runtimeStates;
   final bool proxyListLoading;
+  final LatencyMeasurementMode latencyMeasurementMode;
 
   double get speedBytesPerSecond =>
       connected && trafficAvailable ? downlinkBytesPerSecond.toDouble() : 0;
@@ -112,48 +116,52 @@ class ProxiesPresentationBuilder {
     required ScrollController scrollController,
     required ProxyPanelGestures panelGestures,
   }) {
-    return ProxiesPage(
-      profileId: data.profileId,
-      proxies: data.proxies,
-      groupChildrenByTag: data.groupChildrenByTag,
-      selectedTag: data.selectedTag,
-      activeProxy: data.activeProxy,
-      connected: data.connected,
-      serverCount: data.serverCount,
-      urlTestInFlight: data.urlTestInFlight,
-      urlTestInFlightListenable: data.urlTestInFlightListenable,
-      urlTestProgressListenable: data.urlTestProgressListenable,
-      hapticEnabled: data.hapticEnabled,
-      speedBytesPerSecond: data.speedBytesPerSecond,
-      trafficBytes: data.trafficBytes,
-      trafficListenable: data.trafficListenable,
-      initialSort: data.initialSort,
-      onSortChanged: callbacks.changeSort,
-      progressiveBlurEnabled: data.progressiveBlurEnabled,
-      onSelected: callbacks.selectProxy,
-      onUrlTest: callbacks.runUrlTest,
-      onProxyUrlTest: callbacks.runProxyUrlTest,
-      onVisibleProxyNeedsLocation: callbacks.resolveVisibleProxyLocation,
-      outboundForTag: callbacks.outboundForTag,
-      loadProxyChainTargetSources: callbacks.loadProxyChainTargetSources,
-      loadProxyChainTargetsForSource: callbacks.loadProxyChainTargetsForSource,
-      onAddProxyChain: callbacks.addProxyChain,
-      onChangeProxyChainDetour: callbacks.changeProxyChainDetour,
-      onRenameProxyChain: callbacks.renameProxyChain,
-      onRemoveProxyChain: callbacks.removeProxyChain,
-      isProxyChainTag: callbacks.isProxyChainTag,
-      runtimeStates: data.runtimeStates,
-      loading: data.proxyListLoading,
-      embedded: true,
-      sheetMetricsListenable: panelMetricsListenable,
-      scrollController: scrollController,
-      sheetAtMaxExtent: panelMetrics.atMaxExtent,
-      sheetCanFillScreen: panelMetrics.canFillScreen,
-      sheetExtent: panelMetrics.progress,
-      collapsedSheetExtent: 0,
-      expandedHeaderExtent: 1,
-      sheetCornerRadius: proxyPanelScreenCornerRadius,
-      onHeaderTap: panelGestures.onHeaderTap,
+    return LatencyMeasurementScope(
+      mode: data.latencyMeasurementMode,
+      child: ProxiesPage(
+        profileId: data.profileId,
+        proxies: data.proxies,
+        groupChildrenByTag: data.groupChildrenByTag,
+        selectedTag: data.selectedTag,
+        activeProxy: data.activeProxy,
+        connected: data.connected,
+        serverCount: data.serverCount,
+        urlTestInFlight: data.urlTestInFlight,
+        urlTestInFlightListenable: data.urlTestInFlightListenable,
+        urlTestProgressListenable: data.urlTestProgressListenable,
+        hapticEnabled: data.hapticEnabled,
+        speedBytesPerSecond: data.speedBytesPerSecond,
+        trafficBytes: data.trafficBytes,
+        trafficListenable: data.trafficListenable,
+        initialSort: data.initialSort,
+        onSortChanged: callbacks.changeSort,
+        progressiveBlurEnabled: data.progressiveBlurEnabled,
+        onSelected: callbacks.selectProxy,
+        onUrlTest: callbacks.runUrlTest,
+        onProxyUrlTest: callbacks.runProxyUrlTest,
+        onVisibleProxyNeedsLocation: callbacks.resolveVisibleProxyLocation,
+        outboundForTag: callbacks.outboundForTag,
+        loadProxyChainTargetSources: callbacks.loadProxyChainTargetSources,
+        loadProxyChainTargetsForSource:
+            callbacks.loadProxyChainTargetsForSource,
+        onAddProxyChain: callbacks.addProxyChain,
+        onChangeProxyChainDetour: callbacks.changeProxyChainDetour,
+        onRenameProxyChain: callbacks.renameProxyChain,
+        onRemoveProxyChain: callbacks.removeProxyChain,
+        isProxyChainTag: callbacks.isProxyChainTag,
+        runtimeStates: data.runtimeStates,
+        loading: data.proxyListLoading,
+        embedded: true,
+        sheetMetricsListenable: panelMetricsListenable,
+        scrollController: scrollController,
+        sheetAtMaxExtent: panelMetrics.atMaxExtent,
+        sheetCanFillScreen: panelMetrics.canFillScreen,
+        sheetExtent: panelMetrics.progress,
+        collapsedSheetExtent: 0,
+        expandedHeaderExtent: 1,
+        sheetCornerRadius: proxyPanelScreenCornerRadius,
+        onHeaderTap: panelGestures.onHeaderTap,
+      ),
     );
   }
 }

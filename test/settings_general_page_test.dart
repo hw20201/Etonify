@@ -5,6 +5,7 @@ import 'package:meow_client/features/settings/settings_general_page.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/models/public_ip_source.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 
 Widget _generalSettingsApp({
   required bool statusNotificationEnabled,
@@ -19,6 +20,11 @@ Widget _generalSettingsApp({
   ValueChanged<bool>? onAutoConnectChanged,
   PublicIpSource currentPublicIpSource = PublicIpSource.ipQuery,
   ValueChanged<PublicIpSource>? onPublicIpSourceChanged,
+  LatencyMeasurementMode latencyMeasurementMode =
+      LatencyMeasurementMode.unifiedUrlTest,
+  ValueChanged<LatencyMeasurementMode>? onLatencyMeasurementModeChanged,
+  Future<bool> Function(LatencyMeasurementMode)?
+  onLatencyMeasurementModeRequested,
   VoidCallback? onAddQuickSettingsTile,
 }) {
   return MaterialApp(
@@ -36,6 +42,9 @@ Widget _generalSettingsApp({
       currentHideServerIp: false,
       currentPublicIpSource: currentPublicIpSource,
       onPublicIpSourceChanged: onPublicIpSourceChanged,
+      currentLatencyMeasurementMode: latencyMeasurementMode,
+      onLatencyMeasurementModeChanged: onLatencyMeasurementModeChanged,
+      onLatencyMeasurementModeRequested: onLatencyMeasurementModeRequested,
       currentSendHwidToProviders: currentSendHwidToProviders,
       onSendHwidToProvidersChanged: onHwidChanged,
       currentAutoConnectOnLaunch: autoConnectOnLaunch,
@@ -114,6 +123,57 @@ void main() {
     expect(find.text('ipwho.is'), findsOneWidget);
   });
 
+  testWidgets(
+    'async mode failure preserves selection; accepted switch updates it',
+    (tester) async {
+      var accepted = false;
+      final changes = <LatencyMeasurementMode>[];
+      await tester.pumpWidget(
+        _generalSettingsApp(
+          statusNotificationEnabled: true,
+          onLatencyMeasurementModeChanged: changes.add,
+          onLatencyMeasurementModeRequested: (_) async => accepted,
+        ),
+      );
+      final tile = find.byKey(const ValueKey('latency-measurement-mode'));
+      await tester.ensureVisible(tile);
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Real URL measurement').last);
+      await tester.pumpAndSettle();
+      expect(changes, isEmpty);
+      expect(find.text('Unified URLTest measurement'), findsOneWidget);
+      accepted = true;
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Real URL measurement').last);
+      await tester.pumpAndSettle();
+      expect(changes, [LatencyMeasurementMode.realUrl]);
+      expect(find.text('Real URL measurement'), findsOneWidget);
+    },
+  );
+  testWidgets('latency mode selector updates selection immediately', (
+    tester,
+  ) async {
+    final selections = <LatencyMeasurementMode>[];
+    await tester.pumpWidget(
+      _generalSettingsApp(
+        statusNotificationEnabled: true,
+        onLatencyMeasurementModeChanged: selections.add,
+      ),
+    );
+    final tile = find.byKey(const ValueKey('latency-measurement-mode'));
+    await tester.ensureVisible(tile);
+    await tester.pumpAndSettle();
+    expect(find.text('Unified URLTest measurement'), findsOneWidget);
+    await tester.tap(tile);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Real URL measurement').last);
+    await tester.pumpAndSettle();
+    expect(selections, [LatencyMeasurementMode.realUrl]);
+    expect(find.text('Real URL measurement'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets(
     'HWID switch defaults to true, updates immediately and remains readable in Russian',
     (tester) async {

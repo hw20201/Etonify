@@ -2,6 +2,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meow_client/app/offline_url_test_session.dart';
 
 void main() {
+  test('real URL results never suppress the automatic URLTest scheduler', () {
+    final session = OfflineUrlTestSession(
+      id: 'real',
+      realUrlMeasurement: true,
+      fingerprint: 'config',
+      physicalNetworkEpoch: 1,
+      tags: {'a'},
+    )..runOffline();
+    session.accept(
+      tag: 'a',
+      delayMillis: 123,
+      available: true,
+      logicalSessionId: 'real',
+      physicalNetworkEpoch: 1,
+    );
+    expect(session.isTerminal, isTrue);
+    expect(
+      session.suppressesAutomaticCheck(
+        reason: 'selection',
+        physicalNetworkEpoch: 1,
+      ),
+      isFalse,
+    );
+  });
+
   test(
     'offline progress keeps the full catalog when the queue skips a leaf',
     () {

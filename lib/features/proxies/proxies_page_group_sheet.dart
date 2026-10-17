@@ -666,6 +666,9 @@ class _GroupOutboundsSheetHeader extends StatelessWidget {
                 onPressed: () => _showProxySortPicker(
                   context,
                   l10n: l10n,
+                  latencyMeasurementMode:
+                      LatencyMeasurementScope.maybeOf(context) ??
+                      LatencyMeasurementMode.unifiedUrlTest,
                   current: sort,
                   onSelected: onSortSelected,
                 ),

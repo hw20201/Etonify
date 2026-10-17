@@ -78,6 +78,9 @@ class ProxyTile extends StatelessWidget {
         : (theme.brightness == Brightness.dark
               ? Colors.orange
               : Colors.deepOrangeAccent);
+    final latencyMode =
+        LatencyMeasurementScope.maybeOf(context) ??
+        LatencyMeasurementMode.unifiedUrlTest;
     final latencyContent = _ProxyLatencyLabel(
       text: latencyText,
       color: delayColor,
@@ -91,6 +94,8 @@ class ProxyTile extends StatelessWidget {
           ? _latencyErrorTooltip(latencyError)
           : hasNoLatencyResult
           ? l10n.proxyLatencyNoResultDescription
+          : latencyMode == LatencyMeasurementMode.realUrl
+          ? l10n.realUrlLatencyDescription
           : l10n.proxyLatencyMeasurementDescription,
     );
 

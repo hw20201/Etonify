@@ -25,6 +25,7 @@ class OfflineUrlTestMeasurement {
 class OfflineUrlTestSession {
   OfflineUrlTestSession({
     required this.id,
+    this.realUrlMeasurement = false,
     required this.fingerprint,
     required this.physicalNetworkEpoch,
     required Set<String> tags,
@@ -44,6 +45,7 @@ class OfflineUrlTestSession {
   }
 
   final String id;
+  final bool realUrlMeasurement;
   final String fingerprint;
   final Set<String> _tags;
   // A runtime can skip an unusable leaf without changing the catalog size.
@@ -88,6 +90,7 @@ class OfflineUrlTestSession {
     required String reason,
     required int physicalNetworkEpoch,
   }) =>
+      !realUrlMeasurement &&
       phase == OfflineUrlTestPhase.completed &&
       this.physicalNetworkEpoch == physicalNetworkEpoch &&
       (reason == 'runtime_diagnostics_ready' ||

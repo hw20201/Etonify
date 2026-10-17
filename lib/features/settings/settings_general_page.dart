@@ -5,6 +5,7 @@ import 'package:meow_client/features/settings/settings_notification_page.dart';
 import 'package:meow_client/features/settings/battery_optimization_tile.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/models/public_ip_source.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 import 'package:meow_client/features/settings/subscription_background_tile.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
@@ -71,6 +72,9 @@ class SettingsGeneralPage extends StatelessWidget {
     required this.currentHideServerIp,
     this.currentPublicIpSource = PublicIpSource.ipQuery,
     this.onPublicIpSourceChanged,
+    this.currentLatencyMeasurementMode = LatencyMeasurementMode.unifiedUrlTest,
+    this.onLatencyMeasurementModeChanged,
+    this.onLatencyMeasurementModeRequested,
     this.currentSendHwidToProviders = true,
     this.onSendHwidToProvidersChanged,
     this.currentAutoConnectOnLaunch = false,
@@ -99,6 +103,10 @@ class SettingsGeneralPage extends StatelessWidget {
   final bool currentHideServerIp;
   final PublicIpSource currentPublicIpSource;
   final ValueChanged<PublicIpSource>? onPublicIpSourceChanged;
+  final LatencyMeasurementMode currentLatencyMeasurementMode;
+  final ValueChanged<LatencyMeasurementMode>? onLatencyMeasurementModeChanged;
+  final Future<bool> Function(LatencyMeasurementMode)?
+  onLatencyMeasurementModeRequested;
   final bool currentSendHwidToProviders;
   final ValueChanged<bool>? onSendHwidToProvidersChanged;
   final bool currentAutoConnectOnLaunch;
@@ -281,6 +289,11 @@ class SettingsGeneralPage extends StatelessWidget {
                     value: currentPublicIpSource,
                     onChanged: onPublicIpSourceChanged,
                   ),
+                  _LatencyMeasurementModeTile(
+                    value: currentLatencyMeasurementMode,
+                    onChanged: onLatencyMeasurementModeChanged,
+                    onRequested: onLatencyMeasurementModeRequested,
+                  ),
                   if (showBatteryOptimizationSettings)
                     const BatteryOptimizationTile(),
                   if (showQuickSettingsTileAction)
@@ -358,6 +371,107 @@ class SettingsGeneralPage extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Section label
 // ---------------------------------------------------------------------------
+
+class _LatencyMeasurementModeTile extends StatefulWidget {
+  const _LatencyMeasurementModeTile({
+    required this.value,
+    this.onChanged,
+    this.onRequested,
+  });
+  final LatencyMeasurementMode value;
+  final ValueChanged<LatencyMeasurementMode>? onChanged;
+  final Future<bool> Function(LatencyMeasurementMode)? onRequested;
+  @override
+  State<_LatencyMeasurementModeTile> createState() =>
+      _LatencyMeasurementModeTileState();
+}
+
+class _LatencyMeasurementModeTileState
+    extends State<_LatencyMeasurementModeTile> {
+  late LatencyMeasurementMode _value = widget.value;
+  bool _busy = false;
+  @override
+  void didUpdateWidget(covariant _LatencyMeasurementModeTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) _value = widget.value;
+  }
+
+  String _label(AppLocalizations l10n) => switch (_value) {
+    LatencyMeasurementMode.unifiedUrlTest => l10n.latencyMeasurementModeUnified,
+    LatencyMeasurementMode.realUrl => l10n.latencyMeasurementModeRealUrl,
+  };
+  Future<void> _select(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await showModalBottomSheet<LatencyMeasurementMode>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => _RadioSheet<LatencyMeasurementMode>(
+        title: l10n.latencyMeasurementModeTitle,
+        current: _value,
+        items: [
+          RadioChoice(
+            value: LatencyMeasurementMode.unifiedUrlTest,
+            label: l10n.latencyMeasurementModeUnified,
+          ),
+          RadioChoice(
+            value: LatencyMeasurementMode.realUrl,
+            label: l10n.latencyMeasurementModeRealUrl,
+          ),
+        ],
+      ),
+    );
+    if (result == null || !mounted) return;
+    if (result == _value || _busy) return;
+    final request = widget.onRequested;
+    if (request != null) {
+      setState(() => _busy = true);
+      var accepted = false;
+      try {
+        accepted = await request(result);
+      } finally {
+        if (mounted) setState(() => _busy = false);
+      }
+      if (!mounted || !accepted) return;
+    }
+    widget.onChanged?.call(result);
+    setState(() => _value = result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final color = theme.colorScheme;
+    return ListTile(
+      key: const ValueKey('latency-measurement-mode'),
+      leading: SettingsLeadingIcon(
+        icon: Icons.speed_rounded,
+        color: color.primary,
+      ),
+      title: Text(l10n.latencyMeasurementModeTitle),
+      subtitle: Text(l10n.latencyMeasurementModeDescription),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 138,
+            child: Text(
+              _label(l10n),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: color.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const Icon(Icons.chevron_right_rounded),
+        ],
+      ),
+      onTap: _busy ? null : () => _select(context),
+    );
+  }
+}
 
 class _PublicIpSourceTile extends StatefulWidget {
   const _PublicIpSourceTile({required this.value, required this.onChanged});

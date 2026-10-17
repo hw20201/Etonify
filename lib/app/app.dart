@@ -22,6 +22,8 @@ import 'package:meow_client/app/coordinators/app_traffic_monitor.dart';
 import 'package:meow_client/app/coordinators/deep_link_import_coordinator.dart';
 import 'package:meow_client/app/group_url_test_scheduler.dart';
 import 'package:meow_client/app/latency_coordinator.dart';
+import 'package:meow_client/app/real_url_latency_controller.dart';
+import 'package:meow_client/models/latency_measurement_mode.dart';
 import 'package:meow_client/app/latency_dependencies.dart';
 import 'package:meow_client/app/network_recovery_controller.dart';
 import 'package:meow_client/app/offline_url_test_session.dart';
@@ -432,9 +434,17 @@ class _MeowClientState extends ConsumerState<MeowClient>
       _settings.experimentalUrlTestStrictTolerance;
   bool get _experimentalFakeIpEnabled => _settings.experimentalFakeIpEnabled;
 
-  bool get _urlTestInFlight =>
-      _urlTestInFlightNotifier.value ||
-      ref.read(proxyLatencySessionProvider).running;
+  bool get _useRealUrlMeasurement =>
+      _settings.latencyMeasurementMode == LatencyMeasurementMode.realUrl;
+  late final RealUrlLatencyController _realUrlLatency;
+  bool _latencyModeSwitching = false;
+  int _realUrlRunGeneration = 0;
+  Object? _realUrlResultScope;
+  bool _realUrlPreparing = false;
+  bool get _urlTestInFlight => _useRealUrlMeasurement
+      ? _realUrlPreparing || _realUrlLatency.isRunning
+      : _urlTestInFlightNotifier.value ||
+            ref.read(proxyLatencySessionProvider).running;
 
   int? get _lowestLatency => _proxyRuntime.lowestLatency;
   set _lowestLatency(int? value) => _proxyRuntime.lowestLatency = value;
@@ -780,7 +790,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
   }
 
   AppProxySummary? get _displayProxy {
-    return _displayProxyCache;
+    final proxy = _displayProxyCache;
+    return proxy != null && _useRealUrlMeasurement
+        ? _realUrlPresentation(proxy)
+        : proxy;
   }
 
   List<AppProxySummary> get _activeProxies {
@@ -791,7 +804,36 @@ class _MeowClientState extends ConsumerState<MeowClient>
     return _activeGroupChildrenByTagCache;
   }
 
+  AppProxySummary _realUrlPresentation(AppProxySummary proxy) {
+    final target =
+        proxy.selectedChildTag ??
+        (isLowestProxyTag(proxy.tag)
+            ? _runtimeLowestOutboundTagFor(proxy.tag)
+            : latencyTargetTag(proxy.tag, _runtimeGroupSelections)) ??
+        proxy.tag;
+    final resolvedTarget =
+        latencyTargetTag(target, _runtimeGroupSelections) ?? target;
+    final sameScope =
+        _realUrlResultScope ==
+        (
+          _activeProfileId,
+          _activeSubscription?.payloadRevision,
+          _physicalNetworkEpoch,
+        );
+    final result = sameScope ? _realUrlLatency.results[resolvedTarget] : null;
+    return proxy.copyWith(
+      latency: result?.delayMs,
+      clearLatency: result?.delayMs == null,
+      latencyFresh: result?.delayMs != null,
+      latencyChecking: sameScope && _realUrlLatency.isChecking(resolvedTarget),
+      latencyUnavailable: result != null && result.delayMs == null,
+      latencyError: result?.error,
+      clearLatencyError: result?.error == null,
+    );
+  }
+
   ProxyRuntimeVisualState _runtimeVisualStateFor(AppProxySummary proxy) {
+    if (_useRealUrlMeasurement) proxy = _realUrlPresentation(proxy);
     final selecting =
         _connected &&
         _proxySelection.pendingRuntimeSelectTag != null &&
@@ -2170,6 +2212,9 @@ class _MeowClientState extends ConsumerState<MeowClient>
         outboundTag: outboundTag,
       ),
     );
+    _realUrlLatency = RealUrlLatencyController(
+      fetch: _singboxRuntime.fetchUrlViaOutbound,
+    );
     _latencyCoordinator = LatencyCoordinator(
       runTest: (request) => _singboxRuntime.urlTest(
         groupTag: request.groupTag,
@@ -2240,8 +2285,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
           _flushPendingLatestPings();
         }
         _fullUrlTestSessionRunning = fullSessionRunning;
-        _urlTestInFlightNotifier.value =
-            running && (kind == null || kind == LatencySessionKind.full);
+        if (!_useRealUrlMeasurement) {
+          _urlTestInFlightNotifier.value =
+              running && (kind == null || kind == LatencySessionKind.full);
+        }
         ref
             .read(proxyLatencySessionProvider.notifier)
             .update(running: running, kind: kind, targetTag: targetTag);
@@ -2403,6 +2450,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     _appSettingsCommands.unbindLogsHandlers();
     WidgetsBinding.instance.removeObserver(this);
     _subscriptionAutoRefreshTimer?.cancel();
+    _realUrlLatency.cancel();
     _latencyCoordinator.dispose();
     _runtimeRecovery.dispose();
     _proxyLocationCoordinator.dispose();
@@ -4276,6 +4324,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
           _publishOfflineUrlTestProgress();
           await _stopOfflineProbe();
         } else {
+          if (logicalSession.realUrlMeasurement) {
+            ++_realUrlRunGeneration;
+            _realUrlLatency.cancel();
+          }
           logicalSession.pauseForVpn();
           _publishOfflineUrlTestProgress();
           await _latencyCoordinator.cancelAndWait(reason: 'network_changed');
@@ -4725,6 +4777,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
     bool? isCancelled,
     bool resetCounter = true,
   }) {
+    if (_useRealUrlMeasurement) {
+      _publishRealUrlProgress();
+      return;
+    }
     _synchronizeUrlTestProgressCatalog();
     if (resetCounter) {
       final testableTags =
@@ -4797,6 +4853,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
     Iterable<String> changedTags, {
     Set<String>? completedTags,
   }) {
+    if (_useRealUrlMeasurement) {
+      _publishRealUrlProgress();
+      return;
+    }
     final logicalSession = _offlineUrlTestSession;
     if (logicalSession != null && (!logicalSession.isTerminal || !_connected)) {
       _publishOfflineUrlTestProgress();
@@ -5457,6 +5517,40 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   void _setHideServerIp(bool value) {
     _applySettingsChange(() => _settings.setHideServerIp(value));
+  }
+
+  Future<bool> _setLatencyMeasurementMode(LatencyMeasurementMode mode) async {
+    if (_settings.latencyMeasurementMode == mode) return true;
+    if (_latencyModeSwitching) return false;
+    _latencyModeSwitching = true;
+    try {
+      ++_realUrlRunGeneration;
+      _realUrlPreparing = false;
+      _realUrlLatency.clear();
+      ++_offlineStartGeneration;
+      _offlineUrlTestSession?.cancel();
+      await _latencyCoordinator.cancelAndWait(
+        reason: 'measurement_mode_changed',
+      );
+      if (_offlineProbeRunning) await _stopOfflineProbe();
+      if (!mounted) return false;
+      _offlineUrlTestSession = null;
+      _offlineProbeConfig = null;
+      _offlineProgressPublished = false;
+      _applySettingsChange(() => _settings.setLatencyMeasurementMode(mode));
+      _urlTestInFlightNotifier.value = false;
+      _urlTestProgressNotifier.value = const UrlTestProgressState();
+      _publishProxyRuntimeVisualStates();
+      return true;
+    } catch (error) {
+      AppLogStore.warning('latency', 'measurement mode switch failed');
+      if (mounted) {
+        _showAppSnackBar('Unable to switch measurement mode. Try again.');
+      }
+      return false;
+    } finally {
+      _latencyModeSwitching = false;
+    }
   }
 
   void _setPublicIpSource(PublicIpSource source) {
@@ -6227,6 +6321,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
           currentNotificationTrafficRefreshSeconds:
               _notificationTrafficRefreshSeconds,
           currentHideServerIp: _hideServerIp,
+          currentLatencyMeasurementMode: _settings.latencyMeasurementMode,
+          onLatencyMeasurementModeRequested: _setLatencyMeasurementMode,
           currentPublicIpSource: _settings.publicIpSource,
           onPublicIpSourceChanged: _setPublicIpSource,
           currentSendHwidToProviders: _settings.sendHwidToProviders,
@@ -6861,7 +6957,148 @@ class _MeowClientState extends ConsumerState<MeowClient>
     );
   }
 
+  final Set<String> _realUrlProgressTags = <String>{};
+
+  void _publishRealUrlProgress() {
+    if (!mounted || !_useRealUrlMeasurement) return;
+    final logical = _offlineUrlTestSession;
+    if (logical != null &&
+        logical.realUrlMeasurement &&
+        (!logical.isTerminal || !_connected)) {
+      _publishOfflineUrlTestProgress();
+    } else {
+      var working = 0;
+      var failed = 0;
+      for (final tag in _realUrlProgressTags) {
+        final result = _realUrlLatency.results[tag];
+        if (result == null) continue;
+        if (result.delayMs != null) {
+          working++;
+        } else {
+          failed++;
+        }
+      }
+      _urlTestProgressNotifier.value = UrlTestProgressState(
+        isRunning: _realUrlLatency.isRunning || _realUrlPreparing,
+        isCancelled: _urlTestCancelled,
+        showCheckProgress: _realUrlLatency.isRunning,
+        total: _realUrlProgressTags.length,
+        working: working,
+        failed: failed,
+        completed: working + failed,
+      );
+      _urlTestInFlightNotifier.value =
+          _realUrlLatency.isRunning || _realUrlPreparing;
+    }
+    _publishProxyRuntimeVisualStates();
+  }
+
+  Future<void> _cancelRealUrlMeasurement() async {
+    ++_realUrlRunGeneration;
+    ++_offlineStartGeneration;
+    _realUrlPreparing = false;
+    _realUrlLatency.cancel();
+    _urlTestCancelled = true;
+    final session = _offlineUrlTestSession;
+    if (session?.realUrlMeasurement == true) session?.cancel();
+    _publishRealUrlProgress();
+    if (_offlineProbeRunning) await _stopOfflineProbe();
+  }
+
+  Future<void> _runRealUrlMeasurement(
+    Iterable<String> tags, {
+    OfflineUrlTestSession? logicalSession,
+  }) async {
+    if (!mounted || !_useRealUrlMeasurement || _latencyModeSwitching) return;
+    final generation = ++_realUrlRunGeneration;
+    final profileId = _activeProfileId;
+    final revision = _activeSubscription?.payloadRevision;
+    final epoch = _physicalNetworkEpoch;
+    final runtimeGeneration = _runtimeOperations.nativeRuntimeGeneration;
+    final resultScope = (profileId, revision, epoch);
+    if (_realUrlResultScope != resultScope) _realUrlLatency.clear();
+    _realUrlResultScope = resultScope;
+    bool current() =>
+        mounted &&
+        _useRealUrlMeasurement &&
+        generation == _realUrlRunGeneration &&
+        profileId == _activeProfileId &&
+        revision == _activeSubscription?.payloadRevision &&
+        epoch == _physicalNetworkEpoch &&
+        runtimeGeneration == _runtimeOperations.nativeRuntimeGeneration &&
+        (logicalSession == null ||
+            (_offlineUrlTestSession == logicalSession &&
+                logicalSession.phase != OfflineUrlTestPhase.pausingForVpn));
+    final runTags = tags
+        .map((tag) => tag.trim())
+        .where((tag) => tag.isNotEmpty)
+        .toSet();
+    _realUrlProgressTags
+      ..clear()
+      ..addAll(runTags);
+    _realUrlPreparing = false;
+    _urlTestCancelled = false;
+    final url = _activeSubscription?.urlTestConfig.url?.trim();
+    // Use the same configured endpoint, but never silently downgrade HTTPS or
+    // fall back to a direct client when the designated outbound fetch fails.
+    await _realUrlLatency.run(
+      _realUrlProgressTags.toList(growable: false),
+      url == null || url.isEmpty ? _urlTestUrl : url,
+      Duration(seconds: _urlTestTimeoutSeconds),
+      _urlTestConcurrency,
+      () {
+        if (!current()) {
+          if (generation == _realUrlRunGeneration) {
+            _realUrlLatency.clear();
+            _publishRealUrlProgress();
+          }
+          return;
+        }
+        if (logicalSession != null) {
+          for (final tag in logicalSession.pendingTags.toList(
+            growable: false,
+          )) {
+            final result = _realUrlLatency.results[tag];
+            if (!runTags.contains(tag) ||
+                _realUrlLatency.isChecking(tag) ||
+                result == null) {
+              continue;
+            }
+            logicalSession.accept(
+              tag: tag,
+              delayMillis: result.delayMs ?? 0,
+              available: result.delayMs != null,
+              logicalSessionId: logicalSession.id,
+              physicalNetworkEpoch: epoch,
+            );
+          }
+        }
+        _publishRealUrlProgress();
+      },
+    );
+    if (current()) {
+      _publishRealUrlProgress();
+      setState(() {});
+    }
+  }
+
   Future<void> _runUrlTest({bool haptic = true}) async {
+    if (_latencyModeSwitching) return;
+    if (_useRealUrlMeasurement) {
+      if (haptic) _haptic();
+      if (_realUrlLatency.isRunning || _realUrlPreparing) {
+        await _cancelRealUrlMeasurement();
+      } else if (_foregroundLifecycleActive) {
+        if (!_connected) {
+          if (!_automaticSubscriptionApplyInFlight) {
+            await _startOfflineUrlTest();
+          }
+        } else if (await _prepareManualUrlTest('manual_real_url')) {
+          await _runRealUrlMeasurement(_userVisibleServerTags());
+        }
+      }
+      return;
+    }
     if (!_foregroundLifecycleActive) {
       return;
     }
@@ -6963,6 +7200,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   Future<void> _startOfflineUrlTest() async {
     final generation = ++_offlineStartGeneration;
+    if (_useRealUrlMeasurement) _realUrlPreparing = true;
     _urlTestInFlightNotifier.value = true;
     try {
       if (_offlineProbeRunning && _offlineUrlTestSession?.isTerminal == true) {
@@ -6996,13 +7234,14 @@ class _MeowClientState extends ConsumerState<MeowClient>
           ? previous.latestResults
           : const <String, bool>{};
       final session = OfflineUrlTestSession(
+        realUrlMeasurement: _useRealUrlMeasurement,
         id: 'manual-${DateTime.now().microsecondsSinceEpoch}-${++_offlineSessionSequence}',
         fingerprint: probe.probeFingerprint,
         physicalNetworkEpoch: _physicalNetworkEpoch,
         tags: tags,
         visibleTags: visible,
         initialResults: {
-          for (final tag in visible)
+          for (final tag in visible.where((_) => !_useRealUrlMeasurement))
             if ((priorResults[tag] ?? _urlTestProgressResultForTag(tag))
                 case final bool available)
               tag: available,
@@ -7042,6 +7281,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
       }
       if (_offlineProbeRunning) await _stopOfflineProbe();
     } finally {
+      if (generation == _offlineStartGeneration) _realUrlPreparing = false;
       if (generation == _offlineStartGeneration &&
           !_latencyCoordinator.isRunning) {
         _urlTestInFlightNotifier.value =
@@ -7084,6 +7324,17 @@ class _MeowClientState extends ConsumerState<MeowClient>
       _publishOfflineUrlTestProgress();
       return;
     }
+    if (session.realUrlMeasurement) {
+      await _runRealUrlMeasurement(tags, logicalSession: session);
+      if (mounted &&
+          _offlineUrlTestSession == session &&
+          session.phase != OfflineUrlTestPhase.pausingForVpn) {
+        if (!session.isTerminal) session.fail('real_url_incomplete');
+        _publishOfflineUrlTestProgress();
+        if (_offlineProbeRunning) await _stopOfflineProbe();
+      }
+      return;
+    }
     final completed = await _latencyCoordinator.runFull(
       reason: 'offline_manual',
       includeOutboundTags: tags.toList(growable: false),
@@ -7122,6 +7373,9 @@ class _MeowClientState extends ConsumerState<MeowClient>
   }
 
   Future<bool> _cancelOfflineProbeForConfigChange(String reason) async {
+    ++_realUrlRunGeneration;
+    _realUrlPreparing = false;
+    _realUrlLatency.cancel();
     ++_offlineStartGeneration;
     final session = _offlineUrlTestSession;
     session?.fail(reason);
@@ -7155,6 +7409,17 @@ class _MeowClientState extends ConsumerState<MeowClient>
   }
 
   Future<void> _runActiveProxyUrlTest({bool haptic = true}) async {
+    if (_latencyModeSwitching) return;
+    if (_useRealUrlMeasurement) {
+      if (_realUrlPreparing || _realUrlLatency.isRunning) return;
+      if (!await _prepareManualUrlTest('manual_active_real_url')) return;
+      final tag = _currentResolvedActiveOutboundTag()?.trim() ?? '';
+      if (tag.isNotEmpty) {
+        if (haptic) _haptic();
+        await _runRealUrlMeasurement([tag]);
+      }
+      return;
+    }
     final pendingTarget = _currentResolvedActiveOutboundTag()?.trim() ?? '';
     if (pendingTarget.isNotEmpty &&
         (_latencyCoordinator.hasActiveTargetCheck(pendingTarget) ||
@@ -7191,6 +7456,23 @@ class _MeowClientState extends ConsumerState<MeowClient>
   }
 
   Future<void> _runProxyUrlTest(String tag) async {
+    if (_latencyModeSwitching) return;
+    if (_useRealUrlMeasurement) {
+      if (_realUrlPreparing || _realUrlLatency.isRunning) return;
+      if (!await _prepareManualUrlTest('manual_row_real_url')) return;
+      _ensureActiveLookupCaches();
+      if (!_activeOutboundByTagLookup.containsKey(tag) &&
+          !_activeGroupByTagLookup.containsKey(tag) &&
+          _proxyChainForTag(tag) == null &&
+          !isLowestProxyTag(tag)) {
+        return;
+      }
+      final members = _concreteTagsForProxyGroup(tag);
+      final target = latencyTargetTag(tag, _runtimeGroupSelections);
+      _haptic();
+      await _runRealUrlMeasurement(members.isNotEmpty ? members : [?target]);
+      return;
+    }
     if (!await _prepareManualUrlTest('manual_row')) return;
     _ensureActiveLookupCaches();
     if (!_activeOutboundByTagLookup.containsKey(tag) &&
@@ -7698,6 +7980,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
         retryScheduled: decision.retryScheduled,
       );
       if (decision.clearDisconnectedState) {
+        ++_realUrlRunGeneration;
+        _realUrlLatency.clear();
         shouldCancelLatency = true;
         shouldSyncQuickSettingsTile = true;
         _offlineUrlTestSession?.cancel();
@@ -7788,6 +8072,9 @@ class _MeowClientState extends ConsumerState<MeowClient>
     }
     if (physicalChanged) {
       ++_physicalNetworkEpoch;
+      ++_realUrlRunGeneration;
+      _realUrlLatency.clear();
+      if (_useRealUrlMeasurement) _publishRealUrlProgress();
       final logicalSession = _offlineUrlTestSession;
       if (logicalSession != null && !logicalSession.isTerminal) {
         logicalSession.reconcile(
@@ -7977,11 +8264,13 @@ class _MeowClientState extends ConsumerState<MeowClient>
             completed: session.completed,
           );
         }
-        _urlTestProgressNotifier.value = _urlTestProgressCounter.state(
-          isRunning: session.state == 'running',
-          isCancelled: session.state == 'cancelled',
-          showCheckProgress: _latencyCoordinator.isCurrentSessionUserSweep,
-        );
+        if (!_useRealUrlMeasurement) {
+          _urlTestProgressNotifier.value = _urlTestProgressCounter.state(
+            isRunning: session.state == 'running',
+            isCancelled: session.state == 'cancelled',
+            showCheckProgress: _latencyCoordinator.isCurrentSessionUserSweep,
+          );
+        }
         if (logicalSession != null) _publishOfflineUrlTestProgress();
       }
       if (accepted && session.state == 'running') {
@@ -8031,6 +8320,11 @@ class _MeowClientState extends ConsumerState<MeowClient>
     );
     if (!accepted) return;
     final logicalSession = _offlineUrlTestSession;
+    if (logicalSession != null &&
+        logicalSession.realUrlMeasurement &&
+        !logicalSession.isTerminal) {
+      return;
+    }
     if (logicalSession != null &&
         !logicalSession.isTerminal &&
         !logicalSession.accept(
@@ -9540,6 +9834,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     return ProxiesPresentationBuilder(
       data: ProxiesPresentationData(
         profileId: _activeProfileId,
+        latencyMeasurementMode: _settings.latencyMeasurementMode,
         proxies: _activeProxies,
         groupChildrenByTag: _activeGroupChildrenByTag,
         selectedTag: _selectedProxyTag,
