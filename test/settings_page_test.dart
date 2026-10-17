@@ -67,21 +67,41 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('settings destinations stay fixed and remain tappable', (
-    tester,
-  ) async {
+  testWidgets('settings destinations remain tappable', (tester) async {
     var generalCalls = 0;
     await tester.pumpWidget(_settingsApp(onOpenGeneral: () => generalCalls++));
     await tester.pumpAndSettle();
 
-    final destinations = tester.widget<ListView>(
-      find.byKey(const ValueKey('settings-destinations')),
-    );
-    expect(destinations.physics, isA<NeverScrollableScrollPhysics>());
-
     await tester.tap(find.text('General'));
     await tester.pump();
     expect(generalCalls, 1);
+  });
+
+  testWidgets('settings destinations scroll vertically with fling motion', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 420);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(_settingsApp());
+    await tester.pumpAndSettle();
+
+    final destinations = find.byKey(const ValueKey('settings-destinations'));
+    final scrollable = tester.state<ScrollableState>(
+      find.descendant(of: destinations, matching: find.byType(Scrollable)),
+    );
+    expect(scrollable.position.maxScrollExtent, greaterThan(0));
+
+    await tester.fling(destinations, const Offset(0, -100), 250);
+    await tester.pump(const Duration(milliseconds: 50));
+    final earlyOffset = scrollable.position.pixels;
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(earlyOffset, greaterThan(0));
+    expect(scrollable.position.pixels, greaterThan(earlyOffset));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('runtime diagnostics entry follows the test-build flag', (

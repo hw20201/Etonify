@@ -145,7 +145,7 @@ class SettingsPage extends StatelessWidget {
       ),
       body: ListView(
         key: const ValueKey('settings-destinations'),
-        physics: const NeverScrollableScrollPhysics(),
+        // Inherit the app's platform-aware scroll physics and fling behavior.
         padding: EdgeInsets.fromLTRB(
           settingsScreenPadding.left,
           progressiveHeaderTopPadding(context, settingsScreenPadding.top),
