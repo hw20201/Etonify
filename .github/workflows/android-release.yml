@@ -369,8 +369,8 @@ jobs:
         run: |
           set -euo pipefail
           version="$(sed -nE 's/^version:[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' pubspec.yaml | head -n1)"
-          if [[ "$version" != "0.3.101+6049" ]]; then
-            echo "::error title=Unexpected test build version::Expected 0.3.101+6049; found ${version:-<missing>}."
+          if [[ "$version" != "0.3.101+4049" ]]; then
+            echo "::error title=Unexpected test build version::Expected 0.3.101+4049; found ${version:-<missing>}."
             exit 1
           fi
 
@@ -424,7 +424,7 @@ jobs:
           set -euo pipefail
           scripts/verify_android_release_apk.sh \
             build/release-apk/etonify-runtime-diagnostics-v0.3.101-arm64-v8a-6049.apk \
-            0.3.101 6049 "$MINIMUM_UPGRADE_VERSION_CODE" "$EXPECTED_RELEASE_CERT_SHA256"
+            0.3.101 4049 "$MINIMUM_UPGRADE_VERSION_CODE" "$EXPECTED_RELEASE_CERT_SHA256"
 
       - name: Remove temporary signing files
         if: always()
