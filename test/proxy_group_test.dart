@@ -2802,6 +2802,22 @@ void main() {
 
     expect(chain['detour'], 'first-hop');
     expect(chain.containsKey('domain_resolver'), isFalse);
+    final selector = outbounds.firstWhere((entry) => entry['tag'] == 'select');
+    expect(selector['default'], 'chain');
+    final remoteDnsForChain = ((plan.config['dns'] as Map)['servers'] as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((server) => server['tag'] == 'dns-remote');
+    expect(remoteDnsForChain['detour'], 'select');
+
+    final firstHopPlan = _defaultBuilder(
+      subscription,
+      selectedProxyTag: 'first-hop',
+    ).build();
+    final remoteDnsForFirstHop =
+        ((firstHopPlan['dns'] as Map)['servers'] as List)
+            .cast<Map<String, dynamic>>()
+            .firstWhere((server) => server['tag'] == 'dns-remote');
+    expect(remoteDnsForFirstHop['detour'], 'select');
   });
 
   test('global proxy TLS override is scoped to TLS outbounds', () {

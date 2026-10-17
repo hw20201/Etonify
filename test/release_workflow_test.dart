@@ -29,7 +29,7 @@ void main() {
     expect(workflow, contains(r'ref: ${{ inputs.release_tag || github.ref }}'));
     expect(workflow, contains(r'RELEASE_TAG_INPUT: ${{ inputs.release_tag }}'));
     expect(workflow, contains("github.ref == 'refs/heads/master'"));
-    expect(workflow, contains('MINIMUM_UPGRADE_VERSION_CODE: "4047"'));
+    expect(workflow, contains('MINIMUM_UPGRADE_VERSION_CODE: "6050"'));
     expect(
       workflow,
       contains(

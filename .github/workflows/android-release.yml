@@ -273,7 +273,7 @@ jobs:
       - name: Verify signed APK package, version and certificate before draft
         shell: bash
         env:
-          MINIMUM_UPGRADE_VERSION_CODE: "4047"
+          MINIMUM_UPGRADE_VERSION_CODE: "6050"
           EXPECTED_RELEASE_CERT_SHA256: "f1e431ddbefe3496db75f264a0dd02472c7a4be704f8f78c7bd834c146f9f665"
         run: |
           set -euo pipefail
@@ -369,8 +369,8 @@ jobs:
         run: |
           set -euo pipefail
           version="$(sed -nE 's/^version:[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' pubspec.yaml | head -n1)"
-          if [[ "$version" != "0.3.101+4050" ]]; then
-            echo "::error title=Unexpected test build version::Expected 0.3.101+4050; found ${version:-<missing>}."
+          if [[ "$version" != "0.3.102+4051" ]]; then
+            echo "::error title=Unexpected test build version::Expected 0.3.102+4051; found ${version:-<missing>}."
             exit 1
           fi
 
@@ -410,7 +410,7 @@ jobs:
           flutter build apk --release --target-platform android-arm64 --split-per-abi \
             --dart-define=ETONIFY_RUNTIME_DIAGNOSTICS=true
           apk="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
-          output="etonify-runtime-diagnostics-v0.3.101-arm64-v8a-6050.apk"
+          output="etonify-runtime-diagnostics-v0.3.102-arm64-v8a-6051.apk"
           mkdir -p build/release-apk
           cp "$apk" "build/release-apk/${output}"
           ls -lah "build/release-apk/${output}"
@@ -418,13 +418,13 @@ jobs:
       - name: Verify package, upgrade version and release certificate
         shell: bash
         env:
-          MINIMUM_UPGRADE_VERSION_CODE: "6049"
+          MINIMUM_UPGRADE_VERSION_CODE: "6050"
           EXPECTED_RELEASE_CERT_SHA256: "f1e431ddbefe3496db75f264a0dd02472c7a4be704f8f78c7bd834c146f9f665"
         run: |
           set -euo pipefail
           scripts/verify_android_release_apk.sh \
-            build/release-apk/etonify-runtime-diagnostics-v0.3.101-arm64-v8a-6050.apk \
-            0.3.101 4050 "$MINIMUM_UPGRADE_VERSION_CODE" "$EXPECTED_RELEASE_CERT_SHA256"
+            build/release-apk/etonify-runtime-diagnostics-v0.3.102-arm64-v8a-6051.apk \
+            0.3.102 4051 "$MINIMUM_UPGRADE_VERSION_CODE" "$EXPECTED_RELEASE_CERT_SHA256"
 
       - name: Remove temporary signing files
         if: always()
@@ -433,7 +433,7 @@ jobs:
       - name: Upload diagnostics APK artifact only
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: etonify-runtime-diagnostics-arm64-6050-${{ github.sha }}
-          path: build/release-apk/etonify-runtime-diagnostics-v0.3.101-arm64-v8a-6050.apk
+          name: etonify-runtime-diagnostics-arm64-6051-${{ github.sha }}
+          path: build/release-apk/etonify-runtime-diagnostics-v0.3.102-arm64-v8a-6051.apk
           if-no-files-found: error
           retention-days: 14

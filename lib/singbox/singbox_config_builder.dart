@@ -253,9 +253,10 @@ class SingboxConfigBuilder {
 
     final routeFinal = hasProxies ? 'select' : 'direct';
     final dnsFinal = hasProxies ? 'dns-remote' : 'dns-direct';
-    final dnsRemoteDetour = hasProxies
-        ? _dnsRemoteDetourFor(selectorDefault, selectableTags.toSet())
-        : 'direct';
+    // DNS must follow the active selector too. Routing it through a chain's
+    // first hop bypasses the selected exit and can pin DNS to an unrelated
+    // chain when another outbound is selected.
+    final dnsRemoteDetour = hasProxies ? 'select' : 'direct';
     final dnsDirectDetour = dnsDirectThroughProxy && hasProxies
         ? dnsRemoteDetour
         : 'direct';
@@ -742,29 +743,6 @@ class SingboxConfigBuilder {
     }
     config['tcp_multi_path'] = tcpMultiPathEnabled;
     return config;
-  }
-
-  String _dnsRemoteDetourFor(
-    String selectorDefault,
-    Set<String> selectableTags,
-  ) {
-    final subscription = activeSubscription;
-    if (subscription == null) {
-      return 'select';
-    }
-    for (final chain in subscription.proxyChains) {
-      if (chain.tag == selectorDefault) {
-        final detour = chain.detourTag.trim();
-        return selectableTags.contains(detour) ? detour : 'select';
-      }
-    }
-    for (final chain in subscription.proxyChains) {
-      final detour = chain.detourTag.trim();
-      if (selectableTags.contains(detour)) {
-        return detour;
-      }
-    }
-    return 'select';
   }
 
   static Map<String, dynamic>? buildProxyChainOutboundConfig({
