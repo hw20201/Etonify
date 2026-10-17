@@ -467,6 +467,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get proxyLatencyNoResultDescription => '此服务器暂无延迟测试结果。';
 
   @override
+  String get proxyLatencyMeasurementDescription =>
+      '统一对比口径：Etonify URLTest 通过当前测试地址向该节点发送 HTTP HEAD 请求，显示响应耗时；不是 ICMP Ping 或下载速度，也不等同于纯冷建连时间或热 RTT。代理协议的握手、建连与连接复用情况会影响读数。请在同一网络和相同测速配置下刷新后比较。';
+
+  @override
   String get proxySelectorTitle => '选择器';
 
   @override
@@ -535,7 +539,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortByDefault => '订阅源顺序';
 
   @override
-  String get sortByLatency => '按延迟';
+  String get sortByLatency => '按统一 URLTest 延迟';
 
   @override
   String get sortByWorking => '仅可用';

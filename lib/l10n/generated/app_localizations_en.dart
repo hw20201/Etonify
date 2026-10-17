@@ -490,6 +490,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'No latency test result is available for this server yet.';
 
   @override
+  String get proxyLatencyMeasurementDescription =>
+      'Unified comparison: Etonify URLTest sends an HTTP HEAD request to the configured test URL through this outbound and shows the response time. It is not ICMP ping or download speed, and is neither a pure cold-connect time nor a guaranteed warm RTT. Proxy handshakes, connection setup, and reuse can affect results; compare refreshed checks on the same network with the same test settings.';
+
+  @override
   String get proxySelectorTitle => 'Selector';
 
   @override
@@ -558,7 +562,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortByDefault => 'Source order';
 
   @override
-  String get sortByLatency => 'By latency';
+  String get sortByLatency => 'By unified URLTest delay';
 
   @override
   String get sortByWorking => 'Working only';

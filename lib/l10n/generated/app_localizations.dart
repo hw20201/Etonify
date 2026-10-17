@@ -952,6 +952,12 @@ abstract class AppLocalizations {
   /// **'No latency test result is available for this server yet.'**
   String get proxyLatencyNoResultDescription;
 
+  /// No description provided for @proxyLatencyMeasurementDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Unified comparison: Etonify URLTest sends an HTTP HEAD request to the configured test URL through this outbound and shows the response time. It is not ICMP ping or download speed, and is neither a pure cold-connect time nor a guaranteed warm RTT. Proxy handshakes, connection setup, and reuse can affect results; compare refreshed checks on the same network with the same test settings.'**
+  String get proxyLatencyMeasurementDescription;
+
   /// No description provided for @proxySelectorTitle.
   ///
   /// In en, this message translates to:
@@ -1087,7 +1093,7 @@ abstract class AppLocalizations {
   /// No description provided for @sortByLatency.
   ///
   /// In en, this message translates to:
-  /// **'By latency'**
+  /// **'By unified URLTest delay'**
   String get sortByLatency;
 
   /// No description provided for @sortByWorking.

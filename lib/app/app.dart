@@ -422,7 +422,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
   List<String> get _splitRoutingPackages => _splitRoutingTemporarilyDisabled
       ? const <String>[]
       : _settings.splitRoutingPackages;
-  String get _singBoxLogLevel => _settings.singBoxLogLevel;
+  String get _singBoxLogLevel =>
+      effectiveSingBoxLogLevel(_settings.singBoxLogLevel);
   bool get _experimentalTcpFastOpen => _settings.experimentalTcpFastOpen;
   bool get _experimentalTcpMultiPath => _settings.experimentalTcpMultiPath;
   bool get _experimentalInterruptExistingConnections =>

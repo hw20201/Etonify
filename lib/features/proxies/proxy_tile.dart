@@ -91,7 +91,7 @@ class ProxyTile extends StatelessWidget {
           ? _latencyErrorTooltip(latencyError)
           : hasNoLatencyResult
           ? l10n.proxyLatencyNoResultDescription
-          : null,
+          : l10n.proxyLatencyMeasurementDescription,
     );
 
     final latencyLabel = ProxyLatencyButton(

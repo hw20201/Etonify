@@ -13,6 +13,7 @@ import 'package:meow_client/models/subscription.dart';
 import 'package:meow_client/models/core_settings.dart';
 import 'package:meow_client/singbox/core_settings_config.dart';
 import 'package:meow_client/singbox/libbox_capabilities.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 
 class SingboxConfigBuilder {
   // Etonify downloads rule data and OTA files with Dart's HttpClient. In
@@ -270,7 +271,7 @@ class SingboxConfigBuilder {
     );
     final plan = SingboxBuildPlan(
       config: {
-        'log': {'level': logLevel},
+        'log': {'level': effectiveSingBoxLogLevel(logLevel)},
         if (_supportsLegacyUrlTestConfigExtensions)
           'global': {
             'urltest_concurrency_limit': _urltestConcurrency(

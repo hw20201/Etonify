@@ -10,6 +10,20 @@ const bool runtimeDiagnosticsBuild = bool.fromEnvironment(
   defaultValue: false,
 );
 
+/// Prevents verbose sing-box logs in normal builds, even when an old saved
+/// preference requests trace/debug. Private diagnostic builds may opt in.
+String effectiveSingBoxLogLevel(
+  String requested, {
+  bool diagnosticsBuild = runtimeDiagnosticsBuild,
+}) {
+  final normalized = requested.trim().toLowerCase();
+  if (normalized.isEmpty) return 'warning';
+  if (!diagnosticsBuild && (normalized == 'trace' || normalized == 'debug')) {
+    return 'warning';
+  }
+  return normalized;
+}
+
 enum RuntimeDiagnosticLevel { info, warning, error }
 
 class RuntimeDiagnosticEntry {

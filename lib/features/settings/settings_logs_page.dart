@@ -7,6 +7,7 @@ import 'package:meow_client/app/providers/app_settings_provider.dart';
 import 'package:meow_client/core/widgets/app_notice.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/logging/app_log_store.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 import 'package:meow_client/singbox/singbox_runtime.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 
@@ -29,6 +30,11 @@ class _SettingsLogsPageState extends ConsumerState<SettingsLogsPage> {
     'warn',
     'error',
   ];
+  List<String> get _availableSingBoxLogLevels => runtimeDiagnosticsBuild
+      ? _logLevelOrder
+      : _logLevelOrder
+            .where((level) => level != 'trace' && level != 'debug')
+            .toList(growable: false);
   String _levelFilter = 'all';
   final ScrollController _scrollController = ScrollController();
 
@@ -186,10 +192,9 @@ class _SettingsLogsPageState extends ConsumerState<SettingsLogsPage> {
 
   Future<void> _showSingBoxLogLevelPicker(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final currentSingBoxLogLevel = ref
-        .read(appSettingsProvider)
-        .controller
-        .singBoxLogLevel;
+    final currentSingBoxLogLevel = effectiveSingBoxLogLevel(
+      ref.read(appSettingsProvider).controller.singBoxLogLevel,
+    );
     final selected = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -199,11 +204,11 @@ class _SettingsLogsPageState extends ConsumerState<SettingsLogsPage> {
           child: ListView.separated(
             shrinkWrap: true,
             padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            itemCount: _logLevelOrder.length,
+            itemCount: _availableSingBoxLogLevels.length,
             separatorBuilder: (context, index) =>
                 Divider(height: 1, color: theme.colorScheme.outlineVariant),
             itemBuilder: (context, index) {
-              final level = _logLevelOrder[index];
+              final level = _availableSingBoxLogLevels[index];
               final selected = level == currentSingBoxLogLevel;
               return ListTile(
                 dense: true,
@@ -257,10 +262,9 @@ class _SettingsLogsPageState extends ConsumerState<SettingsLogsPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final currentSingBoxLogLevel = ref
-        .watch(appSettingsProvider)
-        .controller
-        .singBoxLogLevel;
+    final currentSingBoxLogLevel = effectiveSingBoxLogLevel(
+      ref.watch(appSettingsProvider).controller.singBoxLogLevel,
+    );
 
     return ProgressiveBlurScaffold(
       appBar: AppBar(

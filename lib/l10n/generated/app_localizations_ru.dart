@@ -488,6 +488,10 @@ class AppLocalizationsRu extends AppLocalizations {
       'Результат проверки для этого сервера ещё не получен.';
 
   @override
+  String get proxyLatencyMeasurementDescription =>
+      'Единая шкала сравнения: Etonify URLTest отправляет через этот выход HTTP HEAD-запрос на заданный тестовый адрес и показывает время ответа. Это не ICMP ping и не скорость загрузки; значение не является ни чистым временем холодного подключения, ни гарантированным тёплым RTT. На него влияют рукопожатия, установка и повторное использование соединения. Сравнивайте обновлённые результаты в одной сети и с одинаковыми настройками теста.';
+
+  @override
   String get proxySelectorTitle => 'Выбор';
 
   @override
@@ -556,7 +560,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sortByDefault => 'Как в подписке';
 
   @override
-  String get sortByLatency => 'По задержке';
+  String get sortByLatency => 'По единой задержке URLTest';
 
   @override
   String get sortByWorking => 'Только рабочие';

@@ -8,6 +8,7 @@ import 'package:meow_client/app/providers/app_settings_provider.dart';
 import 'package:meow_client/features/settings/settings_logs_page.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/logging/app_log_store.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 
 Widget _logsApp({
   String singBoxLogLevel = 'warning',
@@ -133,10 +134,15 @@ void main() {
     await tester.tap(find.text('sing-box log level'));
     await tester.pumpAndSettle();
 
-    // Select 'DEBUG' from bottom sheet
-    await tester.tap(find.text('DEBUG'));
+    if (runtimeDiagnosticsBuild) {
+      await tester.tap(find.text('DEBUG'));
+      expect(changedLevels, ['debug']);
+    } else {
+      expect(find.text('TRACE'), findsNothing);
+      expect(find.text('DEBUG'), findsNothing);
+      await tester.tap(find.text('INFO'));
+      expect(changedLevels, ['info']);
+    }
     await tester.pumpAndSettle();
-
-    expect(changedLevels, ['debug']);
   });
 }

@@ -4,6 +4,35 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 
 void main() {
+  group('effectiveSingBoxLogLevel', () {
+    test('normal builds suppress trace and debug preferences', () {
+      expect(
+        effectiveSingBoxLogLevel('trace', diagnosticsBuild: false),
+        'warning',
+      );
+      expect(
+        effectiveSingBoxLogLevel('debug', diagnosticsBuild: false),
+        'warning',
+      );
+    });
+
+    test('diagnostic builds may retain verbose log levels', () {
+      expect(
+        effectiveSingBoxLogLevel('trace', diagnosticsBuild: true),
+        'trace',
+      );
+      expect(
+        effectiveSingBoxLogLevel('debug', diagnosticsBuild: true),
+        'debug',
+      );
+    });
+
+    test('normal levels and empty values remain safe', () {
+      expect(effectiveSingBoxLogLevel('info', diagnosticsBuild: false), 'info');
+      expect(effectiveSingBoxLogLevel('', diagnosticsBuild: false), 'warning');
+    });
+  });
+
   group('RuntimeDiagnosticBuffer', () {
     test('compile-time flag matches the requested build define', () {
       const expected = bool.fromEnvironment(
