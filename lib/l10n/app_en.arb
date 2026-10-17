@@ -1570,5 +1570,19 @@
       }
     }
   },
-  "verifiedBadgeTooltip": "Verified"
+  "verifiedBadgeTooltip": "Verified",
+  "runtimeDiagnosticsTitle": "Runtime diagnostics · test build",
+  "runtimeDiagnosticsDescription": "Test-only diagnostics. Keeps the latest 500 events in memory. Subscription contents, credentials, node names, hostnames, URLs and IP addresses are not recorded.",
+  "runtimeDiagnosticsEmpty": "No diagnostic events yet.",
+  "runtimeDiagnosticsExport": "Export diagnostics",
+  "runtimeDiagnosticsClear": "Clear diagnostics",
+  "runtimeDiagnosticsExportFailed": "Export failed or cancelled",
+  "runtimeDiagnosticsSaved": "Diagnostics saved: {uri}",
+  "@runtimeDiagnosticsSaved": {
+    "placeholders": {
+      "uri": {
+        "type": "String"
+      }
+    }
+  }
 }

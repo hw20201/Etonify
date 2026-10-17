@@ -17,6 +17,7 @@ class SettingsPresentationCallbacks {
     required this.exportPlainProfile,
     required this.resetSettings,
     required this.openExperimental,
+    this.openRuntimeDiagnostics,
     required this.openLogs,
     required this.openAbout,
   });
@@ -34,6 +35,7 @@ class SettingsPresentationCallbacks {
   final VoidCallback exportPlainProfile;
   final VoidCallback resetSettings;
   final VoidCallback openExperimental;
+  final VoidCallback? openRuntimeDiagnostics;
   final VoidCallback openLogs;
   final VoidCallback openAbout;
 }
@@ -58,6 +60,7 @@ class SettingsPresentationBuilder {
       onExportPlainProfile: callbacks.exportPlainProfile,
       onResetSettings: callbacks.resetSettings,
       onOpenExperimental: callbacks.openExperimental,
+      onOpenRuntimeDiagnostics: callbacks.openRuntimeDiagnostics,
       onOpenLogs: callbacks.openLogs,
       onOpenAbout: callbacks.openAbout,
     );

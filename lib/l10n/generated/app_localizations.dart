@@ -6256,6 +6256,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verified'**
   String get verifiedBadgeTooltip;
+
+  /// No description provided for @runtimeDiagnosticsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime diagnostics · test build'**
+  String get runtimeDiagnosticsTitle;
+
+  /// No description provided for @runtimeDiagnosticsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Test-only diagnostics. Keeps the latest 500 events in memory. Subscription contents, credentials, node names, hostnames, URLs and IP addresses are not recorded.'**
+  String get runtimeDiagnosticsDescription;
+
+  /// No description provided for @runtimeDiagnosticsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No diagnostic events yet.'**
+  String get runtimeDiagnosticsEmpty;
+
+  /// No description provided for @runtimeDiagnosticsExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export diagnostics'**
+  String get runtimeDiagnosticsExport;
+
+  /// No description provided for @runtimeDiagnosticsClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear diagnostics'**
+  String get runtimeDiagnosticsClear;
+
+  /// No description provided for @runtimeDiagnosticsExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed or cancelled'**
+  String get runtimeDiagnosticsExportFailed;
+
+  /// No description provided for @runtimeDiagnosticsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics saved: {uri}'**
+  String runtimeDiagnosticsSaved(String uri);
 }
 
 class _AppLocalizationsDelegate

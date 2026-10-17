@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meow_client/features/settings/settings_page.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 
 Widget _settingsApp({
   VoidCallback? onOpenGeneral,
@@ -28,6 +29,7 @@ Widget _settingsApp({
       onExportPlainProfile: onExportPlainProfile ?? () {},
       onResetSettings: onResetSettings ?? () {},
       onOpenExperimental: () {},
+      onOpenRuntimeDiagnostics: () {},
       onOpenLogs: () {},
       onOpenAbout: () {},
     ),
@@ -52,7 +54,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(Card), findsNWidgets(3));
-    expect(find.byType(ListTile), findsNWidgets(9));
+    expect(
+      find.byType(ListTile),
+      findsNWidgets(runtimeDiagnosticsBuild ? 10 : 9),
+    );
     expect(find.text('General'), findsOneWidget);
     expect(find.text('About'), findsOneWidget);
     expect(find.textContaining('Language: System'), findsNothing);
@@ -77,6 +82,18 @@ void main() {
     await tester.tap(find.text('General'));
     await tester.pump();
     expect(generalCalls, 1);
+  });
+
+  testWidgets('runtime diagnostics entry follows the test-build flag', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_settingsApp());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('settings-runtime-diagnostics')),
+      runtimeDiagnosticsBuild ? findsOneWidget : findsNothing,
+    );
   });
 
   testWidgets('settings menu exposes import, export, and reset', (

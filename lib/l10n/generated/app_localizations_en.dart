@@ -3523,4 +3523,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifiedBadgeTooltip => 'Verified';
+
+  @override
+  String get runtimeDiagnosticsTitle => 'Runtime diagnostics · test build';
+
+  @override
+  String get runtimeDiagnosticsDescription =>
+      'Test-only diagnostics. Keeps the latest 500 events in memory. Subscription contents, credentials, node names, hostnames, URLs and IP addresses are not recorded.';
+
+  @override
+  String get runtimeDiagnosticsEmpty => 'No diagnostic events yet.';
+
+  @override
+  String get runtimeDiagnosticsExport => 'Export diagnostics';
+
+  @override
+  String get runtimeDiagnosticsClear => 'Clear diagnostics';
+
+  @override
+  String get runtimeDiagnosticsExportFailed => 'Export failed or cancelled';
+
+  @override
+  String runtimeDiagnosticsSaved(String uri) {
+    return 'Diagnostics saved: $uri';
+  }
 }

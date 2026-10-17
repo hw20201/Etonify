@@ -3528,4 +3528,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get verifiedBadgeTooltip => 'Подтверждено';
+
+  @override
+  String get runtimeDiagnosticsTitle =>
+      'Диагностика выполнения · тестовая сборка';
+
+  @override
+  String get runtimeDiagnosticsDescription =>
+      'Диагностика только для тестовой сборки. В памяти хранятся не более 500 последних событий. Содержимое подписок, учётные данные, имена узлов, хосты, URL и IP-адреса не записываются.';
+
+  @override
+  String get runtimeDiagnosticsEmpty => 'Диагностических событий пока нет.';
+
+  @override
+  String get runtimeDiagnosticsExport => 'Экспортировать диагностику';
+
+  @override
+  String get runtimeDiagnosticsClear => 'Очистить диагностику';
+
+  @override
+  String get runtimeDiagnosticsExportFailed =>
+      'Не удалось экспортировать или экспорт отменён';
+
+  @override
+  String runtimeDiagnosticsSaved(String uri) {
+    return 'Диагностика сохранена: $uri';
+  }
 }

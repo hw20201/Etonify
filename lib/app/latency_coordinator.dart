@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:meow_client/app/startup_url_test_handoff.dart';
 import 'package:meow_client/logging/app_log_store.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 import 'package:meow_client/singbox/libbox_capabilities.dart';
 
 enum LatencySessionKind { full, targeted }
@@ -158,6 +159,7 @@ class LatencyCoordinator {
   final Map<String, int> _measurementVersions = {};
   int _sessionOperationGeneration = 0;
   int _sessionStartedAtSeconds = 0;
+  Stopwatch? _sessionStopwatch;
   LatencySessionPhase _phase = LatencySessionPhase.idle;
   LatencySessionKind? _kind;
   String _targetTag = '';
@@ -714,7 +716,7 @@ class LatencyCoordinator {
     return true;
   }
 
-  void cancel() {
+  void cancel({String reason = 'other'}) {
     _generation++;
     _cancellationGeneration++;
     _measurementVersions.clear();
@@ -730,6 +732,7 @@ class LatencyCoordinator {
     final receivedCount = _acceptedEventTimes.length;
     final successfulCount = _successfulTags.length;
     final expectedCount = _sessionExpectedTags.length;
+    final durationMs = _sessionStopwatch?.elapsedMilliseconds ?? 0;
     _cancelSessionTimers();
     _phase = LatencySessionPhase.idle;
     _kind = null;
@@ -744,12 +747,27 @@ class LatencyCoordinator {
     _nativeSessionId = 0;
     _sessionMode = '';
     _sessionReason = '';
+    _sessionStopwatch = null;
     final result = _sessionResult;
     _sessionResult = null;
     if (result != null && !result.isCompleted) {
       result.complete(false);
     }
     if (wasRunning) {
+      RuntimeDiagnosticLog.record(
+        'speed_test.session',
+        fields: {
+          'phase': 'cancelled',
+          'kind': previousKind?.name ?? 'full',
+          'cancelReason': reason,
+          'durationMs': durationMs,
+          'expectedCount': expectedCount,
+          'receivedCount': receivedCount,
+          'successfulCount': successfulCount,
+          'result': 'cancelled',
+        },
+        level: RuntimeDiagnosticLevel.warning,
+      );
       AppLogStore.info(
         'latency',
         'latency session cancelled kind=${previousKind?.name ?? 'unknown'} '
@@ -771,9 +789,10 @@ class LatencyCoordinator {
   /// to leave libbox's serialized command lane.
   Future<void> cancelAndWait({
     Duration maxWait = const Duration(seconds: 8),
+    String reason = 'other',
   }) async {
     final pending = _nativeSessionFinished?.future;
-    cancel();
+    cancel(reason: reason);
     if (pending == null) return;
     try {
       await pending.timeout(maxWait);
@@ -887,6 +906,7 @@ class LatencyCoordinator {
     }
 
     final generation = ++_generation;
+    _sessionStopwatch = Stopwatch()..start();
     _sessionOperationGeneration = _operationGeneration();
     _sessionStartedAtSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final baselineTimes = _eventBaselineTimes();
@@ -916,6 +936,15 @@ class LatencyCoordinator {
     final result = Completer<bool>();
     _sessionResult = result;
     _onSessionChanged(true, kind, targetTag);
+    RuntimeDiagnosticLog.record(
+      'speed_test.session',
+      fields: {
+        'phase': 'begin',
+        'kind': kind.name,
+        'expectedCount': _sessionExpectedTags.length,
+        'nodeCount': targetTag.isNotEmpty ? 1 : _outboundCount(),
+      },
+    );
     AppLogStore.info(
       'latency',
       'latency session start kind=${kind.name} reason=$reason '
@@ -1115,6 +1144,7 @@ class LatencyCoordinator {
         .where(_sessionExpectedTags.contains)
         .length;
     final successfulCount = _successfulTags.length;
+    final durationMs = _sessionStopwatch?.elapsedMilliseconds ?? 0;
     _cancelSessionTimers();
     _phase = LatencySessionPhase.settled;
     _kind = null;
@@ -1128,6 +1158,7 @@ class LatencyCoordinator {
     _nativeSessionId = 0;
     _sessionMode = '';
     _sessionReason = '';
+    _sessionStopwatch = null;
     _sessionResult = null;
     _onSessionChanged(false, previousKind, previousTarget);
     if (result != null && !result.isCompleted) {
@@ -1143,6 +1174,26 @@ class LatencyCoordinator {
           'reason=$reason success=$success '
           'received=$receivedCount successful=$successfulCount '
           'expected=$expectedCount',
+    );
+    final fields = <String, Object?>{
+      'phase': 'complete',
+      'kind': previousKind?.name ?? 'full',
+      'reason': reason,
+      'result': success ? 'success' : 'failed',
+      'durationMs': durationMs,
+      'receivedCount': receivedCount,
+      'successfulCount': successfulCount,
+      'expectedCount': expectedCount,
+    };
+    if (error != null) {
+      fields.addAll(RuntimeDiagnosticLog.errorFields(error));
+    }
+    RuntimeDiagnosticLog.record(
+      'speed_test.session',
+      fields: fields,
+      level: success
+          ? RuntimeDiagnosticLevel.info
+          : RuntimeDiagnosticLevel.warning,
     );
   }
 

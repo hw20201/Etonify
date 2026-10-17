@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:meow_client/logging/app_log_store.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 import 'package:meow_client/singbox/singbox_api.g.dart' as pigeon;
 
 class RuntimeStateEvent {
@@ -345,6 +346,13 @@ class RuntimeEventController {
     if (!_shouldRecordLog(effectiveLevel)) {
       return;
     }
+    if (effectiveLevel == 'error') {
+      RuntimeDiagnosticLog.record(
+        'native.runtime_error',
+        fields: RuntimeDiagnosticLog.errorFields(message),
+        level: RuntimeDiagnosticLevel.error,
+      );
+    }
     AppLogStore.ingest(
       'sing-box',
       message,
@@ -371,6 +379,13 @@ class RuntimeEventController {
       final effectiveLevel = AppLogStore.inferLevel(message) ?? fallbackLevel;
       if (!_shouldRecordLog(effectiveLevel)) {
         continue;
+      }
+      if (effectiveLevel == 'error') {
+        RuntimeDiagnosticLog.record(
+          'native.runtime_error',
+          fields: RuntimeDiagnosticLog.errorFields(message),
+          level: RuntimeDiagnosticLevel.error,
+        );
       }
       batch.add(
         AppLogEntry(

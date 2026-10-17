@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
+
 typedef SelectOutboundCommand =
     Future<void> Function(String groupTag, String outboundTag);
 
@@ -40,8 +42,21 @@ class RuntimeCommandCoordinator {
     final normalizedTag = outboundTag.trim();
     final generation = ++_generation;
     final stopwatch = Stopwatch()..start();
+    RuntimeDiagnosticLog.record(
+      'proxy.selection.runtime',
+      fields: {'phase': 'begin', 'selectedPresent': normalizedTag.isNotEmpty},
+    );
     if (_disposed || normalizedTag.isEmpty) {
       stopwatch.stop();
+      RuntimeDiagnosticLog.record(
+        'proxy.selection.runtime',
+        fields: {
+          'phase': 'complete',
+          'result': 'stale',
+          'durationMs': stopwatch.elapsedMilliseconds,
+        },
+        level: RuntimeDiagnosticLevel.warning,
+      );
       return RuntimeSelectionResult._(
         RuntimeSelectionStatus.stale,
         stopwatch.elapsed,
@@ -52,18 +67,46 @@ class RuntimeCommandCoordinator {
       await _selectOutbound('select', normalizedTag).timeout(selectionTimeout);
       stopwatch.stop();
       if (_disposed || generation != _generation) {
+        RuntimeDiagnosticLog.record(
+          'proxy.selection.runtime',
+          fields: {
+            'phase': 'complete',
+            'result': 'stale',
+            'durationMs': stopwatch.elapsedMilliseconds,
+          },
+          level: RuntimeDiagnosticLevel.warning,
+        );
         return RuntimeSelectionResult._(
           RuntimeSelectionStatus.stale,
           stopwatch.elapsed,
         );
       }
+      RuntimeDiagnosticLog.record(
+        'proxy.selection.runtime',
+        fields: {
+          'phase': 'complete',
+          'result': 'success',
+          'durationMs': stopwatch.elapsedMilliseconds,
+        },
+      );
       return RuntimeSelectionResult._(
         RuntimeSelectionStatus.applied,
         stopwatch.elapsed,
       );
     } catch (error) {
       stopwatch.stop();
-      if (_disposed || generation != _generation) {
+      final stale = _disposed || generation != _generation;
+      RuntimeDiagnosticLog.record(
+        'proxy.selection.runtime',
+        fields: {
+          'phase': 'complete',
+          'result': stale ? 'stale' : 'failed',
+          'durationMs': stopwatch.elapsedMilliseconds,
+          ...RuntimeDiagnosticLog.errorFields(error),
+        },
+        level: RuntimeDiagnosticLevel.error,
+      );
+      if (stale) {
         return RuntimeSelectionResult._(
           RuntimeSelectionStatus.stale,
           stopwatch.elapsed,

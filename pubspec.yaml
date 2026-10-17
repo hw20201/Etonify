@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 # This is the single source for Android versionName/versionCode in debug and release.
 # Increment the build number for every release; CI checks it against earlier tags.
-version: 0.3.101+4048
+version: 0.3.101+6049
 environment:
   sdk: ^3.11.4
 

@@ -1570,5 +1570,19 @@
       }
     }
   },
-  "verifiedBadgeTooltip": "已认证"
+  "verifiedBadgeTooltip": "已认证",
+  "runtimeDiagnosticsTitle": "运行诊断（测试构建）",
+  "runtimeDiagnosticsDescription": "仅测试构建使用；内存中最多保留最近 500 条事件。不会记录订阅内容、凭据、节点名称、主机名、URL 或 IP 地址。",
+  "runtimeDiagnosticsEmpty": "暂无诊断事件。",
+  "runtimeDiagnosticsExport": "导出诊断记录",
+  "runtimeDiagnosticsClear": "清空诊断记录",
+  "runtimeDiagnosticsExportFailed": "导出失败或已取消",
+  "runtimeDiagnosticsSaved": "诊断记录已保存：{uri}",
+  "@runtimeDiagnosticsSaved": {
+    "placeholders": {
+      "uri": {
+        "type": "String"
+      }
+    }
+  }
 }

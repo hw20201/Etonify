@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 
@@ -19,6 +20,7 @@ class SettingsPage extends StatelessWidget {
     required this.onExportPlainProfile,
     required this.onResetSettings,
     required this.onOpenExperimental,
+    this.onOpenRuntimeDiagnostics,
     required this.onOpenLogs,
     required this.onOpenAbout,
   });
@@ -36,6 +38,7 @@ class SettingsPage extends StatelessWidget {
   final VoidCallback onExportPlainProfile;
   final VoidCallback onResetSettings;
   final VoidCallback onOpenExperimental;
+  final VoidCallback? onOpenRuntimeDiagnostics;
   final VoidCallback onOpenLogs;
   final VoidCallback onOpenAbout;
 
@@ -203,6 +206,13 @@ class SettingsPage extends StatelessWidget {
                 title: l10n.logsTitle,
                 onTap: onOpenLogs,
               ),
+              if (runtimeDiagnosticsBuild && onOpenRuntimeDiagnostics != null)
+                _SettingsEntryTile(
+                  key: const ValueKey('settings-runtime-diagnostics'),
+                  icon: Icons.bug_report_outlined,
+                  title: l10n.runtimeDiagnosticsTitle,
+                  onTap: onOpenRuntimeDiagnostics!,
+                ),
             ],
           ),
           const SizedBox(height: settingsIslandGap),
@@ -223,6 +233,7 @@ class SettingsPage extends StatelessWidget {
 
 class _SettingsEntryTile extends StatelessWidget {
   const _SettingsEntryTile({
+    super.key,
     required this.icon,
     required this.title,
     required this.onTap,

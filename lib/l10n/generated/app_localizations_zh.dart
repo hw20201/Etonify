@@ -3327,4 +3327,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get verifiedBadgeTooltip => '已认证';
+
+  @override
+  String get runtimeDiagnosticsTitle => '运行诊断（测试构建）';
+
+  @override
+  String get runtimeDiagnosticsDescription =>
+      '仅测试构建使用；内存中最多保留最近 500 条事件。不会记录订阅内容、凭据、节点名称、主机名、URL 或 IP 地址。';
+
+  @override
+  String get runtimeDiagnosticsEmpty => '暂无诊断事件。';
+
+  @override
+  String get runtimeDiagnosticsExport => '导出诊断记录';
+
+  @override
+  String get runtimeDiagnosticsClear => '清空诊断记录';
+
+  @override
+  String get runtimeDiagnosticsExportFailed => '导出失败或已取消';
+
+  @override
+  String runtimeDiagnosticsSaved(String uri) {
+    return '诊断记录已保存：$uri';
+  }
 }

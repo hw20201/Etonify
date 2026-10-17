@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:meow_client/app/app_background_tasks.dart';
 import 'package:meow_client/logging/app_log_store.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 import 'package:meow_client/singbox/singbox_api.g.dart' as pigeon;
 import 'package:meow_client/singbox/singbox_runtime.dart';
 
@@ -171,26 +172,92 @@ class RuntimeLifecycleController {
     required void Function(String reason) trimMemory,
     required RuntimeTimeoutHook onWatchdogTimeout,
   }) async {
+    final totalTimer = Stopwatch()..start();
+    final mode = useVpn ? 'vpn' : 'proxy';
+    RuntimeDiagnosticLog.record(
+      'connection.start',
+      fields: {'phase': 'begin', 'mode': mode},
+    );
     trimMemory('before_runtime_start_build');
     cacheStartedBuild(build);
+    Future<RuntimeLifecycleResult> waitForStart(
+      Future<void> startFuture,
+    ) async {
+      final watchdogGeneration = _armStartWatchdog(
+        useVpn: useVpn,
+        onTimeout: onWatchdogTimeout,
+      );
+      final result = await _waitForStartFuture(
+        startFuture,
+        watchdogGeneration: watchdogGeneration,
+        useVpn: useVpn,
+      );
+      final fields = <String, Object?>{
+        'phase': 'complete',
+        'mode': mode,
+        'durationMs': totalTimer.elapsedMilliseconds,
+        'result': result.success
+            ? 'success'
+            : (result.timedOut ? 'timeout' : 'failed'),
+      };
+      if (result.error != null) {
+        fields.addAll(RuntimeDiagnosticLog.errorFields(result.error!));
+      }
+      RuntimeDiagnosticLog.record(
+        'connection.start',
+        fields: fields,
+        level: result.success
+            ? RuntimeDiagnosticLevel.info
+            : RuntimeDiagnosticLevel.error,
+      );
+      return result;
+    }
+
     Future<void> startFuture;
     if (build.hasPreparedConfig) {
-      await promotePreparedConfig(build);
+      final promoteTimer = Stopwatch()..start();
+      try {
+        await promotePreparedConfig(build);
+      } catch (error) {
+        final errorFields = RuntimeDiagnosticLog.errorFields(error);
+        RuntimeDiagnosticLog.record(
+          'connection.start.stage',
+          fields: {
+            'phase': 'config_promotion',
+            'durationMs': promoteTimer.elapsedMilliseconds,
+            'result': 'failed',
+            ...errorFields,
+          },
+          level: RuntimeDiagnosticLevel.error,
+        );
+        RuntimeDiagnosticLog.record(
+          'connection.start',
+          fields: {
+            'phase': 'complete',
+            'mode': mode,
+            'durationMs': totalTimer.elapsedMilliseconds,
+            'result': 'failed',
+            ...errorFields,
+          },
+          level: RuntimeDiagnosticLevel.error,
+        );
+        rethrow;
+      }
+      RuntimeDiagnosticLog.record(
+        'connection.start.stage',
+        fields: {
+          'phase': 'config_promotion',
+          'durationMs': promoteTimer.elapsedMilliseconds,
+          'result': 'success',
+        },
+      );
       logCall(
         'startPrepared',
         'reason=start runtime useVpn=$useVpn '
             'configOutbounds=${build.configOutboundCount}',
       );
-      final watchdogGeneration = _armStartWatchdog(
-        useVpn: useVpn,
-        onTimeout: onWatchdogTimeout,
-      );
       startFuture = _runtime.startPrepared(useVpn: useVpn);
-      return _waitForStartFuture(
-        startFuture,
-        watchdogGeneration: watchdogGeneration,
-        useVpn: useVpn,
-      );
+      return waitForStart(startFuture);
     } else {
       logCall(
         'start',
@@ -198,16 +265,8 @@ class RuntimeLifecycleController {
             'configOutbounds=${build.configOutboundCount} '
             'configChars=${build.configLength}',
       );
-      final watchdogGeneration = _armStartWatchdog(
-        useVpn: useVpn,
-        onTimeout: onWatchdogTimeout,
-      );
       startFuture = _runtime.start(config: build.configJson, useVpn: useVpn);
-      return _waitForStartFuture(
-        startFuture,
-        watchdogGeneration: watchdogGeneration,
-        useVpn: useVpn,
-      );
+      return waitForStart(startFuture);
     }
   }
 
@@ -217,8 +276,20 @@ class RuntimeLifecycleController {
     required bool useVpn,
   }) async {
     final deadline = DateTime.now().add(startTimeout);
+    var phase = 'native_rpc';
+    var phaseTimer = Stopwatch()..start();
     try {
       await startFuture.timeout(startTimeout);
+      RuntimeDiagnosticLog.record(
+        'connection.start.stage',
+        fields: {
+          'phase': 'native_rpc',
+          'durationMs': phaseTimer.elapsedMilliseconds,
+          'result': 'success',
+        },
+      );
+      phase = 'confirmation';
+      phaseTimer = Stopwatch()..start();
       final startConfirmed = await _waitForStartedRuntime(
         useVpn: useVpn,
         deadline: deadline,
@@ -229,11 +300,29 @@ class RuntimeLifecycleController {
           startTimeout,
         );
       }
+      RuntimeDiagnosticLog.record(
+        'connection.start.stage',
+        fields: {
+          'phase': 'confirmation',
+          'durationMs': phaseTimer.elapsedMilliseconds,
+          'result': 'success',
+        },
+      );
       cancelStartWatchdog();
       return const RuntimeLifecycleResult.success(
         policy: RuntimeApplyPolicy.fullServiceRestart,
       );
     } on TimeoutException catch (error, stackTrace) {
+      RuntimeDiagnosticLog.record(
+        'connection.start.stage',
+        fields: {
+          'phase': phase,
+          'durationMs': phaseTimer.elapsedMilliseconds,
+          'result': 'timeout',
+          ...RuntimeDiagnosticLog.errorFields(error),
+        },
+        level: RuntimeDiagnosticLevel.warning,
+      );
       return _handleImmediateStartTimeout(
         generation: watchdogGeneration,
         useVpn: useVpn,
@@ -242,6 +331,16 @@ class RuntimeLifecycleController {
       );
     } catch (error, stackTrace) {
       cancelStartWatchdog();
+      RuntimeDiagnosticLog.record(
+        'connection.start.stage',
+        fields: {
+          'phase': phase,
+          'durationMs': phaseTimer.elapsedMilliseconds,
+          'result': 'failed',
+          ...RuntimeDiagnosticLog.errorFields(error),
+        },
+        level: RuntimeDiagnosticLevel.error,
+      );
       AppLogStore.error(
         'sing-box',
         'runtime start failed useVpn=$useVpn error=$error\n$stackTrace',
@@ -605,17 +704,61 @@ class RuntimeLifecycleController {
   }
 
   Future<bool> stopRuntime({required String reason}) async {
+    final totalTimer = Stopwatch()..start();
+    RuntimeDiagnosticLog.record('connection.stop', fields: {'phase': 'begin'});
     cancelStartWatchdog();
+    final rpcTimer = Stopwatch()..start();
     try {
       await _runtime.stop(reason: reason).timeout(stopTimeout);
+      RuntimeDiagnosticLog.record(
+        'connection.stop.stage',
+        fields: {
+          'phase': 'native_rpc',
+          'durationMs': rpcTimer.elapsedMilliseconds,
+          'result': 'success',
+        },
+      );
     } catch (error, stackTrace) {
+      RuntimeDiagnosticLog.record(
+        'connection.stop.stage',
+        fields: {
+          'phase': 'native_rpc',
+          'durationMs': rpcTimer.elapsedMilliseconds,
+          'result': error is TimeoutException ? 'timeout' : 'failed',
+          ...RuntimeDiagnosticLog.errorFields(error),
+        },
+        level: RuntimeDiagnosticLevel.warning,
+      );
       AppLogStore.warning(
         'runtime',
         'native runtime stop call failed reason=$reason error=$error\n'
             '$stackTrace',
       );
     }
+    final confirmationTimer = Stopwatch()..start();
     final stopped = await _waitForStoppedRuntime();
+    RuntimeDiagnosticLog.record(
+      'connection.stop.stage',
+      fields: {
+        'phase': 'confirmation',
+        'durationMs': confirmationTimer.elapsedMilliseconds,
+        'result': stopped ? 'success' : 'timeout',
+      },
+      level: stopped
+          ? RuntimeDiagnosticLevel.info
+          : RuntimeDiagnosticLevel.warning,
+    );
+    RuntimeDiagnosticLog.record(
+      'connection.stop',
+      fields: {
+        'phase': 'complete',
+        'durationMs': totalTimer.elapsedMilliseconds,
+        'result': stopped ? 'success' : 'failed',
+      },
+      level: stopped
+          ? RuntimeDiagnosticLevel.info
+          : RuntimeDiagnosticLevel.warning,
+    );
     if (!stopped) {
       AppLogStore.error(
         'runtime',

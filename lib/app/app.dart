@@ -83,6 +83,7 @@ import 'package:meow_client/features/settings/settings_core_page.dart';
 import 'package:meow_client/features/settings/settings_general_page.dart';
 import 'package:meow_client/features/settings/settings_inbound_page.dart';
 import 'package:meow_client/features/settings/settings_logs_page.dart';
+import 'package:meow_client/features/settings/runtime_diagnostics_page.dart';
 import 'package:meow_client/features/settings/settings_page.dart';
 import 'package:meow_client/features/settings/settings_presentation_builder.dart';
 import 'package:meow_client/features/settings/settings_routing_page.dart';
@@ -94,6 +95,7 @@ import 'package:meow_client/features/subscriptions/subscriptions_page.dart';
 import 'package:meow_client/features/welcome/welcome_page.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/logging/app_log_store.dart';
+import 'package:meow_client/logging/runtime_diagnostic_log.dart';
 import 'package:meow_client/platform/quick_settings_tile_installer.dart';
 import 'package:meow_client/models/app_view_models.dart';
 import 'package:meow_client/models/proxy_runtime_visual_state.dart';
@@ -1045,7 +1047,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     }
     _networkRecovery.recordRestart(DateTime.now());
     _groupUrlTestScheduler.cancel();
-    _latencyCoordinator.cancel();
+    _latencyCoordinator.cancel(reason: 'network_changed');
     AppLogStore.warning(
       'network',
       'recovery_restart reason=$reason '
@@ -4094,6 +4096,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     _networkRecovery.cancelDecision();
     await _latencyCoordinator.cancelAndWait(
       maxWait: const Duration(seconds: 2),
+      reason: 'runtime_stopped',
     );
     if (mounted) {
       setState(() {
@@ -4274,7 +4277,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
         } else {
           logicalSession.pauseForVpn();
           _publishOfflineUrlTestProgress();
-          await _latencyCoordinator.cancelAndWait();
+          await _latencyCoordinator.cancelAndWait(reason: 'network_changed');
           try {
             await _stopOfflineProbe(retainConfig: true);
           } catch (error) {
@@ -4407,6 +4410,16 @@ class _MeowClientState extends ConsumerState<MeowClient>
       return;
     }
 
+    final selectionTimer = Stopwatch()..start();
+    RuntimeDiagnosticLog.record(
+      'proxy.selection',
+      fields: {
+        'phase': 'begin',
+        'source': 'user',
+        'connected': _connected,
+        'selectedPresent': tag.isNotEmpty,
+      },
+    );
     final previousTag = _selectedProxyTag;
     final previousProxy = _displayProxyForSelectedTag(previousTag);
     final requestedProxy = _displayProxyForSelectedTag(tag);
@@ -4432,6 +4445,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     final selectionGeneration = selectInRuntime
         ? _beginRuntimeProxySelectionGuard(tag, previousTag)
         : _beginLocalProxySelection();
+    final localUpdateTimer = Stopwatch()..start();
     setState(() {
       _subscriptions = _replaceSubscription(updatedSubscription);
       _activeLookupSubscription = null;
@@ -4439,6 +4453,16 @@ class _MeowClientState extends ConsumerState<MeowClient>
       _displayProxyCache =
           _displayProxyForSelectedTag(tag) ?? _displayProxyCache;
     });
+    RuntimeDiagnosticLog.record(
+      'proxy.selection',
+      fields: {
+        'phase': 'local_update',
+        'result': 'success',
+        'localUpdateMs': localUpdateTimer.elapsedMilliseconds,
+        'connected': _connected,
+        'selectedPresent': true,
+      },
+    );
     // A selection changes at most the old and the new visible rows. Rebuilding
     // every proxy summary here turns a Wi-Fi/LTE handover plus one tap into a
     // multi-thousand-row synchronous allocation burst.
@@ -4509,6 +4533,14 @@ class _MeowClientState extends ConsumerState<MeowClient>
             reason: 'proxy selection persisted',
             generation: selectionGeneration,
           );
+          RuntimeDiagnosticLog.record(
+            'proxy.selection',
+            fields: {
+              'phase': 'complete',
+              'result': 'success',
+              'durationMs': selectionTimer.elapsedMilliseconds,
+            },
+          );
           _clearRuntimeProxySelectionGuard(generation: selectionGeneration);
           _scheduleActiveOutboundIpRefresh();
           if (_connected && !_runtimeTransitionInProgress) {
@@ -4518,6 +4550,16 @@ class _MeowClientState extends ConsumerState<MeowClient>
             );
           }
         } catch (error) {
+          RuntimeDiagnosticLog.record(
+            'proxy.selection',
+            fields: {
+              'phase': 'failed',
+              'result': 'failed',
+              'durationMs': selectionTimer.elapsedMilliseconds,
+              ...RuntimeDiagnosticLog.errorFields(error),
+            },
+            level: RuntimeDiagnosticLevel.error,
+          );
           if (!mounted ||
               !_proxySelection.isCurrentGeneration(selectionGeneration)) {
             return;
@@ -4539,6 +4581,11 @@ class _MeowClientState extends ConsumerState<MeowClient>
     required int generation,
     required bool prepareConfigSnapshot,
   }) async {
+    final timer = Stopwatch()..start();
+    RuntimeDiagnosticLog.record(
+      'proxy.selection.persistence',
+      fields: {'phase': 'begin'},
+    );
     try {
       await Future.wait<void>([
         SubscriptionStore.saveSelectedProxyMetadata(updatedSubscription),
@@ -4550,7 +4597,25 @@ class _MeowClientState extends ConsumerState<MeowClient>
           generation: generation,
         );
       }
+      RuntimeDiagnosticLog.record(
+        'proxy.selection.persistence',
+        fields: {
+          'phase': 'complete',
+          'result': 'success',
+          'persistenceMs': timer.elapsedMilliseconds,
+        },
+      );
     } catch (error) {
+      RuntimeDiagnosticLog.record(
+        'proxy.selection.persistence',
+        fields: {
+          'phase': 'failed',
+          'result': 'failed',
+          'persistenceMs': timer.elapsedMilliseconds,
+          ...RuntimeDiagnosticLog.errorFields(error),
+        },
+        level: RuntimeDiagnosticLevel.error,
+      );
       AppLogStore.error(
         'proxy',
         'Failed to persist selected outbound '
@@ -6076,6 +6141,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
         ),
         resetSettings: () => unawaited(_resetSettingsToDefaults()),
         openExperimental: _showExperimentalSettingsPage,
+        openRuntimeDiagnostics: _showRuntimeDiagnosticsPage,
         openCore: _showCoreSettingsPage,
         openLogs: _showLogsPage,
         openAbout: _showAboutSettingsPage,
@@ -6786,6 +6852,14 @@ class _MeowClientState extends ConsumerState<MeowClient>
     );
   }
 
+  Future<void> _showRuntimeDiagnosticsPage() async {
+    final navigator = _navigatorKey.currentState;
+    if (navigator == null) return;
+    await navigator.push(
+      MaterialPageRoute<void>(builder: (_) => const RuntimeDiagnosticsPage()),
+    );
+  }
+
   Future<void> _runUrlTest({bool haptic = true}) async {
     if (!_foregroundLifecycleActive) {
       return;
@@ -6799,7 +6873,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
       _groupUrlTestScheduler.cancel();
       _urlTestInFlightNotifier.value = false;
       _urlTestCancelled = true;
-      _latencyCoordinator.cancel();
+      _latencyCoordinator.cancel(reason: 'user_action');
       if (!_connected) ++_offlineStartGeneration;
       final offlineSession = _offlineUrlTestSession;
       if (offlineSession != null && !offlineSession.isTerminal) {
@@ -6853,7 +6927,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
       if (_latencyCoordinator.kind == LatencySessionKind.targeted ||
           (!_latencyCoordinator.isRunning &&
               !_latencyCoordinator.canStartSession)) {
-        await _latencyCoordinator.cancelAndWait();
+        await _latencyCoordinator.cancelAndWait(reason: 'user_action');
       }
       if (!await _ensureActiveSubscriptionHydratedForRuntime()) return false;
       // A matching group snapshot is needed for diagnostics, not for URLTest.
@@ -7051,7 +7125,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     final session = _offlineUrlTestSession;
     session?.fail(reason);
     _publishOfflineUrlTestProgress();
-    await _latencyCoordinator.cancelAndWait();
+    await _latencyCoordinator.cancelAndWait(reason: 'runtime_transition');
     if (!_offlineProbeRunning) return true;
     try {
       await _stopOfflineProbe();
@@ -7293,7 +7367,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     }
     if (phase == SingboxConfigCoordinatorPhase.reconfiguring ||
         phase == SingboxConfigCoordinatorPhase.stopping) {
-      _latencyCoordinator.cancel();
+      _latencyCoordinator.cancel(reason: 'runtime_transition');
       _activeProxyIpController.cancelPending();
       _groupUrlTestScheduler.cancel();
     }
@@ -7397,6 +7471,11 @@ class _MeowClientState extends ConsumerState<MeowClient>
     if (!mounted || !_proxySelection.isCurrentGeneration(generation)) {
       return;
     }
+    final timer = Stopwatch()..start();
+    RuntimeDiagnosticLog.record(
+      'proxy.selection.snapshot',
+      fields: {'phase': 'begin'},
+    );
     try {
       final build = await _configCoordinator
           .buildCurrentSingboxConfigInBackground(returnConfig: false);
@@ -7406,12 +7485,39 @@ class _MeowClientState extends ConsumerState<MeowClient>
         if (build != null) {
           _configCoordinator.discardPreparedConfigCandidate(build);
         }
+        RuntimeDiagnosticLog.record(
+          'proxy.selection.snapshot',
+          fields: {
+            'phase': 'complete',
+            'result': build == null ? 'skipped' : 'stale',
+            'persistenceMs': timer.elapsedMilliseconds,
+          },
+          level: RuntimeDiagnosticLevel.warning,
+        );
         return;
       }
       await _configCoordinator.promotePreparedConfigBuild(build);
       _cacheLastStartedBuild(build);
       _configCoordinator.recordBuiltConfigLog(reason, build);
+      RuntimeDiagnosticLog.record(
+        'proxy.selection.snapshot',
+        fields: {
+          'phase': 'complete',
+          'result': 'success',
+          'persistenceMs': timer.elapsedMilliseconds,
+        },
+      );
     } catch (error) {
+      RuntimeDiagnosticLog.record(
+        'proxy.selection.snapshot',
+        fields: {
+          'phase': 'failed',
+          'result': 'failed',
+          'persistenceMs': timer.elapsedMilliseconds,
+          ...RuntimeDiagnosticLog.errorFields(error),
+        },
+        level: RuntimeDiagnosticLevel.error,
+      );
       AppLogStore.warning(
         'proxy',
         'Failed to persist selected proxy config snapshot: $error',
@@ -7660,6 +7766,25 @@ class _MeowClientState extends ConsumerState<MeowClient>
       _physicalInterfaceKey,
       physicalKey,
     );
+    if (physicalChanged || !usable) {
+      RuntimeDiagnosticLog.record(
+        'network.change',
+        fields: {
+          'phase': 'observed',
+          'reason': usable ? 'network_changed' : 'network_unavailable',
+          'networkGeneration': networkGeneration,
+          'usable': usable,
+          'physicalChanged': physicalChanged,
+          'transport': RuntimeDiagnosticLog.safeTransportForInterface(
+            interfaceName,
+          ),
+          'connected': _connected,
+        },
+        level: usable
+            ? RuntimeDiagnosticLevel.info
+            : RuntimeDiagnosticLevel.warning,
+      );
+    }
     if (physicalChanged) {
       ++_physicalNetworkEpoch;
       final logicalSession = _offlineUrlTestSession;
@@ -7692,7 +7817,11 @@ class _MeowClientState extends ConsumerState<MeowClient>
           .updateNetwork(generation: networkGeneration, usable: usable);
     }
     _runtimeCommands.invalidate();
-    if (physicalChanged || !usable) _latencyCoordinator.cancel();
+    if (physicalChanged || !usable) {
+      _latencyCoordinator.cancel(
+        reason: usable ? 'network_changed' : 'network_unavailable',
+      );
+    }
     if (physicalChanged &&
         usable &&
         _offlineUrlTestSession != null &&
@@ -7868,15 +7997,36 @@ class _MeowClientState extends ConsumerState<MeowClient>
     RuntimeUrlTestResult result, {
     bool borrowedStartupResult = false,
   }) {
+    final available =
+        result.delay > 0 &&
+        result.status.toLowerCase() !=
+            ProxyRuntimeController.urlTestStatusUnavailable;
     final accepted = _latencyCoordinator.handleCoreResult(
       tag: result.tag,
       sessionId: result.sessionId,
       revision: result.revision,
       borrowedStartupResult: borrowedStartupResult,
-      available:
-          result.delay > 0 &&
-          result.status.toLowerCase() !=
-              ProxyRuntimeController.urlTestStatusUnavailable,
+      available: available,
+    );
+    final diagnosticFields = <String, Object?>{
+      'phase': 'result',
+      'result': !accepted ? 'stale' : (available ? 'available' : 'unavailable'),
+      'latencyMs': result.delay > 0 ? result.delay : 0,
+    };
+    if (!available &&
+        (result.error.isNotEmpty || result.errorCode.isNotEmpty)) {
+      diagnosticFields.addAll(
+        RuntimeDiagnosticLog.errorFields(
+          StateError('${result.error} ${result.errorCode}'),
+        ),
+      );
+    }
+    RuntimeDiagnosticLog.record(
+      'speed_test.result',
+      fields: diagnosticFields,
+      level: available
+          ? RuntimeDiagnosticLevel.info
+          : RuntimeDiagnosticLevel.warning,
     );
     if (!accepted) return;
     final logicalSession = _offlineUrlTestSession;
