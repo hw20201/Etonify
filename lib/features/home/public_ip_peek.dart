@@ -120,7 +120,11 @@ class _PublicIpPeekState extends State<PublicIpPeek>
       builder: (context, _) {
         final displayedIp = _displayIp(widget.controller.info?.ip ?? '');
         final accent = theme.colorScheme.primary;
+        // Keep the backdrop in the app-wide overlay. The nearest overlay can
+        // be bounded/clipped to the home content area, leaving the area below
+        // the card undimmed and making the background color visibly change.
         return OverlayPortal(
+          overlayLocation: OverlayChildLocation.rootOverlay,
           controller: _portalController,
           overlayChildBuilder: (overlayContext) =>
               _buildOverlay(overlayContext, theme, l10n, accent),

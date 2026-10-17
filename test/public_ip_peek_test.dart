@@ -5,6 +5,93 @@ import 'package:meow_client/features/home/public_ip_peek.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 
 void main() {
+  testWidgets('backdrop covers the root overlay outside a nested navigator', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(412, 915);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final controller = PublicIpController(
+      load: () async => const PublicIpInfo(ip: '203.0.113.1'),
+    );
+    var backgroundTaps = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Scaffold(
+          body: Column(
+            children: [
+              SizedBox(
+                height: 600,
+                child: Navigator(
+                  onGenerateRoute: (_) => MaterialPageRoute<void>(
+                    builder: (_) => Scaffold(
+                      body: Center(
+                        child: PublicIpPeek(
+                          controller: controller,
+                          connected: true,
+                          hideIp: false,
+                          hapticEnabled: false,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  key: const ValueKey('outside-nested-overlay'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => backgroundTaps++,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final capsule = find.byKey(const ValueKey('outbound-ip-capsule'));
+    final card = find.byKey(const ValueKey('outbound-ip-details-card'));
+    final backdrop = find.byKey(const ValueKey('outbound-ip-overlay-backdrop'));
+    final outside = find.byKey(const ValueKey('outside-nested-overlay'));
+
+    await tester.tap(capsule);
+    await tester.pumpAndSettle();
+    expect(tester.getRect(backdrop), const Rect.fromLTWH(0, 0, 412, 915));
+    expect(tester.getRect(card).bottom, lessThan(tester.getRect(capsule).top));
+    expect(tester.widget<ColoredBox>(backdrop).color.a, closeTo(.12, .005));
+
+    // A tap below the nested navigator must dismiss the card, not reach home.
+    await tester.tapAt(tester.getCenter(outside));
+    await tester.pumpAndSettle();
+    expect(card, findsNothing);
+    expect(backdrop, findsNothing);
+    expect(backgroundTaps, 0);
+
+    // Closing and reopening must keep the controller and anchor functional.
+    await tester.tap(capsule);
+    await tester.pumpAndSettle();
+    expect(card, findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('outbound-ip-close')));
+    await tester.pumpAndSettle();
+    expect(card, findsNothing);
+    await tester.tapAt(tester.getCenter(outside));
+    expect(backgroundTaps, 1);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    controller.dispose();
+  });
+
   testWidgets('capsule expands its themed detail card above the anchor', (
     tester,
   ) async {
