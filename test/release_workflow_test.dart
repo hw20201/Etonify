@@ -45,6 +45,10 @@ void main() {
       contains('run: bash scripts/verify_android_release_apk_test.sh'),
     );
     final releaseJobStart = workflow.indexOf('  draft-tag-release:');
+    final releaseJobEnd = workflow.indexOf('  diagnostic-test-artifact:');
+    final releaseJob = workflow.substring(releaseJobStart, releaseJobEnd);
+    expect(releaseJob, contains('MINIMUM_UPGRADE_VERSION_CODE: "6054"'));
+    expect(releaseJob, contains('Check formatting before signed build'));
     final analyzeIndex = workflow.indexOf(
       '      - name: Analyze and test',
       releaseJobStart,

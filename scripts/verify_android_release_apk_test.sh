@@ -61,6 +61,17 @@ run_success_case() {
 run_success_case legacy
 run_success_case v2
 
+ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=v2 FAKE_APK_VERSION_CODE=6055 FAKE_APK_VERSION_NAME=0.3.105 \
+  bash "$verifier" "$apk" '0.3.105' '4055' '6054' "$expected_sha256" > "$tmp_dir/upgrade-6055.out"
+grep -Fq 'versionCode=6055' "$tmp_dir/upgrade-6055.out"
+
+if ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=v2 FAKE_APK_VERSION_CODE=6054 FAKE_APK_VERSION_NAME=0.3.105 \
+  bash "$verifier" "$apk" '0.3.105' '4055' '6054' "$expected_sha256" > "$tmp_dir/baseline-6054.out" 2>&1; then
+  echo 'Expected the installed v0.3.104 versionCode 6054 to be rejected.' >&2
+  exit 1
+fi
+grep -Fq 'APK versionCode 6054 must be greater than installed baseline 6054.' "$tmp_dir/baseline-6054.out"
+
 ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=v2 FAKE_APK_VERSION_CODE=6054 FAKE_APK_VERSION_NAME=0.3.104 \
   bash "$verifier" "$apk" '0.3.104' '4054' '6053' "$expected_sha256" > "$tmp_dir/upgrade-6054.out"
 grep -Fq 'versionCode=6054' "$tmp_dir/upgrade-6054.out"

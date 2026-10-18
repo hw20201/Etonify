@@ -245,6 +245,14 @@ jobs:
           flutter analyze --fatal-infos
           flutter test
 
+      - name: Check formatting before signed build
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-files 'lib/*.dart' 'test/*.dart' \
+            | grep -v '\.g\.dart$' \
+            | xargs -n 50 dart format --output=none --set-exit-if-changed
+
       - name: Checkout pinned APK verifier reference
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -273,7 +281,7 @@ jobs:
       - name: Verify signed APK package, version and certificate before draft
         shell: bash
         env:
-          MINIMUM_UPGRADE_VERSION_CODE: "6053"
+          MINIMUM_UPGRADE_VERSION_CODE: "6054"
           EXPECTED_RELEASE_CERT_SHA256: "f1e431ddbefe3496db75f264a0dd02472c7a4be704f8f78c7bd834c146f9f665"
         run: |
           set -euo pipefail
