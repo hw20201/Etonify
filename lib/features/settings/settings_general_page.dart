@@ -449,25 +449,11 @@ class _LatencyMeasurementModeTileState
         color: color.primary,
       ),
       title: Text(l10n.latencyMeasurementModeTitle),
-      subtitle: Text(l10n.latencyMeasurementModeDescription),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 138,
-            child: Text(
-              _label(l10n),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: color.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded),
-        ],
+      subtitle: _SettingsChoiceSubtitle(
+        value: _label(l10n),
+        description: l10n.latencyMeasurementModeDescription,
       ),
+      trailing: const Icon(Icons.chevron_right_rounded),
       onTap: _busy ? null : () => _select(context),
     );
   }
@@ -542,20 +528,33 @@ class _PublicIpSourceTileState extends State<_PublicIpSourceTile> {
         color: colorScheme.primary,
       ),
       title: Text(l10n.ipLookupSourceTitle),
-      subtitle: Text(l10n.ipLookupSourceDescription),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _sourceName(l10n),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const Icon(Icons.chevron_right_rounded),
-        ],
+      subtitle: _SettingsChoiceSubtitle(
+        value: _sourceName(l10n),
+        description: l10n.ipLookupSourceDescription,
       ),
+      trailing: const Icon(Icons.chevron_right_rounded),
       onTap: widget.onChanged == null ? null : () => _choose(context),
+    );
+  }
+}
+
+/// Keep choice values inside the text column so long descriptions can wrap
+/// without competing with a wide trailing label. ListTile owns the row height.
+class _SettingsChoiceSubtitle extends StatelessWidget {
+  const _SettingsChoiceSubtitle({
+    required this.value,
+    required this.description,
+  });
+
+  final String value;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [Text(value), const Gap(4), Text(description)],
     );
   }
 }

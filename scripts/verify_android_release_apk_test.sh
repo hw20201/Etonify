@@ -61,6 +61,17 @@ run_success_case() {
 run_success_case legacy
 run_success_case v2
 
+ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=v2 FAKE_APK_VERSION_CODE=6054 FAKE_APK_VERSION_NAME=0.3.104 \
+  bash "$verifier" "$apk" '0.3.104' '4054' '6053' "$expected_sha256" > "$tmp_dir/upgrade-6054.out"
+grep -Fq 'versionCode=6054' "$tmp_dir/upgrade-6054.out"
+
+if ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=v2 FAKE_APK_VERSION_CODE=6053 FAKE_APK_VERSION_NAME=0.3.104 \
+  bash "$verifier" "$apk" '0.3.104' '4054' '6053' "$expected_sha256" > "$tmp_dir/baseline-6053.out" 2>&1; then
+  echo 'Expected the installed v0.3.103 versionCode 6053 to be rejected.' >&2
+  exit 1
+fi
+grep -Fq 'APK versionCode 6053 must be greater than installed baseline 6053.' "$tmp_dir/baseline-6053.out"
+
 ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=v2 FAKE_APK_VERSION_CODE=6053 FAKE_APK_VERSION_NAME=0.3.103 \
   bash "$verifier" "$apk" '0.3.103' '4053' '6052' "$expected_sha256" > "$tmp_dir/upgrade-6053.out"
 grep -Fq 'versionCode=6053' "$tmp_dir/upgrade-6053.out"
@@ -100,4 +111,4 @@ if ANDROID_SDK_ROOT="$sdk_root" FAKE_APKSIGNER_FORMAT=multiple \
 fi
 grep -Fq 'APK contains multiple distinct signing certificate SHA-256 digests.' "$tmp_dir/multiple.out"
 
-printf '%s\n' 'APK verifier regression tests passed (legacy, apksigner 0.9, upgrade 6053, old Draft 6052, baseline, mismatch, missing, multiple).'
+printf '%s\n' 'APK verifier regression tests passed (legacy, apksigner 0.9, upgrade 6054, reject baseline 6053, upgrade 6053, old Draft 6052, baseline, mismatch, missing, multiple).'

@@ -74,6 +74,102 @@ Future<void> _openNotificationSettings(WidgetTester tester) async {
 }
 
 void main() {
+  for (final locale in ['zh', 'en', 'ru']) {
+    for (final width in [320.0, 360.0, 412.0]) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets(
+          'choice rows share full text width: $locale, $width, scale $scale',
+          (tester) async {
+            tester.view.physicalSize = Size(width, 2400);
+            tester.view.devicePixelRatio = 1;
+            addTearDown(tester.view.resetPhysicalSize);
+            addTearDown(tester.view.resetDevicePixelRatio);
+            await tester.pumpWidget(
+              _generalSettingsApp(
+                statusNotificationEnabled: true,
+                locale: Locale(locale),
+              ),
+            );
+            await tester.pumpAndSettle();
+            // Exercise the real controls group independently of the fixed-size
+            // appearance previews, which are outside this layout change.
+            final group = tester.widget<SettingsTileGroup>(
+              find.ancestor(
+                of: find.byKey(const ValueKey('public-ip-source')),
+                matching: find.byType(SettingsTileGroup),
+              ),
+            );
+            await tester.pumpWidget(
+              MaterialApp(
+                locale: Locale(locale),
+                supportedLocales: AppLocalizations.supportedLocales,
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                builder: (context, child) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: TextScaler.linear(scale)),
+                  child: child!,
+                ),
+                home: Scaffold(
+                  body: Builder(
+                    builder: (context) => Theme(
+                      data: settingsTileTheme(context),
+                      child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [group],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            for (final key in [
+              'public-ip-source',
+              'latency-measurement-mode',
+            ]) {
+              final tileFinder = find.byKey(ValueKey(key));
+              await tester.ensureVisible(tileFinder);
+              await tester.pumpAndSettle();
+              final tile = tester.widget<ListTile>(tileFinder);
+              expect(tile.trailing, isA<Icon>());
+              expect(
+                (tile.trailing! as Icon).icon,
+                Icons.chevron_right_rounded,
+              );
+              final titleFinder = find.descendant(
+                of: tileFinder,
+                matching: find.byWidget(tile.title!),
+              );
+              final texts = find.descendant(
+                of: find.byWidget(tile.subtitle!),
+                matching: find.byType(Text),
+              );
+              expect(texts, findsNWidgets(2));
+              final valueRect = tester.getRect(texts.at(0));
+              final descriptionRect = tester.getRect(texts.at(1));
+              final titleRect = tester.getRect(titleFinder);
+              expect(valueRect.left, titleRect.left);
+              expect(descriptionRect.left, titleRect.left);
+              expect(descriptionRect.width, titleRect.width);
+              expect(descriptionRect.width, greaterThan(width - 180));
+              expect(valueRect.bottom, lessThan(descriptionRect.top));
+              expect(
+                descriptionRect.bottom,
+                lessThanOrEqualTo(tester.getRect(tileFinder).bottom),
+              );
+              for (final text in tester.widgetList<Text>(texts)) {
+                expect(text.maxLines, isNull);
+                expect(text.overflow, isNot(TextOverflow.ellipsis));
+              }
+              expect(tester.takeException(), isNull);
+            }
+          },
+        );
+      }
+    }
+  }
+
   testWidgets('general settings exposes launch connect and quick tile action', (
     tester,
   ) async {
@@ -137,6 +233,7 @@ void main() {
       );
       final tile = find.byKey(const ValueKey('latency-measurement-mode'));
       await tester.ensureVisible(tile);
+      await tester.pumpAndSettle();
       await tester.tap(tile);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Real URL measurement').last);
@@ -144,6 +241,8 @@ void main() {
       expect(changes, isEmpty);
       expect(find.text('Unified URLTest measurement'), findsOneWidget);
       accepted = true;
+      await tester.ensureVisible(tile);
+      await tester.pumpAndSettle();
       await tester.tap(tile);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Real URL measurement').last);
