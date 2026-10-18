@@ -33,15 +33,12 @@ class VpnRuntimeState {
     AppConnectionPhase? phase,
     bool? retryScheduled,
     bool? networkUsable,
-    bool clearNetworkUsable = false,
     int? networkGeneration,
   }) {
     return VpnRuntimeState(
       phase: phase ?? this.phase,
       retryScheduled: retryScheduled ?? this.retryScheduled,
-      networkUsable: clearNetworkUsable
-          ? null
-          : networkUsable ?? this.networkUsable,
+      networkUsable: networkUsable ?? this.networkUsable,
       networkGeneration: networkGeneration ?? this.networkGeneration,
     );
   }
@@ -76,13 +73,6 @@ class VpnRuntimeStateNotifier extends Notifier<VpnRuntimeState> {
       networkGeneration: generation,
       networkUsable: usable,
     );
-    if (next != state) {
-      state = next;
-    }
-  }
-
-  void clearNetwork() {
-    final next = state.copyWith(clearNetworkUsable: true);
     if (next != state) {
       state = next;
     }

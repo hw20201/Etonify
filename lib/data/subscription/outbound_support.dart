@@ -1,5 +1,4 @@
 const String wireGuardOutboundType = 'wireguard';
-const String wireGuardUnsupportedSinceVersion = '0.3.1';
 
 String outboundTypeOf(Map<String, dynamic> config) =>
     config['type']?.toString().trim().toLowerCase() ?? '';

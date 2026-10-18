@@ -7,7 +7,6 @@ const String lowestFreeProxyTag = 'lowest-free';
 const String mixedProxyTag = 'mixed';
 
 const List<String> lowestProxyTags = <String>[lowestProxyTag];
-const List<String> baseLowestProxyTags = <String>[lowestProxyTag];
 const List<String> pinnedProxyTags = <String>[lowestProxyTag];
 
 const Set<String> reservedProxyTags = <String>{
@@ -20,8 +19,6 @@ const Set<String> reservedProxyTags = <String>{
 };
 
 bool isLowestProxyTag(String tag) => tag == lowestProxyTag;
-
-bool isMixedProxyTag(String tag) => tag == mixedProxyTag;
 
 bool isLegacySyntheticProxyTag(String tag) =>
     tag == lowestOpenProxyTag ||
@@ -40,11 +37,6 @@ bool isPinnedProxyTag(String tag) => pinnedProxyTags.contains(tag);
 
 bool isReservedProxyTag(String tag) => reservedProxyTags.contains(tag);
 
-int lowestProxyTagOrder(String tag) {
-  final index = lowestProxyTags.indexOf(tag);
-  return index < 0 ? 1 << 30 : index;
-}
-
 int pinnedProxyTagOrder(String tag) {
   final index = pinnedProxyTags.indexOf(tag);
   return index < 0 ? 1 << 30 : index;
@@ -58,11 +50,6 @@ String lowestProxyDisplayName(String tag, [String? selectedName]) {
   final label = lowestProxyBaseLabel(tag);
   final selected = selectedName?.trim() ?? '';
   return selected.isEmpty ? label : '$label · $selected';
-}
-
-String normalizeLowestCountryCode(String? countryCode) {
-  final normalized = countryCode?.trim().toUpperCase() ?? '';
-  return RegExp(r'^[A-Z]{2}$').hasMatch(normalized) ? normalized : '';
 }
 
 bool lowestProxyAllowsCountry(String tag, String? countryCode) {

@@ -341,24 +341,6 @@ class ChinaRouteDataService implements ChinaRouteUpdateActivity {
     return loadStatus();
   }
 
-  Future<ChinaRouteDataStatus> deleteInstalled() async {
-    final paths = await _storagePaths();
-    for (final directoryPath in <String>[
-      paths.baseDirectoryPath,
-      paths.legacyDirectoryPath,
-    ]) {
-      final directory = Directory(directoryPath);
-      if (await directory.exists()) {
-        try {
-          await directory.delete(recursive: true);
-        } on FileSystemException {
-          // Removing cached route data is best-effort.
-        }
-      }
-    }
-    return const ChinaRouteDataStatus.unavailable();
-  }
-
   Future<Uint8List> _downloadBytes(
     Uri uri, {
     int completedBytesOffset = 0,

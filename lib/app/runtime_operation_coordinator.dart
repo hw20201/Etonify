@@ -51,7 +51,6 @@ class RuntimeOperationCoordinator {
   int get urlTestGeneration => _urlTestGeneration;
   int get nativeRuntimeGeneration => _nativeRuntimeGeneration;
   String get selectedTag => _selectedTag;
-  bool get transitioning => _transitioning;
   bool get networkUsable => _networkUsable;
   bool get networkStateKnown => _networkStateKnown;
   bool get diagnosticsReady =>

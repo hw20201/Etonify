@@ -30,9 +30,6 @@ class EtonifyImportWarning {
   final ExportCompatibilityStatus compatibility;
   final String createdByVersion;
   final String minClientVersion;
-
-  bool get requiresConfirmation =>
-      compatibility == ExportCompatibilityStatus.newerClient;
 }
 
 class EtonifyProfileImportResult {
@@ -158,24 +155,6 @@ class EtonifyBackupService {
       envelope['profile'] = profile;
     }
     return const JsonEncoder.withIndent('  ').convert(envelope);
-  }
-
-  /// Serializes and encrypts large profile exports away from the UI isolate.
-  Future<String> buildProfileExportInBackground({
-    required List<Subscription> subscriptions,
-    required String clientVersion,
-    required EtonifyProfileEncryption encryption,
-    String? password,
-  }) {
-    return Isolate.run(
-      () => const EtonifyBackupService().buildProfileExport(
-        subscriptions: subscriptions,
-        clientVersion: clientVersion,
-        encryption: encryption,
-        password: password,
-      ),
-      debugName: 'etonify-profile-export',
-    );
   }
 
   /// Produces the final bytes in the worker isolate so the UI isolate never

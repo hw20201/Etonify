@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 const appNavigationBarVisualHeight = 80.0;
 const appHeaderBlurHeight = 2.0;
-const appHeaderContentGap = 36.0;
 
 double appSystemStatusBarInset(BuildContext context) {
   return MediaQuery.viewPaddingOf(context).top;

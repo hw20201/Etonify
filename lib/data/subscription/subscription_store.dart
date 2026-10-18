@@ -444,26 +444,6 @@ class SubscriptionStore {
 
   // ─────────────────── CRUD ───────────────────
 
-  /// Returns all stored subscriptions.
-  static Future<List<Subscription>> getAll() async {
-    final indexedResults = <({int index, Subscription subscription})>[];
-    var index = 0;
-    for (final subscription in getAllMetadata()) {
-      final snapshot = await get(subscription.id);
-      if (snapshot == null) continue;
-      indexedResults.add((index: index, subscription: snapshot));
-      index++;
-    }
-    indexedResults.sort((a, b) {
-      final left = a.subscription.sortOrder ?? (1 << 30) + a.index;
-      final right = b.subscription.sortOrder ?? (1 << 30) + b.index;
-      return left.compareTo(right);
-    });
-    return indexedResults
-        .map((entry) => entry.subscription)
-        .toList(growable: false);
-  }
-
   /// Loads all complete subscriptions while decoding large payload JSON away
   /// from the UI isolate. Hive values are copied before the worker starts.
   static Future<List<Subscription>> getAllInBackground() async {
@@ -674,11 +654,6 @@ class SubscriptionStore {
       ),
       debugName: 'meow-profile-snapshot',
     );
-  }
-
-  /// Hydrates raw content/outbounds for a metadata-only subscription.
-  static Future<Subscription> withPayload(Subscription metadata) {
-    return _withPayload(metadata);
   }
 
   static Future<String?> payloadJsonFor(String id) async {
@@ -2235,19 +2210,6 @@ class SubscriptionStore {
         AppLogStore.warning('subscription', message);
       }
     }
-  }
-
-  static Future<Subscription> _withPayload(Subscription metadata) async {
-    if (_payloadBox?.isOpen != true) {
-      return metadata;
-    }
-    final snapshot = await _storedSnapshot(metadata.id);
-    metadata = snapshot.metadata ?? metadata;
-    final raw = snapshot.raw;
-    if (raw == null) {
-      return metadata;
-    }
-    return _withPayloadFromRaw(metadata, raw);
   }
 
   static Subscription _withPayloadFromRaw(

@@ -507,7 +507,6 @@ abstract class AppSettingsStore {
   static const legacyBoxName = 'app_state';
   static const storageSchemaVersionKey = '__etonify_storage_schema_version__';
   static const storageSchemaVersion = 1;
-  static const exportFormatVersion = 1;
   static const exportMinClientVersion = '0.2.0';
 
   /// Ceiling and default for concurrent URLTest probes. Builds before 0.3.7

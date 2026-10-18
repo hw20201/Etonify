@@ -1088,15 +1088,6 @@ String _writeConfigJsonAtomically(String path, String configJson) {
   }
 }
 
-Future<StartupValidationResult> validateStartupOutboundsInBackground(
-  StartupValidationInput input,
-) {
-  return Isolate.run(
-    () => validateStartupOutbounds(input),
-    debugName: 'meow-startup-validation',
-  );
-}
-
 class ConfigMutationInput {
   const ConfigMutationInput({
     required this.config,

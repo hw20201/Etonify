@@ -225,7 +225,6 @@ class LatencyCoordinator {
 
   LatencySessionKind? get kind => isRunning ? _kind : null;
   LatencySessionPhase get phase => _phase;
-  int get sessionStartedAtSeconds => _sessionStartedAtSeconds;
   LibboxCapabilities get capabilities => _capabilities;
 
   void updateCapabilities(LibboxCapabilities value) {

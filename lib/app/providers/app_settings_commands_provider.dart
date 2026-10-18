@@ -194,22 +194,6 @@ class AppSettingsCommands {
     _setSingBoxLogLevel = null;
   }
 
-  bool get isRoutingBound =>
-      _setBlockLeaks != null &&
-      _setAdBlockEnabled != null &&
-      _downloadAdBlockRuleSet != null &&
-      _deleteAdBlockRuleSet != null &&
-      _refreshRoutingRuleData != null &&
-      _setTrafficRoutingMode != null &&
-      _setChinaPlayStorePresetEnabled != null &&
-      _setCustomRoutingRules != null &&
-      _prepareChinaRouteData != null &&
-      _setRussiaDnsDirectResolver != null &&
-      _setBypassLocalNetwork != null &&
-      _setSplitRoutingMode != null &&
-      _setSplitRoutingPackages != null &&
-      _preloadInstalledApps != null;
-
   void bindRoutingHandlers({
     required SetBlockLeaksCommand setBlockLeaks,
     required SetAdBlockEnabledCommand setAdBlockEnabled,

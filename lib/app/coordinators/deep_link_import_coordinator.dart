@@ -79,7 +79,6 @@ class DeepLinkImportCoordinator {
 
   bool get hasPendingImport => _pendingDeepLinkImport != null;
   DeepLinkImportRequest? get pendingImport => _pendingDeepLinkImport;
-  bool get isInFlight => _deepLinkImportInFlight;
 
   Future<void> start() async {
     _deepLinkImportSubscription = _importStream.listen(enqueue);

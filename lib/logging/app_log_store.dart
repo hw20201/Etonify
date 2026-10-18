@@ -174,8 +174,6 @@ class AppLogStore {
 
   static String normalizeMessage(String message) => _normalizeMessage(message);
 
-  static String redact(String value) => _redactSecrets(value);
-
   static String? inferLevel(String message) =>
       _inferLevel(_normalizeMessage(message));
 
