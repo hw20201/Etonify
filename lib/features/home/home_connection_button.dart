@@ -255,7 +255,19 @@ class _ConnectionButtonShadowPainter extends CustomPainter {
     canvas.translate(size.width / 2, size.height / 2);
     canvas.scale(shadowScale);
     canvas.translate(-size.width / 2, -size.height / 2);
-    canvas.drawShadow(path, color, blur, true);
+    // Projected shadows can jump in intensity as this lobed path morphs.
+    // Blur the filled silhouette instead, keeping the glow continuous while
+    // retaining its color, spread and a soft downward offset.
+    canvas.translate(0, blur * .5);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..maskFilter = MaskFilter.blur(
+          BlurStyle.normal,
+          Shadow.convertRadiusToSigma(blur),
+        ),
+    );
     canvas.restore();
   }
 
