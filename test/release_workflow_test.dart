@@ -26,6 +26,8 @@ void main() {
     expect(workflow, contains("inputs.release_tag != ''"));
     expect(workflow, contains("github.ref == 'refs/heads/release/v0.3.101'"));
     expect(workflow, contains("inputs.release_tag == 'v0.3.101'"));
+    expect(workflow, contains("github.ref == 'refs/heads/release/v0.3.106'"));
+    expect(workflow, contains("inputs.release_tag == 'v0.3.106'"));
     expect(workflow, contains(r'ref: ${{ inputs.release_tag || github.ref }}'));
     expect(workflow, contains(r'RELEASE_TAG_INPUT: ${{ inputs.release_tag }}'));
     expect(workflow, contains("github.ref == 'refs/heads/master'"));
@@ -47,7 +49,7 @@ void main() {
     final releaseJobStart = workflow.indexOf('  draft-tag-release:');
     final releaseJobEnd = workflow.indexOf('  diagnostic-test-artifact:');
     final releaseJob = workflow.substring(releaseJobStart, releaseJobEnd);
-    expect(releaseJob, contains('MINIMUM_UPGRADE_VERSION_CODE: "6054"'));
+    expect(releaseJob, contains('MINIMUM_UPGRADE_VERSION_CODE: "6055"'));
     expect(releaseJob, contains('Check formatting before signed build'));
     final analyzeIndex = workflow.indexOf(
       '      - name: Analyze and test',

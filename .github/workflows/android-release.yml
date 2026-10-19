@@ -93,7 +93,8 @@ jobs:
     if: >-
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master' && inputs.release_tag != '') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release/v0.3.101' && inputs.release_tag == 'v0.3.101')
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release/v0.3.101' && inputs.release_tag == 'v0.3.101') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release/v0.3.106' && inputs.release_tag == 'v0.3.106')
     name: Build signed tag APK and create draft Release
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -281,7 +282,7 @@ jobs:
       - name: Verify signed APK package, version and certificate before draft
         shell: bash
         env:
-          MINIMUM_UPGRADE_VERSION_CODE: "6054"
+          MINIMUM_UPGRADE_VERSION_CODE: "6055"
           EXPECTED_RELEASE_CERT_SHA256: "f1e431ddbefe3496db75f264a0dd02472c7a4be704f8f78c7bd834c146f9f665"
         run: |
           set -euo pipefail
