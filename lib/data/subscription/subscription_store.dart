@@ -1527,6 +1527,10 @@ class SubscriptionStore {
       if (existing == null) {
         throw StateError('Subscription $id not found');
       }
+      if (existing.payloadRevision != existingBeforeParse.payloadRevision ||
+          existing.rawContent != existingBeforeParse.rawContent) {
+        throw StateError('Subscription $id changed while reparsing');
+      }
       final preservedOutbounds = _preserveUserState(
         existing.outbounds,
         reparsedOutbounds,
