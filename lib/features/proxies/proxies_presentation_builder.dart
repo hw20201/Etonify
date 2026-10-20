@@ -111,10 +111,11 @@ class ProxiesPresentationBuilder {
   final ProxiesPresentationCallbacks callbacks;
 
   Widget build({
-    required ProxyPanelMetrics panelMetrics,
-    required ValueListenable<ProxyPanelMetrics> panelMetricsListenable,
-    required ScrollController scrollController,
-    required ProxyPanelGestures panelGestures,
+    ProxyPanelMetrics? panelMetrics,
+    ValueListenable<ProxyPanelMetrics>? panelMetricsListenable,
+    ScrollController? scrollController,
+    ProxyPanelGestures? panelGestures,
+    bool embedded = true,
   }) {
     return LatencyMeasurementScope(
       mode: data.latencyMeasurementMode,
@@ -151,16 +152,17 @@ class ProxiesPresentationBuilder {
         isProxyChainTag: callbacks.isProxyChainTag,
         runtimeStates: data.runtimeStates,
         loading: data.proxyListLoading,
-        embedded: true,
+        embedded: embedded,
+        externalNavigationBar: !embedded,
         sheetMetricsListenable: panelMetricsListenable,
         scrollController: scrollController,
-        sheetAtMaxExtent: panelMetrics.atMaxExtent,
-        sheetCanFillScreen: panelMetrics.canFillScreen,
-        sheetExtent: panelMetrics.progress,
+        sheetAtMaxExtent: panelMetrics?.atMaxExtent ?? false,
+        sheetCanFillScreen: panelMetrics?.canFillScreen ?? false,
+        sheetExtent: panelMetrics?.progress ?? 0,
         collapsedSheetExtent: 0,
         expandedHeaderExtent: 1,
         sheetCornerRadius: proxyPanelScreenCornerRadius,
-        onHeaderTap: panelGestures.onHeaderTap,
+        onHeaderTap: panelGestures?.onHeaderTap,
       ),
     );
   }

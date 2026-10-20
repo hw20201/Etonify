@@ -23,6 +23,7 @@ import 'package:meow_client/widgets/country_flag_badge.dart';
 import 'package:meow_client/widgets/progressive_blur_scaffold.dart';
 
 import 'package:meow_client/features/proxies/proxy_list_ordering.dart';
+import 'package:meow_client/features/proxies/proxy_search.dart';
 import 'package:meow_client/features/proxies/proxy_latency_button.dart';
 import 'package:meow_client/features/proxies/proxy_panel_shell.dart';
 import 'package:meow_client/features/proxies/latency_measurement_scope.dart';
@@ -408,6 +409,7 @@ class ProxiesPage extends StatefulWidget {
   const ProxiesPage({
     super.key,
     this.profileId = '',
+    this.externalNavigationBar = false,
     required this.proxies,
     required this.selectedTag,
     this.activeProxy,
@@ -451,6 +453,7 @@ class ProxiesPage extends StatefulWidget {
   });
 
   final String profileId;
+  final bool externalNavigationBar;
   final List<AppProxySummary> proxies;
   final String selectedTag;
   final AppProxySummary? activeProxy;
@@ -536,7 +539,8 @@ class _ProxiesPageState extends State<ProxiesPage> {
   bool _groupPanelRefreshScheduled = false;
   int _groupPanelGeneration = 0;
   List<_ProxyListEntry>? _visibleEntriesCache;
-  Map<Key, int> _visibleEntryIndexes = const <Key, int>{};
+  Map<Key, int> _visibleEntryIndexes = const {};
+  Map<Key, int> _searchEntryIndexes = const {};
   bool _embeddedListActivated = false;
   bool? _visibleEntriesCanAddChainCache;
   String? _visibleEntriesSelectedTagCache;
@@ -545,6 +549,37 @@ class _ProxiesPageState extends State<ProxiesPage> {
   bool _presentationPending = false;
   bool _presentationLoading = false;
   String? _presentationProfileId;
+  String _searchQuery = '';
+
+  List<_ProxyListEntry> _filteredEntries() {
+    final query = _searchQuery.trim();
+    if (query.isEmpty) return _visibleEntries();
+    final filtered = <_ProxyListEntry>[];
+    for (final entry in _visibleEntries()) {
+      final proxy = entry.proxy;
+      if (entry.type == _ProxyListEntryType.tile && proxy != null) {
+        final children = proxy.isGroup
+            ? _groupChildren(proxy)
+            : const <AppProxySummary>[];
+        if (proxyOrChildMatchesSearch(proxy, query, children)) {
+          filtered.add(entry);
+        }
+      }
+    }
+    _searchEntryIndexes = {
+      for (var i = 0; i < filtered.length; i++) filtered[i].key: i,
+    };
+    return filtered;
+  }
+
+  Future<void> _openSearch() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (_) => ProxySearchDialog(initialQuery: _searchQuery),
+    );
+    if (!mounted || result == null) return;
+    setState(() => _searchQuery = result.trim());
+  }
 
   bool _isProxyChain(AppProxySummary proxy) =>
       widget.isProxyChainTag?.call(proxy.tag) ?? false;
@@ -580,6 +615,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
       _bindSheetMetricsListenable(widget.sheetMetricsListenable);
     } else {
       _activateEmbeddedListIfNeeded();
+    }
+    if (oldWidget.profileId != widget.profileId) {
+      _searchQuery = '';
     }
     if (oldWidget.profileId != widget.profileId ||
         oldWidget.selectedTag != widget.selectedTag ||
@@ -932,7 +970,6 @@ class _ProxiesPageState extends State<ProxiesPage> {
 
   void _invalidateVisibleEntries() {
     _visibleEntriesCache = null;
-    _visibleEntryIndexes = const <Key, int>{};
     _visibleEntriesSelectedTagCache = null;
     _visibleEntriesCanAddChainCache = null;
   }
@@ -1119,7 +1156,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
 
     final topPadding = appSystemStatusBarInset(context);
     final headerHeight = topPadding + kToolbarHeight;
-    final footerHeight = appBottomNavigationTotalHeight(context);
+    final footerHeight = widget.externalNavigationBar
+        ? appSystemNavigationBarInset(context)
+        : appBottomNavigationTotalHeight(context);
     final listTopPadding = widget.progressiveBlurEnabled
         ? headerHeight + 8
         : 6.0;
@@ -1129,13 +1168,45 @@ class _ProxiesPageState extends State<ProxiesPage> {
     return Scaffold(
       extendBodyBehindAppBar: widget.progressiveBlurEnabled,
       appBar: AppBar(
-        title: Text(l10n.proxiesTitle),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.proxiesTitle),
+            if (_searchQuery.isNotEmpty)
+              Text(
+                _searchQuery,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+          ],
+        ),
         backgroundColor: widget.progressiveBlurEnabled
             ? Colors.transparent
             : theme.scaffoldBackgroundColor,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         actions: [
+          IconButton(
+            key: const ValueKey('proxy-search-open'),
+            tooltip: ProxySearchCopy.of(context).title,
+            onPressed: _openSearch,
+            icon: Icon(
+              _searchQuery.isEmpty
+                  ? FluentIcons.search_24_regular
+                  : FluentIcons.search_24_filled,
+            ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            IconButton(
+              key: const ValueKey('proxy-search-reset'),
+              tooltip: ProxySearchCopy.of(context).clear,
+              onPressed: () => setState(() => _searchQuery = ''),
+              icon: const Icon(Icons.close_rounded),
+            ),
           IconButton(
             tooltip: l10n.sort,
             onPressed: () => _showProxySortPicker(
@@ -1274,6 +1345,8 @@ class _ProxiesPageState extends State<ProxiesPage> {
                     onSortSelected: _setSort,
                     onUrlTest: widget.onUrlTest,
                     onTap: widget.onHeaderTap,
+                    onSearch: _openSearch,
+                    searchQuery: _searchQuery,
                   ),
                 );
               },
@@ -1301,7 +1374,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
     // first rows visibly jump under the finger.
     const listTopPadding = _kProxySheetHeaderHeight + 6;
     final bottomInset = appSystemNavigationBarInset(context);
-    final entries = listMounted ? _visibleEntries() : const <_ProxyListEntry>[];
+    final entries = listMounted
+        ? _filteredEntries()
+        : const <_ProxyListEntry>[];
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: ListView.builder(
@@ -1312,7 +1387,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
         addAutomaticKeepAlives: false,
         addRepaintBoundaries: true,
         addSemanticIndexes: false,
-        findChildIndexCallback: (key) => _visibleEntryIndexes[key],
+        findChildIndexCallback: (key) => _searchQuery.isEmpty
+            ? _visibleEntryIndexes[key]
+            : _searchEntryIndexes[key],
         padding: listMounted
             ? EdgeInsets.only(
                 top: listTopPadding,
@@ -1322,13 +1399,17 @@ class _ProxiesPageState extends State<ProxiesPage> {
         itemCount: !listMounted
             ? 0
             : widget.proxies.isEmpty ||
-                  (_presentationLoading && entries.isEmpty)
+                  (_presentationLoading && entries.isEmpty) ||
+                  entries.isEmpty
             ? 1
             : entries.length,
         itemBuilder: (context, index) {
           if (widget.proxies.isEmpty ||
               (_presentationLoading && entries.isEmpty)) {
             return _buildEmptyOrLoadingState(context: context, l10n: l10n);
+          }
+          if (entries.isEmpty) {
+            return Center(child: Text(ProxySearchCopy.of(context).noResults));
           }
           return KeyedSubtree(
             key: entries[index].key,
@@ -1388,7 +1469,13 @@ class _ProxiesPageState extends State<ProxiesPage> {
     required double listTopPadding,
     required double listBottomPadding,
   }) {
-    final entries = _visibleEntries();
+    final entries = _filteredEntries();
+    if (_searchQuery.isNotEmpty &&
+        entries.isEmpty &&
+        !widget.loading &&
+        !_presentationLoading) {
+      return Center(child: Text(ProxySearchCopy.of(context).noResults));
+    }
     if (widget.proxies.isEmpty || (_presentationLoading && entries.isEmpty)) {
       return _buildEmptyOrLoadingState(context: context, l10n: l10n);
     }
@@ -1397,7 +1484,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
       addAutomaticKeepAlives: false,
       addRepaintBoundaries: true,
       addSemanticIndexes: false,
-      findChildIndexCallback: (key) => _visibleEntryIndexes[key],
+      findChildIndexCallback: (key) => _searchQuery.isEmpty
+          ? _visibleEntryIndexes[key]
+          : _searchEntryIndexes[key],
       padding: EdgeInsets.only(top: listTopPadding, bottom: listBottomPadding),
       itemCount: entries.length,
       itemBuilder: (context, index) {
@@ -1417,6 +1506,9 @@ class _ProxiesPageState extends State<ProxiesPage> {
     required BuildContext context,
     required AppLocalizations l10n,
   }) {
+    if (_searchQuery.trim().isNotEmpty && !_presentationLoading) {
+      return Center(child: Text(ProxySearchCopy.of(context).noResults));
+    }
     if (widget.loading || _presentationLoading) {
       return const Center(
         child: SizedBox(

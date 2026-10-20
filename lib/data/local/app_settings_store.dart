@@ -11,6 +11,7 @@ import 'package:meow_client/data/routing/custom_routing_rule.dart';
 import 'package:meow_client/data/routing/google_play_routing_preset.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
+import 'package:meow_client/models/home_navigation_mode.dart';
 import 'package:meow_client/logging/app_log_store.dart';
 
 import 'package:meow_client/data/local/secure_hive_storage.dart';
@@ -158,6 +159,7 @@ class AppSettingsState {
     this.proxySort = 'source',
     required this.localeCode,
     required this.themePreference,
+    this.homeNavigationMode = HomeNavigationMode.panel,
     required this.accentColorHex,
     required this.hapticEnabled,
     this.statusNotificationEnabled = true,
@@ -237,6 +239,7 @@ class AppSettingsState {
   final String proxySort;
   final String localeCode;
   final AppThemePreference themePreference;
+  final HomeNavigationMode homeNavigationMode;
   final String accentColorHex; // e.g. "2D5BFF" or "default"
   final bool hapticEnabled;
   final bool statusNotificationEnabled;
@@ -316,6 +319,7 @@ class AppSettingsState {
     String? proxySort,
     String? localeCode,
     AppThemePreference? themePreference,
+    HomeNavigationMode? homeNavigationMode,
     String? accentColorHex,
     bool? hapticEnabled,
     bool? statusNotificationEnabled,
@@ -398,6 +402,7 @@ class AppSettingsState {
       proxySort: proxySort ?? this.proxySort,
       localeCode: localeCode ?? this.localeCode,
       themePreference: themePreference ?? this.themePreference,
+      homeNavigationMode: homeNavigationMode ?? this.homeNavigationMode,
       accentColorHex: accentColorHex ?? this.accentColorHex,
       hapticEnabled: hapticEnabled ?? this.hapticEnabled,
       statusNotificationEnabled:
@@ -546,6 +551,7 @@ abstract class AppSettingsStore {
   static const _proxySortKey = 'proxy_sort';
   static const _localeCodeKey = 'locale_code';
   static const _themePreferenceKey = 'theme_preference';
+  static const _homeNavigationModeKey = 'home_navigation_mode';
   static const _accentColorHexKey = 'accent_color_hex';
   static const _hapticEnabledKey = 'haptic_enabled';
   static const _statusNotificationEnabledKey = 'status_notification_enabled';
@@ -822,6 +828,11 @@ abstract class AppSettingsStore {
         _ => 'source',
       },
       localeCode: map[_localeCodeKey]?.toString() ?? 'system',
+      homeNavigationMode: switch (map[_homeNavigationModeKey]) {
+        'floating' => HomeNavigationMode.floating,
+        'docked' => HomeNavigationMode.docked,
+        _ => HomeNavigationMode.panel,
+      },
       themePreference: switch (map[_themePreferenceKey]) {
         'system' => AppThemePreference.system,
         'dark' => AppThemePreference.dark,
@@ -1070,6 +1081,7 @@ abstract class AppSettingsStore {
       _proxySortKey: state.proxySort,
       _localeCodeKey: state.localeCode,
       _themePreferenceKey: state.themePreference.name,
+      _homeNavigationModeKey: state.homeNavigationMode.name,
       _accentColorHexKey: state.accentColorHex,
       _hapticEnabledKey: state.hapticEnabled ? '1' : '0',
       _statusNotificationEnabledKey: state.statusNotificationEnabled

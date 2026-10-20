@@ -8,8 +8,68 @@ import 'package:meow_client/features/settings/settings_dns_page.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/models/public_ip_source.dart';
 import 'package:meow_client/models/latency_measurement_mode.dart';
+import 'package:meow_client/models/home_navigation_mode.dart';
 
 void main() {
+  test('home navigation mode is UI-only, hydrates and serializes', () {
+    final controller = AppSettingsController();
+    expect(controller.homeNavigationMode, HomeNavigationMode.panel);
+    final changed = controller.setHomeNavigationMode(HomeNavigationMode.docked);
+    expect(changed.changed, isTrue);
+    expect(changed.runtimeImpact, SettingsRuntimeImpact.uiOnly);
+    expect(changed.restartRuntime, isFalse);
+    expect(
+      controller
+          .toState(
+            onboardingCompleted: false,
+            acceptedLegalVersion: '',
+            acceptedLegalAtMillis: null,
+            activeProfileId: '',
+            selectedProxyTag: '',
+          )
+          .homeNavigationMode,
+      HomeNavigationMode.docked,
+    );
+    final store = MemoryAppSettingsStore(
+      controller.toState(
+        onboardingCompleted: false,
+        acceptedLegalVersion: '',
+        acceptedLegalAtMillis: null,
+        activeProfileId: '',
+        selectedProxyTag: '',
+      ),
+    );
+    expect(
+      store.stateToMap(
+        controller.toState(
+          onboardingCompleted: false,
+          acceptedLegalVersion: '',
+          acceptedLegalAtMillis: null,
+          activeProfileId: '',
+          selectedProxyTag: '',
+        ),
+      )['home_navigation_mode'],
+      'docked',
+    );
+    final restored = store.mapState(
+      store.stateToMap(
+        controller.toState(
+          onboardingCompleted: false,
+          acceptedLegalVersion: '',
+          acceptedLegalAtMillis: null,
+          activeProfileId: '',
+          selectedProxyTag: '',
+        ),
+      ),
+    );
+    expect(restored.homeNavigationMode, HomeNavigationMode.docked);
+    controller.applyState(restored);
+    expect(controller.homeNavigationMode, HomeNavigationMode.docked);
+    expect(
+      controller.setHomeNavigationMode(HomeNavigationMode.docked).changed,
+      isFalse,
+    );
+  });
   test(
     'split routing applies mode and both lists as one validated restart',
     () {

@@ -5,6 +5,7 @@ import 'package:meow_client/features/settings/settings_notification_page.dart';
 import 'package:meow_client/features/settings/battery_optimization_tile.dart';
 import 'package:meow_client/features/settings/settings_ui.dart';
 import 'package:meow_client/models/public_ip_source.dart';
+import 'package:meow_client/models/home_navigation_mode.dart';
 import 'package:meow_client/models/latency_measurement_mode.dart';
 import 'package:meow_client/features/settings/subscription_background_tile.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
@@ -58,6 +59,26 @@ class _AccentOption {
   final List<Color>? previewColors;
 }
 
+String _homeNavigationTitle(String locale) => switch (locale.split('_').first) {
+  'zh' => '主页导航方式',
+  'ru' => 'Навигация на главной',
+  _ => 'Home navigation',
+};
+String _homeNavigationLabel(HomeNavigationMode mode, String locale) {
+  final language = locale.split('_').first;
+  return switch ((language, mode)) {
+    ('zh', HomeNavigationMode.panel) => '原上拉面板',
+    ('zh', HomeNavigationMode.floating) => '悬浮底栏',
+    ('zh', HomeNavigationMode.docked) => '固定底栏',
+    ('ru', HomeNavigationMode.panel) => 'Панель со смахиванием вверх',
+    ('ru', HomeNavigationMode.floating) => 'Плавающая нижняя панель',
+    ('ru', HomeNavigationMode.docked) => 'Закреплённая нижняя панель',
+    (_, HomeNavigationMode.panel) => 'Original pull-up panel',
+    (_, HomeNavigationMode.floating) => 'Floating bottom bar',
+    (_, HomeNavigationMode.docked) => 'Docked bottom bar',
+  };
+}
+
 class SettingsGeneralPage extends StatelessWidget {
   const SettingsGeneralPage({
     super.key,
@@ -65,6 +86,8 @@ class SettingsGeneralPage extends StatelessWidget {
     required this.currentThemePreference,
     required this.currentAccentColorHex,
     this.dynamicLightScheme,
+    this.currentHomeNavigationMode = HomeNavigationMode.panel,
+    this.onHomeNavigationModeChanged,
     required this.currentHapticEnabled,
     required this.currentStatusNotificationEnabled,
     required this.currentNotificationTrafficDisplayMode,
@@ -96,6 +119,8 @@ class SettingsGeneralPage extends StatelessWidget {
   final AppThemePreference currentThemePreference;
   final String currentAccentColorHex;
   final ColorScheme? dynamicLightScheme;
+  final HomeNavigationMode currentHomeNavigationMode;
+  final ValueChanged<HomeNavigationMode>? onHomeNavigationModeChanged;
   final bool currentHapticEnabled;
   final bool currentStatusNotificationEnabled;
   final NotificationTrafficDisplayMode currentNotificationTrafficDisplayMode;
@@ -200,6 +225,58 @@ class SettingsGeneralPage extends StatelessWidget {
 
             const Gap(settingsSectionGap),
 
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SettingsTileGroup(
+                children: [
+                  ListTile(
+                    leading: SettingsLeadingIcon(
+                      icon: Icons.dock_rounded,
+                      color: cs.primary,
+                    ),
+                    title: Text(_homeNavigationTitle(currentLocaleCode)),
+                    subtitle: Text(
+                      _homeNavigationLabel(
+                        currentHomeNavigationMode,
+                        currentLocaleCode,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: onHomeNavigationModeChanged == null
+                        ? null
+                        : () async {
+                            final selected =
+                                await showModalBottomSheet<HomeNavigationMode>(
+                                  context: context,
+                                  showDragHandle: true,
+                                  builder: (ctx) =>
+                                      _RadioSheet<HomeNavigationMode>(
+                                        title: _homeNavigationTitle(
+                                          currentLocaleCode,
+                                        ),
+                                        current: currentHomeNavigationMode,
+                                        items: HomeNavigationMode.values
+                                            .map(
+                                              (mode) => RadioChoice(
+                                                value: mode,
+                                                label: _homeNavigationLabel(
+                                                  mode,
+                                                  currentLocaleCode,
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                      ),
+                                );
+                            if (selected != null) {
+                              onHomeNavigationModeChanged!(selected);
+                            }
+                          },
+                  ),
+                ],
+              ),
+            ),
+            const Gap(settingsSectionGap),
             // ── Appearance — Theme ──
             _SectionLabel(label: l10n.appearanceTitle),
             const Gap(settingsSectionLabelGap),

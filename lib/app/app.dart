@@ -71,6 +71,8 @@ import 'package:meow_client/data/subscription/subscription_store.dart';
 import 'package:meow_client/data/update/app_update_channel.dart';
 import 'package:meow_client/data/update/app_update_service.dart';
 import 'package:meow_client/features/home/home_presentation_builder.dart';
+import 'package:meow_client/features/home/experimental_home_shell.dart';
+import 'package:meow_client/models/home_navigation_mode.dart';
 import 'package:meow_client/features/home/traffic_dashboard_page.dart';
 import 'package:meow_client/features/home/public_ip_controller.dart';
 import 'package:meow_client/features/legal/legal_consent_page.dart';
@@ -174,6 +176,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
   bool _settingsBackupOperationInFlight = false;
   bool _proxyPanelInteractionActive = false;
   bool _proxyPanelOpen = false;
+  bool _tabbedProxyListRetained = false;
   int _proxyPanelResetGeneration = 0;
   String _clientVersionLabel = _fallbackClientVersionLabel;
   int _clientVersionCode = 0;
@@ -692,7 +695,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _proxyPanelOpen) {
+      if (!mounted || _proxyPanelOpen || _tabbedProxyListRetained) {
         return;
       }
       _proxyRuntimeVisualStates.pruneUnobserved(
@@ -705,7 +708,10 @@ class _MeowClientState extends ConsumerState<MeowClient>
         : _largeProxyListCacheReleaseDelay;
     _proxyListCacheReleaseTimer = Timer(releaseDelay, () {
       _proxyListCacheReleaseTimer = null;
-      if (!mounted || _proxyPanelOpen || _proxyPanelInteractionActive) {
+      if (!mounted ||
+          _proxyPanelOpen ||
+          _tabbedProxyListRetained ||
+          _proxyPanelInteractionActive) {
         return;
       }
       _releaseFullProxyListCache(reason: 'panel_closed');
@@ -6327,6 +6333,17 @@ class _MeowClientState extends ConsumerState<MeowClient>
           onPublicIpSourceChanged: _setPublicIpSource,
           currentSendHwidToProviders: _settings.sendHwidToProviders,
           currentAutoConnectOnLaunch: _settings.autoConnectOnLaunch,
+          currentHomeNavigationMode: _settings.homeNavigationMode,
+          onHomeNavigationModeChanged: (value) {
+            if (value == _settings.homeNavigationMode) return;
+            _proxyPanelOpen = false;
+            _tabbedProxyListRetained = false;
+            _applySettingsChange(() => _settings.setHomeNavigationMode(value));
+            _scheduleProxyListCacheRelease();
+            // Reveal the chosen layout immediately; do not leave stale settings
+            // route arguments on top of the experiment.
+            _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+          },
           onAutoConnectOnLaunchChanged: _setAutoConnectOnLaunch,
           showQuickSettingsTileAction: Platform.isAndroid,
           showBatteryOptimizationSettings: Platform.isAndroid,
@@ -9775,7 +9792,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   Widget _buildHomePresentation(
     BuildContext context, {
-    required ProxyPanelMetrics panelMetrics,
+    ProxyPanelMetrics? panelMetrics,
+    bool tabbed = false,
   }) {
     final activeSubscription = _activeSubscription;
     final canRefreshActiveSubscription =
@@ -9821,15 +9839,16 @@ class _MeowClientState extends ConsumerState<MeowClient>
             ? _refreshActiveSubscription
             : null,
       ),
-    ).build(panelMetrics: panelMetrics);
+    ).build(panelMetrics: panelMetrics, tabbed: tabbed);
   }
 
   Widget _buildProxiesPresentation(
     BuildContext context, {
-    required ProxyPanelMetrics panelMetrics,
-    required ValueListenable<ProxyPanelMetrics> panelMetricsListenable,
-    required ScrollController scrollController,
-    required ProxyPanelGestures panelGestures,
+    ProxyPanelMetrics? panelMetrics,
+    ValueListenable<ProxyPanelMetrics>? panelMetricsListenable,
+    ScrollController? scrollController,
+    ProxyPanelGestures? panelGestures,
+    bool embedded = true,
   }) {
     return ProxiesPresentationBuilder(
       data: ProxiesPresentationData(
@@ -9877,6 +9896,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
       panelMetricsListenable: panelMetricsListenable,
       scrollController: scrollController,
       panelGestures: panelGestures,
+      embedded: embedded,
     );
   }
 
@@ -9896,6 +9916,30 @@ class _MeowClientState extends ConsumerState<MeowClient>
   }
 
   Widget _buildAppHome() {
+    if (_ready &&
+        _onboardingCompleted &&
+        _legalAccepted &&
+        _settings.homeNavigationMode != HomeNavigationMode.panel) {
+      return ExperimentalHomeShell(
+        mode: _settings.homeNavigationMode,
+        homeBuilder: (context) => _buildHomePresentation(context, tabbed: true),
+        proxiesBuilder: (context) =>
+            _buildProxiesPresentation(context, embedded: false),
+        settingsBuilder: _buildSettingsPresentation,
+        onTabChanged: (index) => _proxyPanelOpen = index == 1,
+        onProxiesRequested: () {
+          _tabbedProxyListRetained = true;
+          _cancelScheduledProxyListCacheRelease();
+          unawaited(() async {
+            final hydrated =
+                await _ensureActiveSubscriptionHydratedForRuntime();
+            if (mounted && hydrated && _tabbedProxyListRetained) {
+              _ensureFullProxyListCache();
+            }
+          }());
+        },
+      );
+    }
     return ProxyPanelShell(
       ready: _ready,
       onboardingCompleted: _onboardingCompleted && _legalAccepted,
@@ -9965,6 +10009,11 @@ class _MeowClientState extends ConsumerState<MeowClient>
     // traffic and proxy visual updates are handled by ValueNotifier-based
     // stores below, so the whole app shell should only rebuild for values that
     // actually affect its configuration or the currently selected runtime.
+    ref.watch(
+      appSettingsProvider.select(
+        (snapshot) => snapshot.controller.homeNavigationMode,
+      ),
+    );
     ref.watch(
       appSettingsProvider.select(
         (snapshot) => snapshot.controller.themePreference,

@@ -153,6 +153,8 @@ class _ProxySheetHeader extends StatelessWidget {
     required this.onSortSelected,
     required this.onUrlTest,
     required this.onTap,
+    required this.onSearch,
+    this.searchQuery = '',
   });
 
   final double height;
@@ -173,6 +175,8 @@ class _ProxySheetHeader extends StatelessWidget {
   final ValueChanged<ProxySort> onSortSelected;
   final Future<void> Function() onUrlTest;
   final VoidCallback? onTap;
+  final VoidCallback onSearch;
+  final String searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -413,6 +417,20 @@ class _ProxySheetHeader extends StatelessWidget {
                                   l10n: l10n,
                                   inFlight: urlTestInFlight,
                                 ),
+                        IconButton(
+                          key: const ValueKey('proxy-search-open'),
+                          tooltip:
+                              '${ProxySearchCopy.of(context).title}${searchQuery.isEmpty ? '' : ': $searchQuery'}',
+                          onPressed: onSearch,
+                          icon: Icon(
+                            searchQuery.isEmpty
+                                ? FluentIcons.search_24_regular
+                                : FluentIcons.search_24_filled,
+                            color: searchQuery.isEmpty
+                                ? null
+                                : Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                         IconButton(
                           tooltip: l10n.sort,
                           onPressed: () => _showProxySortPicker(

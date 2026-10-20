@@ -3,6 +3,7 @@ import 'package:meow_client/models/core_settings.dart';
 import 'package:meow_client/models/public_ip_source.dart';
 import 'package:meow_client/models/latency_measurement_mode.dart';
 import 'package:meow_client/data/local/app_settings_store.dart';
+import 'package:meow_client/models/home_navigation_mode.dart';
 import 'package:meow_client/data/subscription/subscription_fetcher.dart';
 import 'package:meow_client/data/routing/custom_routing_rule.dart';
 import 'package:meow_client/data/routing/traffic_routing_mode.dart';
@@ -122,6 +123,7 @@ class AppSettingsController {
 
   String localeCode = 'system';
   AppThemePreference themePreference = AppThemePreference.system;
+  HomeNavigationMode homeNavigationMode = HomeNavigationMode.panel;
   String accentColorHex = 'default';
   bool memoryLimitEnabled = false;
   bool memoryLimitWarningDismissed = false;
@@ -223,6 +225,7 @@ class AppSettingsController {
       proxySort: proxySort,
       localeCode: localeCode,
       themePreference: themePreference,
+      homeNavigationMode: homeNavigationMode,
       accentColorHex: accentColorHex,
       hapticEnabled: hapticEnabled,
       statusNotificationEnabled: statusNotificationEnabled,
@@ -304,6 +307,7 @@ class AppSettingsController {
     coreSettingsNoticeAcknowledged = state.coreSettingsNoticeAcknowledged;
     localeCode = state.localeCode;
     themePreference = state.themePreference;
+    homeNavigationMode = state.homeNavigationMode;
     accentColorHex = normalizeAccentColorHex(state.accentColorHex);
     hapticEnabled = state.hapticEnabled;
     statusNotificationEnabled = state.statusNotificationEnabled;
@@ -416,6 +420,12 @@ class AppSettingsController {
       return const AppSettingsChange.none();
     }
     localeCode = normalized;
+    return const AppSettingsChange(changed: true);
+  }
+
+  AppSettingsChange setHomeNavigationMode(HomeNavigationMode value) {
+    if (homeNavigationMode == value) return const AppSettingsChange.none();
+    homeNavigationMode = value;
     return const AppSettingsChange(changed: true);
   }
 
