@@ -18,7 +18,7 @@ permissions:
 
 concurrency:
   group: android-arm64-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   FLUTTER_VERSION: "3.47.5"
@@ -28,7 +28,7 @@ jobs:
   build-arm64-apk:
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/master') ||
-      (github.event_name == 'workflow_dispatch' && inputs.release_tag == '' && github.ref != 'refs/heads/fix/public-ip-runtime-dns' && github.ref != 'refs/heads/feat/diagnostic-runtime-logging' && github.ref != 'refs/heads/feat/public-ip-pinned-outbound')
+      (github.event_name == 'workflow_dispatch' && inputs.release_tag == '' && github.ref != 'refs/heads/test/ip-rollback-6061' && github.ref != 'refs/heads/fix/public-ip-runtime-dns' && github.ref != 'refs/heads/feat/diagnostic-runtime-logging' && github.ref != 'refs/heads/feat/public-ip-pinned-outbound')
     name: Build arm64 APK artifact
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -683,6 +683,144 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: etonify-public-ip-runtime-dns-arm64-6059-${{ github.sha }}
+          path: build/release-apk/*
+          if-no-files-found: error
+          retention-days: 14
+
+  ip-rollback-test-artifact:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'hw20201/Etonify' &&
+      github.ref == 'refs/heads/test/ip-rollback-6061'
+    name: Build signed public-IP network rollback test APK artifact only
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify pinned libbox binary
+        run: |
+          git submodule update --init --depth 1 -- etonify-core
+          test "$(git rev-parse HEAD:etonify-core)" = "f27b9dbcb570d49e32df06dc6fd8f0588d0db04e"
+          test "$(git config --file .gitmodules submodule.etonify-core.url)" = "https://github.com/hw20201/etonify-core.git"
+          python3 scripts/verify_libbox.py
+          bash scripts/verify_android_release_apk_test.sh
+
+      - name: Set up JDK
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies and generate bindings
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          dart run pigeon --input pigeons/singbox_api.dart
+
+      - name: Analyze and test
+        run: |
+          set -euo pipefail
+          mkdir -p build/test-evidence
+          flutter analyze --fatal-infos 2>&1 | tee build/test-evidence/flutter-analyze.log
+          flutter test --reporter expanded 2>&1 | tee build/test-evidence/flutter-tests.log
+
+      - name: Verify test build version source
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(sed -nE 's/^version:[[:space:]]*([^[:space:]]+)[[:space:]]*$/\1/p' pubspec.yaml | head -n1)"
+          if [[ "$version" != "0.3.107+4059" ]]; then
+            echo "::error title=Unexpected test build version::Expected 0.3.107+4059; found ${version:-<missing>}."
+            exit 1
+          fi
+
+      - name: Restore existing Android signing files
+        shell: bash
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          set +x
+          umask 077
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error title=Signing secret required::${name} is not configured."
+              exit 1
+            fi
+          done
+          mkdir -p android/app
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/etonify-release.jks
+          cat > android/key.properties <<EOF
+          storePassword=${ANDROID_KEYSTORE_PASSWORD}
+          keyPassword=${ANDROID_KEY_PASSWORD}
+          keyAlias=${ANDROID_KEY_ALIAS}
+          storeFile=app/etonify-release.jks
+          EOF
+          chmod 600 android/app/etonify-release.jks android/key.properties
+
+      - name: Build signed arm64 public-IP network rollback test APK
+        shell: bash
+        env:
+          MEOW_ALLOW_DEBUG_RELEASE_SIGNING: "false"
+        run: |
+          set -euo pipefail
+          flutter build apk --release --target-platform android-arm64 --split-per-abi --build-number=4061 \
+            --dart-define=ETONIFY_RUNTIME_DIAGNOSTICS=false
+          apk="build/app/outputs/flutter-apk/app-arm64-v8a-release.apk"
+          output="etonify-public-ip-network-rollback-v0.3.107-arm64-v8a-6061.apk"
+          mkdir -p build/release-apk
+          cp "$apk" "build/release-apk/${output}"
+          ls -lah "build/release-apk/${output}"
+
+      - name: Verify package, upgrade version and release certificate
+        shell: bash
+        env:
+          MINIMUM_UPGRADE_VERSION_CODE: "6060"
+          EXPECTED_RELEASE_CERT_SHA256: "f1e431ddbefe3496db75f264a0dd02472c7a4be704f8f78c7bd834c146f9f665"
+        run: |
+          set -euo pipefail
+          scripts/verify_android_release_apk.sh \
+            build/release-apk/etonify-public-ip-network-rollback-v0.3.107-arm64-v8a-6061.apk \
+            0.3.107 4061 "$MINIMUM_UPGRADE_VERSION_CODE" "$EXPECTED_RELEASE_CERT_SHA256"
+
+      - name: Android host unit tests
+        run: |
+          set -euo pipefail
+          cd android
+          ./gradlew :app:testDebugUnitTest --console=plain 2>&1 | tee ../build/test-evidence/android-host-tests.log
+
+      - name: Remove temporary signing files
+        if: always()
+        run: rm -f android/app/etonify-release.jks android/key.properties
+
+      - name: Record APK checksum
+        run: |
+          set -euo pipefail
+          cp android/app/libs/libbox.provenance.json build/release-apk/
+          cp build/test-evidence/*.log build/release-apk/
+          git rev-parse HEAD > build/release-apk/app-source-commit.txt
+          git rev-parse HEAD:etonify-core > build/release-apk/core-source-commit.txt
+          sha256sum build/release-apk/*.apk > build/release-apk/SHA256SUMS.txt
+
+      - name: Upload public-IP network rollback APK artifact only
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: etonify-public-ip-network-rollback-arm64-6061-${{ github.sha }}
           path: build/release-apk/*
           if-no-files-found: error
           retention-days: 14
