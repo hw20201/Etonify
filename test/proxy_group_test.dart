@@ -4388,6 +4388,74 @@ void main() {
     final dns = config['dns'] as Map<String, dynamic>;
     expect(dns.containsKey('strategy'), isFalse);
   });
+  test(
+    'VLESS Reality domain endpoint preserves security fields and uses local bootstrap',
+    () {
+      // Record the complete dependency chain for a user-supplied node:
+      // endpoint hostname -> dns-local (explicitly or route default), while
+      // remote DNS follows select and its hostname bootstrap uses dns-local.
+      // This does not assert that any IP lookup is available. Simply allowing
+      // a protocol in an IP-lookup path would bypass these dependencies.
+      const subscription = Subscription(
+        id: 'vless-reality-domain',
+        name: 'VLESS Reality domain',
+        url: '',
+        outbounds: [
+          Outbound(
+            tag: 'reality-node',
+            name: 'Reality node',
+            config: {
+              'type': 'vless',
+              'tag': 'reality-node',
+              'server': 'edge.example.test',
+              'server_port': 443,
+              'uuid': '11111111-1111-4111-8111-111111111111',
+              'flow': 'xtls-rprx-vision',
+              'tls': {
+                'enabled': true,
+                'server_name': 'front.example.test',
+                'utls': {'enabled': true, 'fingerprint': 'chrome'},
+                'reality': {
+                  'enabled': true,
+                  'public_key': 'CQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+                  'short_id': '0123abcd',
+                },
+              },
+            },
+          ),
+        ],
+      );
+      final config = _defaultBuilder(
+        subscription,
+        selectedProxyTag: 'reality-node',
+      ).build();
+      final outbounds = (config['outbounds'] as List).cast<Map>();
+      final node = outbounds.firstWhere(
+        (entry) => entry['tag'] == 'reality-node',
+      );
+      expect(node['server'], 'edge.example.test');
+      expect(node['server_port'], 443);
+      expect(node['uuid'], '11111111-1111-4111-8111-111111111111');
+      expect(node['flow'], 'xtls-rprx-vision');
+      final tls = node['tls'] as Map;
+      expect(tls['enabled'], isTrue);
+      expect(tls['server_name'], 'front.example.test');
+      expect(tls['utls'], {'enabled': true, 'fingerprint': 'chrome'});
+      expect(tls['reality'], {
+        'enabled': true,
+        'public_key': 'CQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        'short_id': '0123abcd',
+      });
+      final dns = config['dns'] as Map;
+      final remoteDns = (dns['servers'] as List).cast<Map>().firstWhere(
+        (server) => server['tag'] == 'dns-remote',
+      );
+      expect(remoteDns['detour'], 'select');
+      expect(remoteDns['domain_resolver'], 'dns-local');
+      expect((config['route'] as Map)['default_domain_resolver'], 'dns-local');
+      expect(node['domain_resolver'] ?? 'dns-local', 'dns-local');
+    },
+  );
 }
 
 SingboxConfigBuilder _defaultBuilder(
