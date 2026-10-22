@@ -3444,4 +3444,8 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get trafficDashboardPublicIpReasonSelectionInvalid =>
       '无法从当前配置中确定所选出站。';
+
+  @override
+  String get trafficDashboardPublicIpReasonOutboundBootstrapPinRequired =>
+      '当前节点还没有与配置和网络匹配的有效 Reality 端点记录，请先通过该节点正常联网后重试。本查询不会使用本机 DNS 或直连回退。';
 }

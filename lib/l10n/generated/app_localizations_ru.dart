@@ -3658,4 +3658,8 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get trafficDashboardPublicIpReasonSelectionInvalid =>
       'The selected outbound could not be resolved from the active configuration.';
+
+  @override
+  String get trafficDashboardPublicIpReasonOutboundBootstrapPinRequired =>
+      'Нет действующей записи конечного адреса Reality для этой конфигурации и сети. Сначала используйте выбранный узел для обычного подключения и повторите запрос. Запрос не использует локальный DNS или прямое соединение в обход прокси.';
 }

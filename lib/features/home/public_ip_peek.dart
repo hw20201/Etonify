@@ -794,6 +794,8 @@ String publicIpUnsupportedMessage(
       l10n.trafficDashboardPublicIpReasonOutboundProtocolOther,
     PublicIpUnsupportedReason.outboundBootstrapDomain =>
       l10n.trafficDashboardPublicIpReasonOutboundBootstrapDomain,
+    PublicIpUnsupportedReason.outboundBootstrapPinRequired =>
+      l10n.trafficDashboardPublicIpReasonOutboundBootstrapPinRequired,
     PublicIpUnsupportedReason.outboundDetour =>
       l10n.trafficDashboardPublicIpReasonOutboundDetour,
     PublicIpUnsupportedReason.outboundOption =>

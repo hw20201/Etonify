@@ -1620,5 +1620,6 @@
         "type": "String"
       }
     }
-  }
+  },
+  "trafficDashboardPublicIpReasonOutboundBootstrapPinRequired": "No valid Reality endpoint record matches this configuration and network. Use the selected node normally, then retry. This query never falls back to local DNS or direct access."
 }

@@ -46,6 +46,7 @@ void main() {
   for (final cached in [false, true]) {
     for (final code in [
       'outbound.protocol.vless',
+      'outbound.bootstrap.pin_required',
       'outbound.option.inet4_bind_address',
     ]) {
       testWidgets('safe diagnostic on narrow panel: $code cached=$cached', (

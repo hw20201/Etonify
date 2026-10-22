@@ -6457,6 +6457,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The selected outbound could not be resolved from the active configuration.'**
   String get trafficDashboardPublicIpReasonSelectionInvalid;
+
+  /// No description provided for @trafficDashboardPublicIpReasonOutboundBootstrapPinRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'No valid Reality endpoint record matches this configuration and network. Use the selected node normally, then retry. This query never falls back to local DNS or direct access.'**
+  String get trafficDashboardPublicIpReasonOutboundBootstrapPinRequired;
 }
 
 class _AppLocalizationsDelegate

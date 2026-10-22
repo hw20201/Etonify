@@ -261,6 +261,7 @@ enum PublicIpUnsupportedReason {
   outboundProtocolTrojan('outbound.protocol.trojan'),
   outboundProtocolOther('outbound.protocol.other'),
   outboundBootstrapDomain('outbound.bootstrap.domain'),
+  outboundBootstrapPinRequired('outbound.bootstrap.pin_required'),
   outboundDetour('outbound.option.detour'),
   outboundOption('outbound.option.unknown'),
   outboundInvalid('outbound.invalid'),

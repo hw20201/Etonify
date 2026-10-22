@@ -224,6 +224,10 @@ void main() {
           PublicIpUnsupportedReason.outboundProtocolTrojan,
         ),
         ('outbound.option.detour', PublicIpUnsupportedReason.outboundDetour),
+        (
+          'outbound.bootstrap.pin_required',
+          PublicIpUnsupportedReason.outboundBootstrapPinRequired,
+        ),
         ('outbound.option.tls', PublicIpUnsupportedReason.outboundOption),
         ('dns.rules', PublicIpUnsupportedReason.dnsRules),
         ('dns.option.strategy', PublicIpUnsupportedReason.dnsOption),

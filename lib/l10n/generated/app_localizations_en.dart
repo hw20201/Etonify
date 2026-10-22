@@ -3651,4 +3651,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get trafficDashboardPublicIpReasonSelectionInvalid =>
       'The selected outbound could not be resolved from the active configuration.';
+
+  @override
+  String get trafficDashboardPublicIpReasonOutboundBootstrapPinRequired =>
+      'No valid Reality endpoint record matches this configuration and network. Use the selected node normally, then retry. This query never falls back to local DNS or direct access.';
 }

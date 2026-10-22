@@ -1610,5 +1610,6 @@
   "trafficDashboardPublicIpReasonDnsType": "本次查询不支持此 DNS 类型。",
   "trafficDashboardPublicIpReasonDnsInvalid": "DNS 配置无法用于本次 IP 查询。",
   "trafficDashboardPublicIpReasonSnapshotInvalid": "当前配置快照无法用于 IP 查询。",
-  "trafficDashboardPublicIpReasonSelectionInvalid": "无法从当前配置中确定所选出站。"
+  "trafficDashboardPublicIpReasonSelectionInvalid": "无法从当前配置中确定所选出站。",
+  "trafficDashboardPublicIpReasonOutboundBootstrapPinRequired": "当前节点还没有与配置和网络匹配的有效 Reality 端点记录，请先通过该节点正常联网后重试。本查询不会使用本机 DNS 或直连回退。"
 }
