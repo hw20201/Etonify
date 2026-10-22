@@ -256,6 +256,13 @@ class PublicIpLookup {
 }
 
 /// App-owned: memory-only result and cooldown survive closing the sheet.
+enum PublicIpFailureKind {
+  unsupportedConfiguration,
+  notConnected,
+  timeout,
+  general,
+}
+
 class PublicIpController extends ChangeNotifier {
   PublicIpController({
     Future<PublicIpInfo> Function()? load,
@@ -264,7 +271,9 @@ class PublicIpController extends ChangeNotifier {
     String Function()? outboundProvider,
     int Function()? networkGenerationProvider,
     Object Function()? scopeProvider,
+    bool Function()? connectedProvider,
   }) {
+    _connectedProvider = connectedProvider;
     _scope = () => (
       sourceProvider?.call() ?? PublicIpSource.ipQuery,
       outboundProvider?.call() ?? '',
@@ -294,6 +303,8 @@ class PublicIpController extends ChangeNotifier {
   PublicIpInfo? _info;
   bool _loading = false;
   bool _failed = false;
+  PublicIpFailureKind? _failureKind;
+  late final bool Function()? _connectedProvider;
   bool _disposed = false;
   Timer? _cooldown;
   int _generation = 0;
@@ -301,6 +312,7 @@ class PublicIpController extends ChangeNotifier {
   PublicIpInfo? get info => _cachedScope == _scope() ? _info : null;
   bool get loading => _loading;
   bool get failed => _failed;
+  PublicIpFailureKind? get failureKind => _failureKind;
   bool get canRefresh => !_disposed && !_loading && _cooldown == null;
 
   /// Repeated group/traffic snapshots do not cancel a query unless its actual
@@ -316,6 +328,7 @@ class PublicIpController extends ChangeNotifier {
     final generation = ++_generation;
     _loading = true;
     _failed = false;
+    _failureKind = null;
     _cooldown = Timer(const Duration(seconds: 4), () {
       _cooldown = null;
       if (!_disposed) notifyListeners();
@@ -330,13 +343,17 @@ class PublicIpController extends ChangeNotifier {
       }
       _info = result;
       _cachedScope = scope;
-    } catch (_) {
+    } catch (error) {
       if (_disposed || generation != _generation) return;
       if (scope != _scope()) {
         invalidateForSourceChange();
         return;
       }
       _failed = true;
+      _failureKind = _classifyPublicIpFailure(
+        error,
+        connected: _connectedProvider?.call(),
+      );
     } finally {
       if (!_disposed && generation == _generation) {
         _loading = false;
@@ -358,6 +375,7 @@ class PublicIpController extends ChangeNotifier {
     _info = null;
     _loading = false;
     _failed = false;
+    _failureKind = null;
     notifyListeners();
   }
 
@@ -378,4 +396,27 @@ class PublicIpController extends ChangeNotifier {
     _cooldown?.cancel();
     super.dispose();
   }
+}
+
+PublicIpFailureKind _classifyPublicIpFailure(Object error, {bool? connected}) {
+  if (connected == false) return PublicIpFailureKind.notConnected;
+  if (error is TimeoutException) return PublicIpFailureKind.timeout;
+  // Inspect only for categorization. The exception text is never presented.
+  final message = error.toString().toLowerCase();
+  if (message.contains('unsupported') ||
+      message.contains('not supported') ||
+      message.contains('invalid configuration') ||
+      message.contains('unsupported configuration')) {
+    return PublicIpFailureKind.unsupportedConfiguration;
+  }
+  if (message.contains('not connected') ||
+      message.contains('requires a running') ||
+      message.contains('no active connection') ||
+      message.contains('disconnected')) {
+    return PublicIpFailureKind.notConnected;
+  }
+  if (message.contains('timeout') || message.contains('timed out')) {
+    return PublicIpFailureKind.timeout;
+  }
+  return PublicIpFailureKind.general;
 }

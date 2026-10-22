@@ -600,7 +600,15 @@ class _PublicIpSection extends StatelessWidget {
         const Gap(8),
         Text(
           failed
-              ? l10n.trafficDashboardPublicIpError
+              ? switch (controller?.failureKind) {
+                  PublicIpFailureKind.unsupportedConfiguration =>
+                    l10n.trafficDashboardPublicIpUnsupported,
+                  PublicIpFailureKind.notConnected =>
+                    l10n.trafficDashboardPublicIpNotConnected,
+                  PublicIpFailureKind.timeout =>
+                    l10n.trafficDashboardPublicIpTimeout,
+                  _ => l10n.trafficDashboardPublicIpError,
+                }
               : l10n.trafficDashboardPublicIpHint,
           style: theme.textTheme.bodySmall?.copyWith(
             color: failed

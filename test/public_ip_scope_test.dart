@@ -102,4 +102,23 @@ void main() {
       controller.dispose();
     },
   );
+
+  test('stable selector request is scoped by selected leaf identity', () async {
+    var selected = 'leaf-a';
+    var calls = 0;
+    final controller = PublicIpController(
+      outboundProvider: () => 'select',
+      scopeProvider: () => selected,
+      load: () async => PublicIpInfo(ip: '203.0.113.${++calls}'),
+    );
+    await controller.refresh();
+    expect(controller.info?.ip, '203.0.113.1');
+    selected = 'leaf-b';
+    controller.synchronizeScope();
+    expect(controller.info, isNull);
+    expect(controller.canRefresh, isTrue);
+    await controller.refresh();
+    expect(controller.info?.ip, '203.0.113.2');
+    controller.dispose();
+  });
 }

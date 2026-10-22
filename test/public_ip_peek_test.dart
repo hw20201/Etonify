@@ -5,6 +5,61 @@ import 'package:meow_client/features/home/public_ip_peek.dart';
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 
 void main() {
+  for (final cached in [false, true]) {
+    testWidgets('unsupported query shows safe detail text; cached=$cached', (
+      tester,
+    ) async {
+      var calls = 0;
+      final controller = PublicIpController(
+        load: () async {
+          if (cached && calls++ == 0) {
+            return const PublicIpInfo(ip: '203.0.113.1');
+          }
+          throw StateError(
+            'unsupported scoped query configuration: secret-value',
+          );
+        },
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('zh'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: Scaffold(
+            body: Center(
+              child: PublicIpPeek(
+                controller: controller,
+                connected: true,
+                hideIp: false,
+                hapticEnabled: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      if (cached) {
+        await tester.pump(const Duration(seconds: 4));
+        await controller.refresh();
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.byKey(const ValueKey('outbound-ip-capsule')));
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PublicIpPeek)),
+      );
+      expect(
+        find.text(l10n.trafficDashboardPublicIpUnsupported),
+        findsOneWidget,
+      );
+      expect(find.textContaining('secret-value'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      controller.dispose();
+    });
+  }
+
   testWidgets('backdrop covers the root overlay outside a nested navigator', (
     tester,
   ) async {

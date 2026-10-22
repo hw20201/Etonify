@@ -2152,13 +2152,15 @@ class _MeowClientState extends ConsumerState<MeowClient>
     _publicIpController = PublicIpController(
       sourceProvider: () =>
           ref.read(appSettingsProvider).controller.publicIpSource,
-      outboundProvider: () => _selectedProxyTag,
+      outboundProvider: () => 'select',
+      connectedProvider: () => _connected,
       networkGenerationProvider: () => _networkInterfaceGeneration,
       scopeProvider: () => (
         _runtimeOperations.nativeRuntimeGeneration,
         _publicIpConfigIdentity,
         _activeProfileId,
         _connected,
+        _selectedProxyTag,
         jsonEncode(SplayTreeMap<String, String>.of(_runtimeGroupSelections)),
       ),
     );

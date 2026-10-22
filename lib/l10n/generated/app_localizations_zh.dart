@@ -1463,6 +1463,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trafficDashboardPublicIpError => '无法刷新您的 IP，请重试。';
 
   @override
+  String get trafficDashboardPublicIpUnsupported => '此 IP 查询配置不受支持。';
+
+  @override
+  String get trafficDashboardPublicIpNotConnected => '请先连接 VPN，然后重试。';
+
+  @override
+  String get trafficDashboardPublicIpTimeout => 'IP 查询超时，请重试。';
+
+  @override
   String get trafficDashboardPublicIpCooldown => '每 4 秒可刷新一次';
 
   @override

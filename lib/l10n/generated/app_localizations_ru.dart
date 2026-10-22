@@ -1530,6 +1530,18 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось обновить IP. Попробуйте ещё раз.';
 
   @override
+  String get trafficDashboardPublicIpUnsupported =>
+      'Эта конфигурация поиска IP не поддерживается.';
+
+  @override
+  String get trafficDashboardPublicIpNotConnected =>
+      'Подключитесь к VPN и повторите попытку.';
+
+  @override
+  String get trafficDashboardPublicIpTimeout =>
+      'Время ожидания поиска IP истекло. Повторите попытку.';
+
+  @override
   String get trafficDashboardPublicIpCooldown =>
       'Обновление доступно раз в 4 секунды';
 

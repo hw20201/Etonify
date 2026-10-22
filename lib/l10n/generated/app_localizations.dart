@@ -2797,6 +2797,24 @@ abstract class AppLocalizations {
   /// **'Could not refresh your IP. Try again.'**
   String get trafficDashboardPublicIpError;
 
+  /// No description provided for @trafficDashboardPublicIpUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This IP lookup configuration is not supported.'**
+  String get trafficDashboardPublicIpUnsupported;
+
+  /// No description provided for @trafficDashboardPublicIpNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to the VPN and try again.'**
+  String get trafficDashboardPublicIpNotConnected;
+
+  /// No description provided for @trafficDashboardPublicIpTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'The IP lookup timed out. Try again.'**
+  String get trafficDashboardPublicIpTimeout;
+
   /// No description provided for @trafficDashboardPublicIpCooldown.
   ///
   /// In en, this message translates to:

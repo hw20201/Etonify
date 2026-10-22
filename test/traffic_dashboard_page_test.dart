@@ -261,6 +261,33 @@ void main() {
     },
   );
 
+  testWidgets(
+    'public IP error shows localized fixed text, never raw RPC details',
+    (tester) async {
+      useTallViewport(tester);
+      final notifier = ValueNotifier(snapshot());
+      addTearDown(notifier.dispose);
+      final controller = PublicIpController(
+        load: () async => throw StateError('secret=credential rpc-stacktrace'),
+      );
+      await tester.pumpWidget(app(notifier, publicIpController: controller));
+      await tester.pump();
+      final refresh = find.byKey(const ValueKey('public-ip-refresh'));
+      await tester.pump(const Duration(seconds: 4));
+      await tester.tap(refresh);
+      await tester.pump();
+      expect(
+        find.text('Не удалось обновить IP. Попробуйте ещё раз.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('credential'), findsNothing);
+      expect(find.textContaining('rpc-stacktrace'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+      controller.dispose();
+      await tester.pump(const Duration(seconds: 4));
+    },
+  );
+
   testWidgets('closing cancels lookup and quick reopening does not spam', (
     tester,
   ) async {

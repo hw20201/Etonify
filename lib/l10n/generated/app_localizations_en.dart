@@ -1533,6 +1533,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not refresh your IP. Try again.';
 
   @override
+  String get trafficDashboardPublicIpUnsupported =>
+      'This IP lookup configuration is not supported.';
+
+  @override
+  String get trafficDashboardPublicIpNotConnected =>
+      'Connect to the VPN and try again.';
+
+  @override
+  String get trafficDashboardPublicIpTimeout =>
+      'The IP lookup timed out. Try again.';
+
+  @override
   String get trafficDashboardPublicIpCooldown =>
       'Refresh available every 4 seconds';
 

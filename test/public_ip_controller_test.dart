@@ -183,4 +183,43 @@ void main() {
     expect(controller.canRefresh, isTrue);
     controller.dispose();
   });
+
+  testWidgets('failure categories are stable and safe from arbitrary errors', (
+    tester,
+  ) async {
+    for (final entry in <(Object, PublicIpFailureKind)>[
+      (
+        StateError('UNSUPPORTED config credential=secret'),
+        PublicIpFailureKind.unsupportedConfiguration,
+      ),
+      (
+        StateError('socket disconnected; token=secret'),
+        PublicIpFailureKind.notConnected,
+      ),
+      (
+        TimeoutException('private RPC payload=secret'),
+        PublicIpFailureKind.timeout,
+      ),
+      (StateError('private RPC payload=secret'), PublicIpFailureKind.general),
+    ]) {
+      final controller = PublicIpController(load: () async => throw entry.$1);
+      await controller.refresh();
+      expect(controller.failureKind, entry.$2);
+      expect(controller.failed, isTrue);
+      controller.dispose();
+      await tester.pump(const Duration(seconds: 4));
+    }
+  });
+
+  testWidgets('disconnected state takes precedence over RPC detail', (
+    tester,
+  ) async {
+    final controller = PublicIpController(
+      load: () async => throw StateError('unsupported private config secret'),
+      connectedProvider: () => false,
+    );
+    await controller.refresh();
+    expect(controller.failureKind, PublicIpFailureKind.notConnected);
+    controller.dispose();
+  });
 }

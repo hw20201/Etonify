@@ -478,6 +478,7 @@ class _PublicIpDetailsCard extends StatelessWidget {
                       _LookupStatus(
                         loading: controller.loading,
                         failed: controller.failed,
+                        failureKind: controller.failureKind,
                       ),
                     ] else ...[
                       const Gap(18),
@@ -535,7 +536,15 @@ class _PublicIpDetailsCard extends StatelessWidget {
                       if (controller.failed) ...[
                         const Gap(10),
                         Text(
-                          l10n.trafficDashboardPublicIpError,
+                          switch (controller.failureKind) {
+                            PublicIpFailureKind.unsupportedConfiguration =>
+                              l10n.trafficDashboardPublicIpUnsupported,
+                            PublicIpFailureKind.notConnected =>
+                              l10n.trafficDashboardPublicIpNotConnected,
+                            PublicIpFailureKind.timeout =>
+                              l10n.trafficDashboardPublicIpTimeout,
+                            _ => l10n.trafficDashboardPublicIpError,
+                          },
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.error,
                           ),
@@ -554,10 +563,15 @@ class _PublicIpDetailsCard extends StatelessWidget {
 }
 
 class _LookupStatus extends StatelessWidget {
-  const _LookupStatus({required this.loading, required this.failed});
+  const _LookupStatus({
+    required this.loading,
+    required this.failed,
+    required this.failureKind,
+  });
 
   final bool loading;
   final bool failed;
+  final PublicIpFailureKind? failureKind;
 
   @override
   Widget build(BuildContext context) {
@@ -591,7 +605,15 @@ class _LookupStatus extends StatelessWidget {
             duration: const Duration(milliseconds: 220),
             child: Text(
               failed
-                  ? l10n.trafficDashboardPublicIpError
+                  ? switch (failureKind) {
+                      PublicIpFailureKind.unsupportedConfiguration =>
+                        l10n.trafficDashboardPublicIpUnsupported,
+                      PublicIpFailureKind.notConnected =>
+                        l10n.trafficDashboardPublicIpNotConnected,
+                      PublicIpFailureKind.timeout =>
+                        l10n.trafficDashboardPublicIpTimeout,
+                      _ => l10n.trafficDashboardPublicIpError,
+                    }
                   : loading
                   ? l10n.homeOutboundIpLoading
                   : l10n.homeOutboundIpUnavailable,
