@@ -214,65 +214,68 @@ void main() {
     expect(runtime.where((node) => node['tag'] == 'outer'), isEmpty);
     expect(runtime.where((node) => node['tag'] == groups.single.tag), isEmpty);
   });
-  test('native selectors preserve direct defaults without counting direct as a proxy', () {
-    for (final entrySelector in [false, true]) {
-      final payload = SubscriptionStore.buildSubscriptionPayloadForTest(
-        SubscriptionParser.parse(
-          jsonEncode({
-            if (entrySelector) 'route': {'final': 'choice'},
-            'outbounds': [
-              {'type': 'direct', 'tag': 'bypass'},
-              {
-                'type': 'vless',
-                'tag': 'proxy',
-                'server': 'one.example',
-                'server_port': 443,
-                'uuid': 'test-uuid',
-              },
-              {
-                'type': 'selector',
-                'tag': 'choice',
-                'outbounds': ['bypass', 'proxy'],
-                'default': 'bypass',
-              },
-            ],
-          }),
-        ),
-      );
-      final subscription = Subscription(
-        id: 'sub',
-        name: 'Sub',
-        url: '',
-        outbounds: payload.outbounds.map(Outbound.fromMap).toList(),
-        groups: payload.groups.map(SubscriptionGroup.fromMap).toList(),
-      );
-      final catalog = SubscriptionServerCatalog(subscription);
-      final groupTag = subscription.groups.single.tag;
-      expect(catalog.roots.map((node) => node.tag), [
-        entrySelector ? 'proxy' : groupTag,
-      ]);
-      final config = (catalog.exportGroup(groupTag)['outbounds'] as List)
-          .cast<Map<String, dynamic>>();
-      expect(config.map((node) => node['type']), [
-        'selector',
-        'direct',
-        'vless',
-      ]);
-      expect(config.first['default'], config[1]['tag']);
-      expect(catalog.visibleProxyCount, 1);
-      final runtime =
-          (_defaultBuilder(subscription).build()['outbounds'] as List)
-              .cast<Map<String, dynamic>>();
-      final selector = runtime.singleWhere((node) => node['tag'] == groupTag);
-      expect(selector['default'], config[1]['tag']);
-      expect(
-        runtime.singleWhere(
-          (node) => node['tag'] == selector['default'],
-        )['type'],
-        'direct',
-      );
-    }
-  });
+  test(
+    'native selectors preserve direct defaults without counting direct as a proxy',
+    () {
+      for (final entrySelector in [false, true]) {
+        final payload = SubscriptionStore.buildSubscriptionPayloadForTest(
+          SubscriptionParser.parse(
+            jsonEncode({
+              if (entrySelector) 'route': {'final': 'choice'},
+              'outbounds': [
+                {'type': 'direct', 'tag': 'bypass'},
+                {
+                  'type': 'vless',
+                  'tag': 'proxy',
+                  'server': 'one.example',
+                  'server_port': 443,
+                  'uuid': 'test-uuid',
+                },
+                {
+                  'type': 'selector',
+                  'tag': 'choice',
+                  'outbounds': ['bypass', 'proxy'],
+                  'default': 'bypass',
+                },
+              ],
+            }),
+          ),
+        );
+        final subscription = Subscription(
+          id: 'sub',
+          name: 'Sub',
+          url: '',
+          outbounds: payload.outbounds.map(Outbound.fromMap).toList(),
+          groups: payload.groups.map(SubscriptionGroup.fromMap).toList(),
+        );
+        final catalog = SubscriptionServerCatalog(subscription);
+        final groupTag = subscription.groups.single.tag;
+        expect(catalog.roots.map((node) => node.tag), [
+          entrySelector ? 'proxy' : groupTag,
+        ]);
+        final config = (catalog.exportGroup(groupTag)['outbounds'] as List)
+            .cast<Map<String, dynamic>>();
+        expect(config.map((node) => node['type']), [
+          'selector',
+          'direct',
+          'vless',
+        ]);
+        expect(config.first['default'], config[1]['tag']);
+        expect(catalog.visibleProxyCount, 1);
+        final runtime =
+            (_defaultBuilder(subscription).build()['outbounds'] as List)
+                .cast<Map<String, dynamic>>();
+        final selector = runtime.singleWhere((node) => node['tag'] == groupTag);
+        expect(selector['default'], config[1]['tag']);
+        expect(
+          runtime.singleWhere(
+            (node) => node['tag'] == selector['default'],
+          )['type'],
+          'direct',
+        );
+      }
+    },
+  );
   test('nested export prunes an empty branch after a leaf is deleted', () {
     final payload = SubscriptionStore.buildSubscriptionPayloadForTest(
       SubscriptionParser.parse(
@@ -526,15 +529,15 @@ void main() {
         expect(cache.displayProxy?.ip, '203.0.113.1');
       }
       expect(
-        buildProxyCache(lowestInput).groupChildrenByTag[root.tag]!
-            .map((node) => node.tag),
+        buildProxyCache(
+          lowestInput,
+        ).groupChildrenByTag[root.tag]!.map((node) => node.tag),
         [configs[1]['tag']],
       );
       expect(
-        buildProxyCache(lowestInput)
-            .groupChildrenByTag[root.tag]!
-            .single
-            .highlighted,
+        buildProxyCache(
+          lowestInput,
+        ).groupChildrenByTag[root.tag]!.single.highlighted,
         isTrue,
       );
       final roundtrip = SubscriptionStore.buildSubscriptionPayloadForTest(
@@ -599,9 +602,11 @@ void main() {
       'Last standalone',
     ]);
   });
-  final schema114Corpus = jsonDecode(
-    File('test/fixtures/etonify_schema114.json').readAsStringSync(),
-  ) as List;
+  final schema114Corpus =
+      jsonDecode(
+            File('test/fixtures/etonify_schema114.json').readAsStringSync(),
+          )
+          as List;
   for (final fixture in schema114Corpus.cast<Map<String, dynamic>>()) {
     test('saved profile 1.14 migration: ${fixture['name']}', () {
       final input = fixture['input'] as Map<String, dynamic>;
@@ -691,8 +696,9 @@ void main() {
     );
     // Exercise the isolate serialization boundary too.
     expect(
-      ParsedOutboundGroup.fromMap(parsed.groups.first.toMap())
-          .sourceFallbackTag,
+      ParsedOutboundGroup.fromMap(
+        parsed.groups.first.toMap(),
+      ).sourceFallbackTag,
       'reserve',
     );
     final payload = SubscriptionStore.buildSubscriptionPayloadForTest(parsed);
@@ -4282,41 +4288,44 @@ void main() {
     },
   );
 
-  test('vpnEnableIpv6: false restricts TUN to IPv4 and sets DNS strategy to ipv4_only', () {
-    final builder = _defaultBuilder(
-      const Subscription(
-        id: 'sub-1',
-        name: 'Sub',
-        url: 'https://example.com/sub',
-        selectedProxyTag: '',
-        groups: <SubscriptionGroup>[],
-      ),
-      vpnInboundEnabled: true,
-      vpnEnableIpv6: false,
-      experimentalFakeIpEnabled: true,
-    );
-    final config = builder.build();
-    final inbounds = config['inbounds'] as List<dynamic>;
-    final tunIn = inbounds.firstWhere(
-      (i) => (i as Map)['tag'] == 'tun-in',
-    ) as Map<String, dynamic>;
-    expect(tunIn['address'], ['172.19.0.1/30']);
+  test(
+    'vpnEnableIpv6: false restricts TUN to IPv4 and sets DNS strategy to ipv4_only',
+    () {
+      final builder = _defaultBuilder(
+        const Subscription(
+          id: 'sub-1',
+          name: 'Sub',
+          url: 'https://example.com/sub',
+          selectedProxyTag: '',
+          groups: <SubscriptionGroup>[],
+        ),
+        vpnInboundEnabled: true,
+        vpnEnableIpv6: false,
+        experimentalFakeIpEnabled: true,
+      );
+      final config = builder.build();
+      final inbounds = config['inbounds'] as List<dynamic>;
+      final tunIn =
+          inbounds.firstWhere((i) => (i as Map)['tag'] == 'tun-in')
+              as Map<String, dynamic>;
+      expect(tunIn['address'], ['172.19.0.1/30']);
 
-    final dns = config['dns'] as Map<String, dynamic>;
-    expect(dns['strategy'], 'ipv4_only');
+      final dns = config['dns'] as Map<String, dynamic>;
+      expect(dns['strategy'], 'ipv4_only');
 
-    final servers = dns['servers'] as List<dynamic>;
-    final fakeIpServer = servers.firstWhere(
-      (s) => (s as Map)['tag'] == 'dns-fakeip',
-    ) as Map<String, dynamic>;
-    expect(fakeIpServer.containsKey('inet6_range'), isFalse);
+      final servers = dns['servers'] as List<dynamic>;
+      final fakeIpServer =
+          servers.firstWhere((s) => (s as Map)['tag'] == 'dns-fakeip')
+              as Map<String, dynamic>;
+      expect(fakeIpServer.containsKey('inet6_range'), isFalse);
 
-    final rules = dns['rules'] as List<dynamic>;
-    final fakeIpRule = rules.firstWhere(
-      (r) => (r as Map)['server'] == 'dns-fakeip',
-    ) as Map<String, dynamic>;
-    expect(fakeIpRule['query_type'], ['A']);
-  });
+      final rules = dns['rules'] as List<dynamic>;
+      final fakeIpRule =
+          rules.firstWhere((r) => (r as Map)['server'] == 'dns-fakeip')
+              as Map<String, dynamic>;
+      expect(fakeIpRule['query_type'], ['A']);
+    },
+  );
 
   test(
     'vpnEnableIpv6: true routes IPv6 and prefers AAAA with fakeip enabled',
@@ -4335,9 +4344,9 @@ void main() {
       );
       final config = builder.build();
       final inbounds = config['inbounds'] as List<dynamic>;
-      final tunIn = inbounds.firstWhere(
-        (i) => (i as Map)['tag'] == 'tun-in',
-      ) as Map<String, dynamic>;
+      final tunIn =
+          inbounds.firstWhere((i) => (i as Map)['tag'] == 'tun-in')
+              as Map<String, dynamic>;
       expect(tunIn['address'], ['172.19.0.1/30', 'fdfe:dcba:9876::1/126']);
 
       final dns = config['dns'] as Map<String, dynamic>;
@@ -4349,15 +4358,15 @@ void main() {
       });
 
       final servers = dns['servers'] as List<dynamic>;
-      final fakeIpServer = servers.firstWhere(
-        (s) => (s as Map)['tag'] == 'dns-fakeip',
-      ) as Map<String, dynamic>;
+      final fakeIpServer =
+          servers.firstWhere((s) => (s as Map)['tag'] == 'dns-fakeip')
+              as Map<String, dynamic>;
       expect(fakeIpServer['inet6_range'], 'fc00::/18');
 
       final rules = dns['rules'] as List<dynamic>;
-      final fakeIpRule = rules.firstWhere(
-        (r) => (r as Map)['server'] == 'dns-fakeip',
-      ) as Map<String, dynamic>;
+      final fakeIpRule =
+          rules.firstWhere((r) => (r as Map)['server'] == 'dns-fakeip')
+              as Map<String, dynamic>;
       expect(fakeIpRule['query_type'], ['A', 'AAAA']);
     },
   );
@@ -4379,72 +4388,76 @@ void main() {
     final dns = config['dns'] as Map<String, dynamic>;
     expect(dns.containsKey('strategy'), isFalse);
   });
-  test('VLESS Reality domain endpoint preserves security fields and uses local bootstrap', () {
-    // Record the complete dependency chain for a user-supplied node:
-    // endpoint hostname -> dns-local (explicitly or route default), while
-    // remote DNS follows select and its hostname bootstrap uses dns-local.
-    // This does not assert that any IP lookup is available. Simply allowing
-    // a protocol in an IP-lookup path would bypass these dependencies.
-    const subscription = Subscription(
-      id: 'vless-reality-domain',
-      name: 'VLESS Reality domain',
-      url: '',
-      outbounds: [
-        Outbound(
-          tag: 'reality-node',
-          name: 'Reality node',
-          config: {
-            'type': 'vless',
-            'tag': 'reality-node',
-            'server': 'edge.example.test',
-            'server_port': 443,
-            'uuid': '11111111-1111-4111-8111-111111111111',
-            'flow': 'xtls-rprx-vision',
-            'tls': {
-              'enabled': true,
-              'server_name': 'front.example.test',
-              'utls': {'enabled': true, 'fingerprint': 'chrome'},
-              'reality': {
+  test(
+    'VLESS Reality domain endpoint preserves security fields and uses local bootstrap',
+    () {
+      // Record the complete dependency chain for a user-supplied node:
+      // endpoint hostname -> dns-local (explicitly or route default), while
+      // remote DNS follows select and its hostname bootstrap uses dns-local.
+      // This does not assert that any IP lookup is available. Simply allowing
+      // a protocol in an IP-lookup path would bypass these dependencies.
+      const subscription = Subscription(
+        id: 'vless-reality-domain',
+        name: 'VLESS Reality domain',
+        url: '',
+        outbounds: [
+          Outbound(
+            tag: 'reality-node',
+            name: 'Reality node',
+            config: {
+              'type': 'vless',
+              'tag': 'reality-node',
+              'server': 'edge.example.test',
+              'server_port': 443,
+              'uuid': '11111111-1111-4111-8111-111111111111',
+              'flow': 'xtls-rprx-vision',
+              'tls': {
                 'enabled': true,
-                'public_key': 'CQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-                'short_id': '0123abcd',
+                'server_name': 'front.example.test',
+                'utls': {'enabled': true, 'fingerprint': 'chrome'},
+                'reality': {
+                  'enabled': true,
+                  'public_key': 'CQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+                  'short_id': '0123abcd',
+                },
               },
             },
-          },
-        ),
-      ],
-    );
-    final config = _defaultBuilder(
-      subscription,
-      selectedProxyTag: 'reality-node',
-    ).build();
-    final outbounds = (config['outbounds'] as List)
-        .cast<Map<String, dynamic>>();
-    final node = outbounds.firstWhere(
-      (entry) => entry['tag'] == 'reality-node',
-    );
-    expect(node['server'], 'edge.example.test');
-    expect(node['server_port'], 443);
-    expect(node['uuid'], '11111111-1111-4111-8111-111111111111');
-    expect(node['flow'], 'xtls-rprx-vision');
-    final tls = node['tls'] as Map;
-    expect(tls['enabled'], isTrue);
-    expect(tls['server_name'], 'front.example.test');
-    expect(tls['utls'], {'enabled': true, 'fingerprint': 'chrome'});
-    expect(tls['reality'], {
-      'enabled': true,
-      'public_key': 'CQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-      'short_id': '0123abcd',
-    });
-    final dns = config['dns'] as Map;
-    final remoteDns = (dns['servers'] as List)
-        .cast<Map<String, dynamic>>()
-        .firstWhere((server) => server['tag'] == 'dns-remote');
-    expect(remoteDns['detour'], 'select');
-    expect(remoteDns['domain_resolver'], 'dns-local');
-    expect((config['route'] as Map)['default_domain_resolver'], 'dns-local');
-    expect(node['domain_resolver'] ?? 'dns-local', 'dns-local');
-  });
+          ),
+        ],
+      );
+      final config = _defaultBuilder(
+        subscription,
+        selectedProxyTag: 'reality-node',
+      ).build();
+      final outbounds = (config['outbounds'] as List).cast<Map<String, dynamic>>();
+      final node = outbounds.firstWhere(
+        (entry) => entry['tag'] == 'reality-node',
+      );
+      expect(node['server'], 'edge.example.test');
+      expect(node['server_port'], 443);
+      expect(node['uuid'], '11111111-1111-4111-8111-111111111111');
+      expect(node['flow'], 'xtls-rprx-vision');
+      final tls = node['tls'] as Map;
+      expect(tls['enabled'], isTrue);
+      expect(tls['server_name'], 'front.example.test');
+      expect(tls['utls'], {'enabled': true, 'fingerprint': 'chrome'});
+      expect(tls['reality'], {
+        'enabled': true,
+        'public_key': 'CQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        'short_id': '0123abcd',
+      });
+      final dns = config['dns'] as Map;
+      final remoteDns = (dns['servers'] as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere(
+        (server) => server['tag'] == 'dns-remote',
+      );
+      expect(remoteDns['detour'], 'select');
+      expect(remoteDns['domain_resolver'], 'dns-local');
+      expect((config['route'] as Map)['default_domain_resolver'], 'dns-local');
+      expect(node['domain_resolver'] ?? 'dns-local', 'dns-local');
+    },
+  );
 }
 
 SingboxConfigBuilder _defaultBuilder(
