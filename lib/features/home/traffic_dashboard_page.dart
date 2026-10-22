@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:meow_client/core/formatting.dart';
 import 'package:meow_client/features/home/public_ip_controller.dart';
+import 'package:meow_client/features/home/public_ip_peek.dart'
+    show publicIpUnsupportedMessage;
 import 'package:meow_client/l10n/generated/app_localizations.dart';
 import 'package:meow_client/models/app_view_models.dart';
 import 'package:meow_client/widgets/country_flag_badge.dart';
@@ -602,7 +604,11 @@ class _PublicIpSection extends StatelessWidget {
           failed
               ? switch (controller?.failureKind) {
                   PublicIpFailureKind.unsupportedConfiguration =>
-                    l10n.trafficDashboardPublicIpUnsupported,
+                    publicIpUnsupportedMessage(
+                      l10n,
+                      controller?.unsupportedReason,
+                      controller?.unsupportedDiagnosticCode,
+                    ),
                   PublicIpFailureKind.notConnected =>
                     l10n.trafficDashboardPublicIpNotConnected,
                   PublicIpFailureKind.timeout =>

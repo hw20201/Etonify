@@ -211,6 +211,53 @@ void main() {
     }
   });
 
+  testWidgets(
+    'scoped diagnostic codes are exact allowlisted and never expose raw errors',
+    (tester) async {
+      for (final entry in <(String, PublicIpUnsupportedReason)>[
+        (
+          'outbound.protocol.vless',
+          PublicIpUnsupportedReason.outboundProtocolVless,
+        ),
+        (
+          'outbound.protocol.trojan',
+          PublicIpUnsupportedReason.outboundProtocolTrojan,
+        ),
+        ('outbound.option.detour', PublicIpUnsupportedReason.outboundDetour),
+        ('outbound.option.tls', PublicIpUnsupportedReason.outboundOption),
+        ('dns.rules', PublicIpUnsupportedReason.dnsRules),
+        ('dns.option.strategy', PublicIpUnsupportedReason.dnsOption),
+        ('snapshot.invalid', PublicIpUnsupportedReason.snapshotInvalid),
+        ('selection.invalid', PublicIpUnsupportedReason.selectionInvalid),
+      ]) {
+        final controller = PublicIpController(
+          load: () async => throw StateError(
+            'unsupported scoped query configuration: [PIP_CFG:${entry.$1}] private=secret',
+          ),
+        );
+        await controller.refresh();
+        expect(
+          controller.failureKind,
+          PublicIpFailureKind.unsupportedConfiguration,
+        );
+        expect(controller.unsupportedReason, entry.$2);
+        expect(controller.unsupportedDiagnosticCode, entry.$1);
+        controller.dispose();
+        await tester.pump(const Duration(seconds: 4));
+      }
+      final unknown = PublicIpController(
+        load: () async => throw StateError(
+          'unsupported scoped query configuration: [PIP_CFG:outbound.option.secret_value] credential=secret',
+        ),
+      );
+      await unknown.refresh();
+      expect(unknown.failureKind, PublicIpFailureKind.unsupportedConfiguration);
+      expect(unknown.unsupportedReason, isNull);
+      expect(unknown.unsupportedDiagnosticCode, isNull);
+      unknown.dispose();
+    },
+  );
+
   testWidgets('disconnected state takes precedence over RPC detail', (
     tester,
   ) async {

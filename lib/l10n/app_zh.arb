@@ -1594,5 +1594,21 @@
   "latencyMeasurementModeRealUrl": "真实 URL 测量",
   "latencyMeasurementModeDescription": "仅影响手动测速及其显示；内核自动选路仍使用 URLTest。",
   "realUrlLatencyDescription": "真实 URL 延迟通过指定节点执行 HTTPS GET 并获取小响应；总耗时包含排队/跨层调用、连接、TLS 和响应体（最多 64 KiB）。它与 URLTest 分开，仅用于手动测量，不影响自动选路。原生接口可能跟随最多 5 次 HTTPS 跳转。",
-  "sortByRealUrlLatency": "按真实 URL 延迟"
+  "sortByRealUrlLatency": "按真实 URL 延迟",
+  "trafficDashboardPublicIpUnsupportedDiagnostic": "{reason}（诊断码：{code}）",
+  "trafficDashboardPublicIpReasonOutboundProtocolVless": "所选出站协议不支持 IP 查询。",
+  "trafficDashboardPublicIpReasonOutboundProtocolTrojan": "所选出站协议不支持 IP 查询。",
+  "trafficDashboardPublicIpReasonOutboundProtocolOther": "所选出站协议不支持 IP 查询。",
+  "trafficDashboardPublicIpReasonOutboundBootstrapDomain": "出站服务器域名无法为本次查询安全解析。",
+  "trafficDashboardPublicIpReasonOutboundDetour": "所选出站包含不支持的链式转发。",
+  "trafficDashboardPublicIpReasonOutboundOption": "所选出站包含不支持的选项。",
+  "trafficDashboardPublicIpReasonOutboundInvalid": "所选出站配置无法用于 IP 查询。",
+  "trafficDashboardPublicIpReasonDnsRules": "DNS 规则无法用于本次 IP 查询。",
+  "trafficDashboardPublicIpReasonDnsDetour": "DNS 配置包含不支持的链式转发。",
+  "trafficDashboardPublicIpReasonDnsBootstrap": "DNS 引导配置不受支持。",
+  "trafficDashboardPublicIpReasonDnsOption": "DNS 配置包含不支持的选项。",
+  "trafficDashboardPublicIpReasonDnsType": "本次查询不支持此 DNS 类型。",
+  "trafficDashboardPublicIpReasonDnsInvalid": "DNS 配置无法用于本次 IP 查询。",
+  "trafficDashboardPublicIpReasonSnapshotInvalid": "当前配置快照无法用于 IP 查询。",
+  "trafficDashboardPublicIpReasonSelectionInvalid": "无法从当前配置中确定所选出站。"
 }

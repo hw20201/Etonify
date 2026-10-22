@@ -479,6 +479,8 @@ class _PublicIpDetailsCard extends StatelessWidget {
                         loading: controller.loading,
                         failed: controller.failed,
                         failureKind: controller.failureKind,
+                        unsupportedReason: controller.unsupportedReason,
+                        diagnosticCode: controller.unsupportedDiagnosticCode,
                       ),
                     ] else ...[
                       const Gap(18),
@@ -538,7 +540,11 @@ class _PublicIpDetailsCard extends StatelessWidget {
                         Text(
                           switch (controller.failureKind) {
                             PublicIpFailureKind.unsupportedConfiguration =>
-                              l10n.trafficDashboardPublicIpUnsupported,
+                              publicIpUnsupportedMessage(
+                                l10n,
+                                controller.unsupportedReason,
+                                controller.unsupportedDiagnosticCode,
+                              ),
                             PublicIpFailureKind.notConnected =>
                               l10n.trafficDashboardPublicIpNotConnected,
                             PublicIpFailureKind.timeout =>
@@ -567,11 +573,15 @@ class _LookupStatus extends StatelessWidget {
     required this.loading,
     required this.failed,
     required this.failureKind,
+    required this.unsupportedReason,
+    required this.diagnosticCode,
   });
 
   final bool loading;
   final bool failed;
   final PublicIpFailureKind? failureKind;
+  final PublicIpUnsupportedReason? unsupportedReason;
+  final String? diagnosticCode;
 
   @override
   Widget build(BuildContext context) {
@@ -607,7 +617,11 @@ class _LookupStatus extends StatelessWidget {
               failed
                   ? switch (failureKind) {
                       PublicIpFailureKind.unsupportedConfiguration =>
-                        l10n.trafficDashboardPublicIpUnsupported,
+                        publicIpUnsupportedMessage(
+                          l10n,
+                          unsupportedReason,
+                          diagnosticCode,
+                        ),
                       PublicIpFailureKind.notConnected =>
                         l10n.trafficDashboardPublicIpNotConnected,
                       PublicIpFailureKind.timeout =>
@@ -759,4 +773,49 @@ class _InfoRow extends StatelessWidget {
       ),
     );
   }
+}
+
+String publicIpUnsupportedMessage(
+  AppLocalizations l10n,
+  PublicIpUnsupportedReason? reason,
+  String? code,
+) {
+  if (reason == null ||
+      code == null ||
+      PublicIpUnsupportedReason.parse(code) != reason) {
+    return l10n.trafficDashboardPublicIpUnsupported;
+  }
+  final label = switch (reason) {
+    PublicIpUnsupportedReason.outboundProtocolVless =>
+      l10n.trafficDashboardPublicIpReasonOutboundProtocolVless,
+    PublicIpUnsupportedReason.outboundProtocolTrojan =>
+      l10n.trafficDashboardPublicIpReasonOutboundProtocolTrojan,
+    PublicIpUnsupportedReason.outboundProtocolOther =>
+      l10n.trafficDashboardPublicIpReasonOutboundProtocolOther,
+    PublicIpUnsupportedReason.outboundBootstrapDomain =>
+      l10n.trafficDashboardPublicIpReasonOutboundBootstrapDomain,
+    PublicIpUnsupportedReason.outboundDetour =>
+      l10n.trafficDashboardPublicIpReasonOutboundDetour,
+    PublicIpUnsupportedReason.outboundOption =>
+      l10n.trafficDashboardPublicIpReasonOutboundOption,
+    PublicIpUnsupportedReason.outboundInvalid =>
+      l10n.trafficDashboardPublicIpReasonOutboundInvalid,
+    PublicIpUnsupportedReason.dnsRules =>
+      l10n.trafficDashboardPublicIpReasonDnsRules,
+    PublicIpUnsupportedReason.dnsDetour =>
+      l10n.trafficDashboardPublicIpReasonDnsDetour,
+    PublicIpUnsupportedReason.dnsBootstrap =>
+      l10n.trafficDashboardPublicIpReasonDnsBootstrap,
+    PublicIpUnsupportedReason.dnsOption =>
+      l10n.trafficDashboardPublicIpReasonDnsOption,
+    PublicIpUnsupportedReason.dnsType =>
+      l10n.trafficDashboardPublicIpReasonDnsType,
+    PublicIpUnsupportedReason.dnsInvalid =>
+      l10n.trafficDashboardPublicIpReasonDnsInvalid,
+    PublicIpUnsupportedReason.snapshotInvalid =>
+      l10n.trafficDashboardPublicIpReasonSnapshotInvalid,
+    PublicIpUnsupportedReason.selectionInvalid =>
+      l10n.trafficDashboardPublicIpReasonSelectionInvalid,
+  };
+  return l10n.trafficDashboardPublicIpUnsupportedDiagnostic(label, code);
 }

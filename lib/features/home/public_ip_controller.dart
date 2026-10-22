@@ -256,6 +256,73 @@ class PublicIpLookup {
 }
 
 /// App-owned: memory-only result and cooldown survive closing the sheet.
+enum PublicIpUnsupportedReason {
+  outboundProtocolVless('outbound.protocol.vless'),
+  outboundProtocolTrojan('outbound.protocol.trojan'),
+  outboundProtocolOther('outbound.protocol.other'),
+  outboundBootstrapDomain('outbound.bootstrap.domain'),
+  outboundDetour('outbound.option.detour'),
+  outboundOption('outbound.option.unknown'),
+  outboundInvalid('outbound.invalid'),
+  dnsRules('dns.rules'),
+  dnsDetour('dns.detour'),
+  dnsBootstrap('dns.bootstrap'),
+  dnsOption('dns.option.unknown'),
+  dnsType('dns.type'),
+  dnsInvalid('dns.invalid'),
+  snapshotInvalid('snapshot.invalid'),
+  selectionInvalid('selection.invalid');
+
+  const PublicIpUnsupportedReason(this.diagnosticCode);
+  final String diagnosticCode;
+
+  static PublicIpUnsupportedReason? parse(String code) {
+    if (code == 'outbound.protocol.direct') return outboundProtocolOther;
+    // Only exact, static codes from the core contract are accepted.
+    for (final reason in values) {
+      if (reason.diagnosticCode == code) return reason;
+    }
+    const outboundOptions = <String>{
+      'detour',
+      'domain_resolver',
+      'tls',
+      'transport',
+      'multiplex',
+      'plugin',
+      'plugin_opts',
+      'udp_over_tcp',
+      'network',
+      'bind_interface',
+      'inet4_bind_address',
+      'inet6_bind_address',
+      'routing_mark',
+      'reuse_addr',
+      'connect_timeout',
+      'tcp_fast_open',
+      'tcp_multi_path',
+      'client_subnet',
+      'strategy',
+      'address_resolver',
+      'certificate',
+      'certificate_path',
+      'insecure',
+      'utls',
+      'reality',
+      'enabled',
+      'server_name',
+      'path',
+      'version',
+    };
+    if (outboundOptions.any((key) => code == 'outbound.option.$key')) {
+      return outboundOption;
+    }
+    if (outboundOptions.any((key) => code == 'dns.option.$key')) {
+      return dnsOption;
+    }
+    return null;
+  }
+}
+
 enum PublicIpFailureKind {
   unsupportedConfiguration,
   notConnected,
@@ -304,6 +371,8 @@ class PublicIpController extends ChangeNotifier {
   bool _loading = false;
   bool _failed = false;
   PublicIpFailureKind? _failureKind;
+  PublicIpUnsupportedReason? _unsupportedReason;
+  String? _unsupportedDiagnosticCode;
   late final bool Function()? _connectedProvider;
   bool _disposed = false;
   Timer? _cooldown;
@@ -313,6 +382,8 @@ class PublicIpController extends ChangeNotifier {
   bool get loading => _loading;
   bool get failed => _failed;
   PublicIpFailureKind? get failureKind => _failureKind;
+  PublicIpUnsupportedReason? get unsupportedReason => _unsupportedReason;
+  String? get unsupportedDiagnosticCode => _unsupportedDiagnosticCode;
   bool get canRefresh => !_disposed && !_loading && _cooldown == null;
 
   /// Repeated group/traffic snapshots do not cancel a query unless its actual
@@ -329,6 +400,8 @@ class PublicIpController extends ChangeNotifier {
     _loading = true;
     _failed = false;
     _failureKind = null;
+    _unsupportedReason = null;
+    _unsupportedDiagnosticCode = null;
     _cooldown = Timer(const Duration(seconds: 4), () {
       _cooldown = null;
       if (!_disposed) notifyListeners();
@@ -350,9 +423,17 @@ class PublicIpController extends ChangeNotifier {
         return;
       }
       _failed = true;
+      final candidateCode = _parsePublicIpUnsupportedCode(error);
+      _unsupportedReason = candidateCode == null
+          ? null
+          : PublicIpUnsupportedReason.parse(candidateCode);
+      _unsupportedDiagnosticCode = _unsupportedReason == null
+          ? null
+          : candidateCode;
       _failureKind = _classifyPublicIpFailure(
         error,
         connected: _connectedProvider?.call(),
+        hasAllowlistedReason: _unsupportedReason != null,
       );
     } finally {
       if (!_disposed && generation == _generation) {
@@ -376,6 +457,8 @@ class PublicIpController extends ChangeNotifier {
     _loading = false;
     _failed = false;
     _failureKind = null;
+    _unsupportedReason = null;
+    _unsupportedDiagnosticCode = null;
     notifyListeners();
   }
 
@@ -398,15 +481,29 @@ class PublicIpController extends ChangeNotifier {
   }
 }
 
-PublicIpFailureKind _classifyPublicIpFailure(Object error, {bool? connected}) {
+String? _parsePublicIpUnsupportedCode(Object error) {
+  // Error text is inspected only for the exact RPC marker and strict ASCII code.
+  final match = RegExp(
+    r'unsupported scoped query configuration: \[PIP_CFG:([a-z0-9_.]+)\]',
+  ).firstMatch(error.toString());
+  return match?.group(1);
+}
+
+PublicIpFailureKind _classifyPublicIpFailure(
+  Object error, {
+  bool? connected,
+  bool hasAllowlistedReason = false,
+}) {
   if (connected == false) return PublicIpFailureKind.notConnected;
   if (error is TimeoutException) return PublicIpFailureKind.timeout;
   // Inspect only for categorization. The exception text is never presented.
   final message = error.toString().toLowerCase();
-  if (message.contains('unsupported') ||
+  if (hasAllowlistedReason ||
+      message.contains('unsupported scoped query configuration') ||
+      message.contains('unsupported configuration') ||
+      message.contains('unsupported') ||
       message.contains('not supported') ||
-      message.contains('invalid configuration') ||
-      message.contains('unsupported configuration')) {
+      message.contains('invalid configuration')) {
     return PublicIpFailureKind.unsupportedConfiguration;
   }
   if (message.contains('not connected') ||
