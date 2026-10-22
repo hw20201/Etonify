@@ -1533,18 +1533,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not refresh your IP. Try again.';
 
   @override
-  String get trafficDashboardPublicIpUnsupported =>
-      'This IP lookup configuration is not supported.';
-
-  @override
-  String get trafficDashboardPublicIpNotConnected =>
-      'Connect to the VPN and try again.';
-
-  @override
-  String get trafficDashboardPublicIpTimeout =>
-      'The IP lookup timed out. Try again.';
-
-  @override
   String get trafficDashboardPublicIpCooldown =>
       'Refresh available every 4 seconds';
 
@@ -3583,76 +3571,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortByRealUrlLatency => 'Real URL latency';
-
-  @override
-  String trafficDashboardPublicIpUnsupportedDiagnostic(
-    String reason,
-    String code,
-  ) {
-    return '$reason (diagnostic: $code)';
-  }
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundProtocolVless =>
-      'The selected outbound protocol is not supported for IP lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundProtocolTrojan =>
-      'The selected outbound protocol is not supported for IP lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundProtocolOther =>
-      'The selected outbound protocol is not supported for IP lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundBootstrapDomain =>
-      'The outbound server hostname cannot be safely resolved for this lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundDetour =>
-      'The selected outbound uses an unsupported detour.';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundOption =>
-      'The selected outbound has an unsupported option.';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundInvalid =>
-      'The selected outbound configuration is invalid for IP lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsRules =>
-      'The DNS rules cannot be used for this IP lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsDetour =>
-      'The DNS configuration uses an unsupported detour.';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsBootstrap =>
-      'The DNS bootstrap configuration is unsupported.';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsOption =>
-      'The DNS configuration has an unsupported option.';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsType =>
-      'The DNS server type is unsupported for this lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsInvalid =>
-      'The DNS configuration is invalid for this IP lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonSnapshotInvalid =>
-      'The active configuration snapshot is invalid for IP lookup.';
-
-  @override
-  String get trafficDashboardPublicIpReasonSelectionInvalid =>
-      'The selected outbound could not be resolved from the active configuration.';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundBootstrapPinRequired =>
-      'No valid Reality endpoint record matches this configuration and network. Use the selected node normally, then retry. This query never falls back to local DNS or direct access.';
 }

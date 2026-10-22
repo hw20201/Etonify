@@ -4429,7 +4429,8 @@ void main() {
         subscription,
         selectedProxyTag: 'reality-node',
       ).build();
-      final outbounds = (config['outbounds'] as List).cast<Map>();
+      final outbounds = (config['outbounds'] as List)
+          .cast<Map<dynamic, dynamic>>();
       final node = outbounds.firstWhere(
         (entry) => entry['tag'] == 'reality-node',
       );
@@ -4447,9 +4448,9 @@ void main() {
         'short_id': '0123abcd',
       });
       final dns = config['dns'] as Map;
-      final remoteDns = (dns['servers'] as List).cast<Map>().firstWhere(
-        (server) => server['tag'] == 'dns-remote',
-      );
+      final remoteDns = (dns['servers'] as List)
+          .cast<Map<dynamic, dynamic>>()
+          .firstWhere((server) => server['tag'] == 'dns-remote');
       expect(remoteDns['detour'], 'select');
       expect(remoteDns['domain_resolver'], 'dns-local');
       expect((config['route'] as Map)['default_domain_resolver'], 'dns-local');

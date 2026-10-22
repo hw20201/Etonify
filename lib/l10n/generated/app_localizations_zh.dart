@@ -1463,15 +1463,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trafficDashboardPublicIpError => '无法刷新您的 IP，请重试。';
 
   @override
-  String get trafficDashboardPublicIpUnsupported => '此 IP 查询配置不受支持。';
-
-  @override
-  String get trafficDashboardPublicIpNotConnected => '请先连接 VPN，然后重试。';
-
-  @override
-  String get trafficDashboardPublicIpTimeout => 'IP 查询超时，请重试。';
-
-  @override
   String get trafficDashboardPublicIpCooldown => '每 4 秒可刷新一次';
 
   @override
@@ -3384,68 +3375,4 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sortByRealUrlLatency => '按真实 URL 延迟';
-
-  @override
-  String trafficDashboardPublicIpUnsupportedDiagnostic(
-    String reason,
-    String code,
-  ) {
-    return '$reason（诊断码：$code）';
-  }
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundProtocolVless =>
-      '所选出站协议不支持 IP 查询。';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundProtocolTrojan =>
-      '所选出站协议不支持 IP 查询。';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundProtocolOther =>
-      '所选出站协议不支持 IP 查询。';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundBootstrapDomain =>
-      '出站服务器域名无法为本次查询安全解析。';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundDetour => '所选出站包含不支持的链式转发。';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundOption => '所选出站包含不支持的选项。';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundInvalid =>
-      '所选出站配置无法用于 IP 查询。';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsRules => 'DNS 规则无法用于本次 IP 查询。';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsDetour => 'DNS 配置包含不支持的链式转发。';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsBootstrap => 'DNS 引导配置不受支持。';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsOption => 'DNS 配置包含不支持的选项。';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsType => '本次查询不支持此 DNS 类型。';
-
-  @override
-  String get trafficDashboardPublicIpReasonDnsInvalid => 'DNS 配置无法用于本次 IP 查询。';
-
-  @override
-  String get trafficDashboardPublicIpReasonSnapshotInvalid =>
-      '当前配置快照无法用于 IP 查询。';
-
-  @override
-  String get trafficDashboardPublicIpReasonSelectionInvalid =>
-      '无法从当前配置中确定所选出站。';
-
-  @override
-  String get trafficDashboardPublicIpReasonOutboundBootstrapPinRequired =>
-      '当前节点还没有与配置和网络匹配的有效 Reality 端点记录，请先通过该节点正常联网后重试。本查询不会使用本机 DNS 或直连回退。';
 }

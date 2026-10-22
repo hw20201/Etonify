@@ -43,8 +43,6 @@ import com.etonify.meow_client.generated.FlutterError as PigeonFlutterError
 import com.etonify.meow_client.generated.HttpHeaderMessage
 import com.etonify.meow_client.generated.InstalledAppMessage
 import com.etonify.meow_client.generated.NetworkInterfaceStateMessage
-import com.etonify.meow_client.generated.PublicIpLookupRequestMessage
-import com.etonify.meow_client.generated.PublicIpLookupResponseMessage
 import com.etonify.meow_client.generated.OutboundFetchRequestMessage
 import com.etonify.meow_client.generated.RuntimeFlagsMessage
 import com.etonify.meow_client.generated.SingboxHostApi
@@ -1825,12 +1823,6 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                 }
 
-                override fun lookupPublicIp(request: PublicIpLookupRequestMessage, callback: (Result<PublicIpLookupResponseMessage>) -> Unit) {
-                    SingboxController.lookupPublicIp(request, callback)
-                }
-                override fun cancelPublicIp(requestId: String, callback: (Result<Unit>) -> Unit) {
-                    SingboxController.cancelPublicIp(requestId, callback)
-                }
                 override fun getNetworkInterfaceState(
                     callback: (Result<NetworkInterfaceStateMessage>) -> Unit,
                 ) {

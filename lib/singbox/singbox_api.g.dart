@@ -351,136 +351,6 @@ class UrlTestRequestMessage {
   }
 }
 
-class PublicIpLookupRequestMessage {
-  PublicIpLookupRequestMessage({
-    required this.requestId,
-    required this.outboundTag,
-    required this.provider,
-    required this.networkGeneration,
-    required this.timeoutMillis,
-  });
-
-  String requestId;
-
-  String outboundTag;
-
-  String provider;
-
-  int networkGeneration;
-
-  int timeoutMillis;
-
-  List<Object?> _toList() {
-    return <Object?>[
-      requestId,
-      outboundTag,
-      provider,
-      networkGeneration,
-      timeoutMillis,
-    ];
-  }
-
-  Object encode() {
-    return _toList();  }
-
-  static PublicIpLookupRequestMessage decode(Object result) {
-    result as List<Object?>;
-    return PublicIpLookupRequestMessage(
-      requestId: result[0]! as String,
-      outboundTag: result[1]! as String,
-      provider: result[2]! as String,
-      networkGeneration: result[3]! as int,
-      timeoutMillis: result[4]! as int,
-    );
-  }
-
-  @override
-  // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  bool operator ==(Object other) {
-    if (other is! PublicIpLookupRequestMessage || other.runtimeType != runtimeType) {
-      return false;
-    }
-    if (identical(this, other)) {
-      return true;
-    }
-    return _deepEquals(requestId, other.requestId) && _deepEquals(outboundTag, other.outboundTag) && _deepEquals(provider, other.provider) && _deepEquals(networkGeneration, other.networkGeneration) && _deepEquals(timeoutMillis, other.timeoutMillis);
-  }
-
-  @override
-  // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
-
-  @override
-  String toString() {
-    return 'PublicIpLookupRequestMessage(requestId: $requestId, outboundTag: $outboundTag, provider: $provider, networkGeneration: $networkGeneration, timeoutMillis: $timeoutMillis)';
-  }
-}
-
-class PublicIpLookupResponseMessage {
-  PublicIpLookupResponseMessage({
-    required this.json,
-    required this.planId,
-    required this.coreGeneration,
-    required this.networkGeneration,
-    required this.outboundTag,
-  });
-
-  String json;
-
-  String planId;
-
-  String coreGeneration;
-
-  int networkGeneration;
-
-  String outboundTag;
-
-  List<Object?> _toList() {
-    return <Object?>[
-      json,
-      planId,
-      coreGeneration,
-      networkGeneration,
-      outboundTag,
-    ];
-  }
-
-  Object encode() {
-    return _toList();  }
-
-  static PublicIpLookupResponseMessage decode(Object result) {
-    result as List<Object?>;
-    return PublicIpLookupResponseMessage(
-      json: result[0]! as String,
-      planId: result[1]! as String,
-      coreGeneration: result[2]! as String,
-      networkGeneration: result[3]! as int,
-      outboundTag: result[4]! as String,
-    );
-  }
-
-  @override
-  // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  bool operator ==(Object other) {
-    if (other is! PublicIpLookupResponseMessage || other.runtimeType != runtimeType) {
-      return false;
-    }
-    if (identical(this, other)) {
-      return true;
-    }
-    return _deepEquals(json, other.json) && _deepEquals(planId, other.planId) && _deepEquals(coreGeneration, other.coreGeneration) && _deepEquals(networkGeneration, other.networkGeneration) && _deepEquals(outboundTag, other.outboundTag);
-  }
-
-  @override
-  // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
-
-  @override
-  String toString() {
-    return 'PublicIpLookupResponseMessage(json: $json, planId: $planId, coreGeneration: $coreGeneration, networkGeneration: $networkGeneration, outboundTag: $outboundTag)';
-  }
-}
-
 class VpnNotificationPresentationMessage {
   VpnNotificationPresentationMessage({
     required this.detailed,
@@ -1158,38 +1028,32 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is UrlTestRequestMessage) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
-    }    else if (value is PublicIpLookupRequestMessage) {
+    }    else if (value is VpnNotificationPresentationMessage) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
-    }    else if (value is PublicIpLookupResponseMessage) {
+    }    else if (value is HttpHeaderMessage) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
-    }    else if (value is VpnNotificationPresentationMessage) {
+    }    else if (value is UnderlyingNetworkFetchRequestMessage) {
       buffer.putUint8(134);
       writeValue(buffer, value.encode());
-    }    else if (value is HttpHeaderMessage) {
+    }    else if (value is UnderlyingNetworkFetchResponseMessage) {
       buffer.putUint8(135);
       writeValue(buffer, value.encode());
-    }    else if (value is UnderlyingNetworkFetchRequestMessage) {
+    }    else if (value is OutboundFetchRequestMessage) {
       buffer.putUint8(136);
       writeValue(buffer, value.encode());
-    }    else if (value is UnderlyingNetworkFetchResponseMessage) {
+    }    else if (value is UnderlyingNetworkDownloadRequestMessage) {
       buffer.putUint8(137);
       writeValue(buffer, value.encode());
-    }    else if (value is OutboundFetchRequestMessage) {
+    }    else if (value is UnderlyingNetworkDownloadResponseMessage) {
       buffer.putUint8(138);
       writeValue(buffer, value.encode());
-    }    else if (value is UnderlyingNetworkDownloadRequestMessage) {
+    }    else if (value is ApkInspectionMessage) {
       buffer.putUint8(139);
       writeValue(buffer, value.encode());
-    }    else if (value is UnderlyingNetworkDownloadResponseMessage) {
-      buffer.putUint8(140);
-      writeValue(buffer, value.encode());
-    }    else if (value is ApkInspectionMessage) {
-      buffer.putUint8(141);
-      writeValue(buffer, value.encode());
     }    else if (value is InstalledAppMessage) {
-      buffer.putUint8(142);
+      buffer.putUint8(140);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -1206,26 +1070,22 @@ class _PigeonCodec extends StandardMessageCodec {
       case 131:
         return UrlTestRequestMessage.decode(readValue(buffer)!);
       case 132:
-        return PublicIpLookupRequestMessage.decode(readValue(buffer)!);
-      case 133:
-        return PublicIpLookupResponseMessage.decode(readValue(buffer)!);
-      case 134:
         return VpnNotificationPresentationMessage.decode(readValue(buffer)!);
-      case 135:
+      case 133:
         return HttpHeaderMessage.decode(readValue(buffer)!);
-      case 136:
+      case 134:
         return UnderlyingNetworkFetchRequestMessage.decode(readValue(buffer)!);
-      case 137:
+      case 135:
         return UnderlyingNetworkFetchResponseMessage.decode(readValue(buffer)!);
-      case 138:
+      case 136:
         return OutboundFetchRequestMessage.decode(readValue(buffer)!);
-      case 139:
+      case 137:
         return UnderlyingNetworkDownloadRequestMessage.decode(readValue(buffer)!);
-      case 140:
+      case 138:
         return UnderlyingNetworkDownloadResponseMessage.decode(readValue(buffer)!);
-      case 141:
+      case 139:
         return ApkInspectionMessage.decode(readValue(buffer)!);
-      case 142:
+      case 140:
         return InstalledAppMessage.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -1653,43 +1513,6 @@ class SingboxHostApi {
     )
     ;
     return (pigeonVar_replyValue! as Map<Object?, Object?>).cast<String?, Object?>();
-  }
-
-  Future<PublicIpLookupResponseMessage> lookupPublicIp(PublicIpLookupRequestMessage request) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.meow_client.SingboxHostApi.lookupPublicIp$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[request]);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
-    return pigeonVar_replyValue! as PublicIpLookupResponseMessage;
-  }
-
-  Future<void> cancelPublicIp(String requestId) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.meow_client.SingboxHostApi.cancelPublicIp$pigeonVar_messageChannelSuffix';
-    final pigeonVar_channel = BasicMessageChannel<Object?>(
-      pigeonVar_channelName,
-      pigeonChannelCodec,
-      binaryMessenger: pigeonVar_binaryMessenger,
-    );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[requestId]);
-    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
-
-    _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: true,
-    )
-    ;
   }
 
   Future<NetworkInterfaceStateMessage> getNetworkInterfaceState() async {

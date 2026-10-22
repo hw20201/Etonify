@@ -645,9 +645,6 @@
   "trafficDashboardPublicIpHint": "Public address of your current connection",
   "trafficDashboardPublicIpRefresh": "Refresh your IP",
   "trafficDashboardPublicIpError": "Could not refresh your IP. Try again.",
-  "trafficDashboardPublicIpUnsupported": "This IP lookup configuration is not supported.",
-  "trafficDashboardPublicIpNotConnected": "Connect to the VPN and try again.",
-  "trafficDashboardPublicIpTimeout": "The IP lookup timed out. Try again.",
   "trafficDashboardPublicIpCooldown": "Refresh available every 4 seconds",
   "homeOutboundIpTitle": "Outbound IP",
   "homeOutboundIpHint": "Third-party IP lookup; for reference only",
@@ -1594,32 +1591,5 @@
   "latencyMeasurementModeRealUrl": "Real URL measurement",
   "latencyMeasurementModeDescription": "Only affects manual latency measurements and their display. Automatic core route selection continues to use URLTest.",
   "realUrlLatencyDescription": "Real URL latency uses an HTTPS GET with a small response through the selected node. Total time includes queueing/cross-layer calls, connection, TLS, and response body (up to 64 KiB). Separate from URLTest; manual measurements only, no effect on automatic route selection. The native interface may follow up to 5 HTTPS redirects.",
-  "sortByRealUrlLatency": "Real URL latency",
-  "trafficDashboardPublicIpUnsupportedDiagnostic": "{reason} (diagnostic: {code})",
-  "trafficDashboardPublicIpReasonOutboundProtocolVless": "The selected outbound protocol is not supported for IP lookup.",
-  "trafficDashboardPublicIpReasonOutboundProtocolTrojan": "The selected outbound protocol is not supported for IP lookup.",
-  "trafficDashboardPublicIpReasonOutboundProtocolOther": "The selected outbound protocol is not supported for IP lookup.",
-  "trafficDashboardPublicIpReasonOutboundBootstrapDomain": "The outbound server hostname cannot be safely resolved for this lookup.",
-  "trafficDashboardPublicIpReasonOutboundDetour": "The selected outbound uses an unsupported detour.",
-  "trafficDashboardPublicIpReasonOutboundOption": "The selected outbound has an unsupported option.",
-  "trafficDashboardPublicIpReasonOutboundInvalid": "The selected outbound configuration is invalid for IP lookup.",
-  "trafficDashboardPublicIpReasonDnsRules": "The DNS rules cannot be used for this IP lookup.",
-  "trafficDashboardPublicIpReasonDnsDetour": "The DNS configuration uses an unsupported detour.",
-  "trafficDashboardPublicIpReasonDnsBootstrap": "The DNS bootstrap configuration is unsupported.",
-  "trafficDashboardPublicIpReasonDnsOption": "The DNS configuration has an unsupported option.",
-  "trafficDashboardPublicIpReasonDnsType": "The DNS server type is unsupported for this lookup.",
-  "trafficDashboardPublicIpReasonDnsInvalid": "The DNS configuration is invalid for this IP lookup.",
-  "trafficDashboardPublicIpReasonSnapshotInvalid": "The active configuration snapshot is invalid for IP lookup.",
-  "trafficDashboardPublicIpReasonSelectionInvalid": "The selected outbound could not be resolved from the active configuration.",
-  "@trafficDashboardPublicIpUnsupportedDiagnostic": {
-    "placeholders": {
-      "reason": {
-        "type": "String"
-      },
-      "code": {
-        "type": "String"
-      }
-    }
-  },
-  "trafficDashboardPublicIpReasonOutboundBootstrapPinRequired": "No valid Reality endpoint record matches this configuration and network. Use the selected node normally, then retry. This query never falls back to local DNS or direct access."
+  "sortByRealUrlLatency": "Real URL latency"
 }

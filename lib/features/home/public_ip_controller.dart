@@ -1,29 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:meow_client/models/public_ip_source.dart';
-import 'package:meow_client/singbox/singbox_api.g.dart' as pigeon;
-import 'package:meow_client/singbox/singbox_runtime.dart';
 
 export 'package:meow_client/models/public_ip_source.dart';
-
-@immutable
-class PublicIpQueryIdentity {
-  const PublicIpQueryIdentity({
-    required this.planId,
-    required this.coreGeneration,
-    required this.outboundTag,
-    required this.networkGeneration,
-    required this.source,
-  });
-  final String planId;
-  final String coreGeneration;
-  final String outboundTag;
-  final int networkGeneration;
-  final PublicIpSource source;
-}
 
 @immutable
 class PublicIpInfo {
@@ -37,7 +22,6 @@ class PublicIpInfo {
     this.asn = '',
     this.isp = '',
     this.source = PublicIpSource.ipQuery,
-    this.identity,
   });
 
   final String ip;
@@ -49,20 +33,6 @@ class PublicIpInfo {
   final String asn;
   final String isp;
   final PublicIpSource source;
-  final PublicIpQueryIdentity? identity;
-
-  PublicIpInfo withIdentity(PublicIpQueryIdentity identity) => PublicIpInfo(
-    ip: ip,
-    countryCode: countryCode,
-    country: country,
-    city: city,
-    region: region,
-    organization: organization,
-    asn: asn,
-    isp: isp,
-    source: source,
-    identity: identity,
-  );
 
   String get locationLabel {
     final countryLabel = country.isNotEmpty ? country : countryCode;
@@ -170,192 +140,184 @@ String _validatedIp(Object? value) {
   return ip;
 }
 
-typedef PublicIpCoreLookup =
-    Future<pigeon.PublicIpLookupResponseMessage> Function(
-      pigeon.PublicIpLookupRequestMessage request,
-    );
-typedef PublicIpCoreCancel = Future<void> Function(String requestId);
+class _HttpPayload {
+  const _HttpPayload(this.statusCode, this.headers, this.body);
 
-/// All provider traffic is performed by the running core over its selected
-/// outbound. No direct-network fallback is permitted.
+  final int statusCode;
+  final Map<String, String> headers;
+  final String body;
+}
+
+/// Queries exactly the selected provider so the chosen destination is explicit
+/// and a failed provider never silently sends the user's IP to another service.
 class PublicIpLookup {
-  PublicIpLookup({PublicIpCoreLookup? lookup, PublicIpCoreCancel? cancel})
-    : _lookup = lookup ?? _runtimeLookup,
-      _cancelRpc = cancel ?? _runtimeCancel;
-  static Future<pigeon.PublicIpLookupResponseMessage> _runtimeLookup(
-    pigeon.PublicIpLookupRequestMessage request,
-  ) => SingboxRuntime.instance.lookupPublicIp(request);
-  static Future<void> _runtimeCancel(String requestId) =>
-      SingboxRuntime.instance.cancelPublicIp(requestId);
-  final PublicIpCoreLookup _lookup;
-  final PublicIpCoreCancel _cancelRpc;
-  String? _activeRequestId;
-  int _sequence = 0;
+  PublicIpLookup({http.Client Function()? clientFactory})
+    : _clientFactory = clientFactory ?? http.Client.new;
+
+  static const _requestTimeout = Duration(seconds: 3);
+  static const _maxResponseBytes = 16 * 1024;
+  static const _ipApiBlockedDefault = Duration(seconds: 60);
+
+  final http.Client Function() _clientFactory;
+  http.Client? _client;
+  int _generation = 0;
+  DateTime? _ipApiBlockedUntil;
+
   Future<PublicIpInfo> load({
     PublicIpSource source = PublicIpSource.ipQuery,
-    String outboundTag = '',
-    int networkGeneration = 0,
   }) async {
-    if (outboundTag.trim().isEmpty) {
-      throw StateError('Public IP lookup requires a selected outbound');
-    }
-    cancel();
-    final id =
-        'public-ip-${DateTime.now().microsecondsSinceEpoch}-${++_sequence}';
-    _activeRequestId = id;
-    final response =
-        await _lookup(
-          pigeon.PublicIpLookupRequestMessage(
-            requestId: id,
-            outboundTag: outboundTag,
-            provider: source.name,
-            networkGeneration: networkGeneration,
-            timeoutMillis: 10000,
-          ),
-        ).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            if (_activeRequestId == id) cancel();
-            throw TimeoutException('Public IP whole-query deadline exceeded');
-          },
+    final generation = ++_generation;
+    late final Uri uri;
+    late final String host;
+    late final String accept;
+    var observeIpApiRateLimit = false;
+
+    switch (source) {
+      case PublicIpSource.ipQuery:
+        final ipPayload = await _request(
+          Uri.https('api.ipquery.io', '/'),
+          generation,
+          accept: 'text/plain',
         );
-    if (_activeRequestId != id) throw StateError('IP request cancelled');
-    if (response.outboundTag != outboundTag ||
-        response.networkGeneration != networkGeneration ||
-        response.planId.trim().isEmpty ||
-        response.coreGeneration.trim().isEmpty) {
-      throw StateError('Public IP response identity is stale or incomplete');
+        _requireOk(ipPayload, 'ipquery.io');
+        final ip = _validatedIp(ipPayload.body);
+        final detailsPayload = await _request(
+          Uri.https('api.ipquery.io', '/$ip', {'format': 'json'}),
+          generation,
+          accept: 'application/json',
+        );
+        _requireOk(detailsPayload, 'ipquery.io');
+        final result = PublicIpInfo.fromIpQueryJson(
+          _decodeJson(detailsPayload.body),
+        );
+        if (generation != _generation) throw StateError('IP request cancelled');
+        return result;
+      case PublicIpSource.ipApi:
+        final blockedUntil = _ipApiBlockedUntil;
+        if (blockedUntil != null && DateTime.now().isBefore(blockedUntil)) {
+          throw HttpException(
+            'ip-api.com rate limited; try again after ${blockedUntil.toIso8601String()}',
+          );
+        }
+        uri = Uri.http('ip-api.com', '/json/', const {
+          'fields':
+              'status,message,query,country,countryCode,regionName,city,isp,org,as',
+        });
+        host = 'ip-api.com';
+        accept = 'application/json';
+        observeIpApiRateLimit = true;
+        break;
+      case PublicIpSource.ipWho:
+        uri = Uri.https('ipwho.is', '/');
+        host = 'ipwho.is';
+        accept = 'application/json';
+        break;
     }
-    final decoded = jsonDecode(response.json);
-    if (decoded is! Map) {
-      throw const FormatException('Invalid public IP JSON response');
-    }
-    final json = Map<String, dynamic>.from(decoded);
-    _activeRequestId = null;
-    final info = switch (source) {
-      PublicIpSource.ipQuery => PublicIpInfo.fromIpQueryJson(json),
+
+    final payload = await _request(
+      uri,
+      generation,
+      accept: accept,
+      observeIpApiRateLimit: observeIpApiRateLimit,
+    );
+    _requireOk(payload, host);
+    final json = _decodeJson(payload.body);
+    final result = switch (source) {
+      PublicIpSource.ipQuery => throw StateError('unreachable IP query path'),
       PublicIpSource.ipApi => PublicIpInfo.fromIpApiJson(json),
       PublicIpSource.ipWho => PublicIpInfo.fromIpWhoJson(json),
     };
-    return info.withIdentity(
-      PublicIpQueryIdentity(
-        planId: response.planId,
-        coreGeneration: response.coreGeneration,
-        outboundTag: outboundTag,
-        networkGeneration: networkGeneration,
-        source: source,
-      ),
-    );
+    if (generation != _generation) throw StateError('IP request cancelled');
+    return result;
+  }
+
+  Future<_HttpPayload> _request(
+    Uri uri,
+    int generation, {
+    required String accept,
+    bool observeIpApiRateLimit = false,
+  }) async {
+    if (generation != _generation) throw StateError('IP request cancelled');
+    final client = _clientFactory();
+    _client = client;
+    try {
+      final request = http.Request('GET', uri)
+        ..followRedirects = false
+        ..headers['Accept'] = accept
+        ..headers['Cache-Control'] = 'no-cache';
+      final response = await client.send(request).timeout(_requestTimeout);
+      if (observeIpApiRateLimit) _observeIpApiRateLimit(response);
+      final bytes = BytesBuilder(copy: false);
+      if ((response.contentLength ?? 0) > _maxResponseBytes) {
+        throw const FormatException('Public IP response too large');
+      }
+      await for (final chunk in response.stream.timeout(_requestTimeout)) {
+        if (bytes.length + chunk.length > _maxResponseBytes) {
+          throw const FormatException('Public IP response too large');
+        }
+        bytes.add(chunk);
+      }
+      if (generation != _generation) throw StateError('IP request cancelled');
+      return _HttpPayload(
+        response.statusCode,
+        response.headers,
+        utf8.decode(bytes.takeBytes()),
+      );
+    } on TimeoutException {
+      client.close();
+      rethrow;
+    } finally {
+      client.close();
+      if (identical(_client, client)) _client = null;
+    }
+  }
+
+  void _observeIpApiRateLimit(http.StreamedResponse response) {
+    final headers = response.headers;
+    final remaining = int.tryParse(headers['x-rl'] ?? '');
+    if (response.statusCode != HttpStatus.tooManyRequests && remaining != 0) {
+      return;
+    }
+    final ttlSeconds = int.tryParse(headers['x-ttl'] ?? '');
+    final ttl = ttlSeconds == null || ttlSeconds < 1
+        ? _ipApiBlockedDefault
+        : Duration(seconds: math.min(ttlSeconds, 24 * 60 * 60));
+    _ipApiBlockedUntil = DateTime.now().add(ttl);
+  }
+
+  void _requireOk(_HttpPayload response, String host) {
+    if (response.statusCode != HttpStatus.ok) {
+      throw HttpException('$host HTTP ${response.statusCode}');
+    }
+  }
+
+  Map<String, dynamic> _decodeJson(String body) {
+    final decoded = jsonDecode(body);
+    if (decoded is Map<String, dynamic>) return decoded;
+    if (decoded is Map) {
+      return decoded.map((key, value) => MapEntry('$key', value));
+    }
+    throw const FormatException('Invalid public IP JSON response');
   }
 
   void cancel() {
-    final id = _activeRequestId;
-    _activeRequestId = null;
-    if (id != null) unawaited(_cancelRpc(id).catchError((Object _) {}));
+    _generation++;
+    _client?.close();
+    _client = null;
   }
 }
 
 /// App-owned: memory-only result and cooldown survive closing the sheet.
-enum PublicIpUnsupportedReason {
-  outboundProtocolVless('outbound.protocol.vless'),
-  outboundProtocolTrojan('outbound.protocol.trojan'),
-  outboundProtocolOther('outbound.protocol.other'),
-  outboundBootstrapDomain('outbound.bootstrap.domain'),
-  outboundBootstrapPinRequired('outbound.bootstrap.pin_required'),
-  outboundDetour('outbound.option.detour'),
-  outboundOption('outbound.option.unknown'),
-  outboundInvalid('outbound.invalid'),
-  dnsRules('dns.rules'),
-  dnsDetour('dns.detour'),
-  dnsBootstrap('dns.bootstrap'),
-  dnsOption('dns.option.unknown'),
-  dnsType('dns.type'),
-  dnsInvalid('dns.invalid'),
-  snapshotInvalid('snapshot.invalid'),
-  selectionInvalid('selection.invalid');
-
-  const PublicIpUnsupportedReason(this.diagnosticCode);
-  final String diagnosticCode;
-
-  static PublicIpUnsupportedReason? parse(String code) {
-    if (code == 'outbound.protocol.direct') return outboundProtocolOther;
-    // Only exact, static codes from the core contract are accepted.
-    for (final reason in values) {
-      if (reason.diagnosticCode == code) return reason;
-    }
-    const outboundOptions = <String>{
-      'detour',
-      'domain_resolver',
-      'tls',
-      'transport',
-      'multiplex',
-      'plugin',
-      'plugin_opts',
-      'udp_over_tcp',
-      'network',
-      'bind_interface',
-      'inet4_bind_address',
-      'inet6_bind_address',
-      'routing_mark',
-      'reuse_addr',
-      'connect_timeout',
-      'tcp_fast_open',
-      'tcp_multi_path',
-      'client_subnet',
-      'strategy',
-      'address_resolver',
-      'certificate',
-      'certificate_path',
-      'insecure',
-      'utls',
-      'reality',
-      'enabled',
-      'server_name',
-      'path',
-      'version',
-    };
-    if (outboundOptions.any((key) => code == 'outbound.option.$key')) {
-      return outboundOption;
-    }
-    if (outboundOptions.any((key) => code == 'dns.option.$key')) {
-      return dnsOption;
-    }
-    return null;
-  }
-}
-
-enum PublicIpFailureKind {
-  unsupportedConfiguration,
-  notConnected,
-  timeout,
-  general,
-}
-
 class PublicIpController extends ChangeNotifier {
   PublicIpController({
     Future<PublicIpInfo> Function()? load,
     VoidCallback? cancel,
     PublicIpSource Function()? sourceProvider,
-    String Function()? outboundProvider,
-    int Function()? networkGenerationProvider,
-    Object Function()? scopeProvider,
-    bool Function()? connectedProvider,
   }) {
-    _connectedProvider = connectedProvider;
-    _scope = () => (
-      sourceProvider?.call() ?? PublicIpSource.ipQuery,
-      outboundProvider?.call() ?? '',
-      networkGenerationProvider?.call() ?? 0,
-      scopeProvider?.call(),
-    );
-    _observedScope = _scope();
     if (load == null) {
       final lookup = PublicIpLookup();
-      _load = () => lookup.load(
-        source: sourceProvider?.call() ?? PublicIpSource.ipQuery,
-        outboundTag: outboundProvider?.call() ?? '',
-        networkGeneration: networkGenerationProvider?.call() ?? 0,
-      );
+      _load = () =>
+          lookup.load(source: sourceProvider?.call() ?? PublicIpSource.ipQuery);
       _cancel = lookup.cancel;
     } else {
       _load = load;
@@ -365,44 +327,23 @@ class PublicIpController extends ChangeNotifier {
 
   late final Future<PublicIpInfo> Function() _load;
   late final VoidCallback _cancel;
-  late final Object Function() _scope;
-  late Object _observedScope;
-  Object? _cachedScope;
   PublicIpInfo? _info;
   bool _loading = false;
   bool _failed = false;
-  PublicIpFailureKind? _failureKind;
-  PublicIpUnsupportedReason? _unsupportedReason;
-  String? _unsupportedDiagnosticCode;
-  late final bool Function()? _connectedProvider;
   bool _disposed = false;
   Timer? _cooldown;
   int _generation = 0;
 
-  PublicIpInfo? get info => _cachedScope == _scope() ? _info : null;
+  PublicIpInfo? get info => _info;
   bool get loading => _loading;
   bool get failed => _failed;
-  PublicIpFailureKind? get failureKind => _failureKind;
-  PublicIpUnsupportedReason? get unsupportedReason => _unsupportedReason;
-  String? get unsupportedDiagnosticCode => _unsupportedDiagnosticCode;
   bool get canRefresh => !_disposed && !_loading && _cooldown == null;
 
-  /// Repeated group/traffic snapshots do not cancel a query unless its actual
-  /// provider/outbound/config/core/network identity changed.
-  void synchronizeScope() {
-    if (!_disposed && _observedScope != _scope()) invalidateForSourceChange();
-  }
-
   Future<void> refresh() async {
-    synchronizeScope();
     if (!canRefresh) return;
-    final scope = _scope();
     final generation = ++_generation;
     _loading = true;
     _failed = false;
-    _failureKind = null;
-    _unsupportedReason = null;
-    _unsupportedDiagnosticCode = null;
     _cooldown = Timer(const Duration(seconds: 4), () {
       _cooldown = null;
       if (!_disposed) notifyListeners();
@@ -411,31 +352,10 @@ class PublicIpController extends ChangeNotifier {
     try {
       final result = await _load();
       if (_disposed || generation != _generation) return;
-      if (scope != _scope()) {
-        invalidateForSourceChange();
-        return;
-      }
       _info = result;
-      _cachedScope = scope;
-    } catch (error) {
+    } catch (_) {
       if (_disposed || generation != _generation) return;
-      if (scope != _scope()) {
-        invalidateForSourceChange();
-        return;
-      }
       _failed = true;
-      final candidateCode = _parsePublicIpUnsupportedCode(error);
-      _unsupportedReason = candidateCode == null
-          ? null
-          : PublicIpUnsupportedReason.parse(candidateCode);
-      _unsupportedDiagnosticCode = _unsupportedReason == null
-          ? null
-          : candidateCode;
-      _failureKind = _classifyPublicIpFailure(
-        error,
-        connected: _connectedProvider?.call(),
-        hasAllowlistedReason: _unsupportedReason != null,
-      );
     } finally {
       if (!_disposed && generation == _generation) {
         _loading = false;
@@ -448,8 +368,6 @@ class PublicIpController extends ChangeNotifier {
   /// refreshable, including when a previous lookup is still in flight.
   void invalidateForSourceChange() {
     if (_disposed) return;
-    _observedScope = _scope();
-    _cachedScope = null;
     _generation++;
     _cancel();
     _cooldown?.cancel();
@@ -457,9 +375,6 @@ class PublicIpController extends ChangeNotifier {
     _info = null;
     _loading = false;
     _failed = false;
-    _failureKind = null;
-    _unsupportedReason = null;
-    _unsupportedDiagnosticCode = null;
     notifyListeners();
   }
 
@@ -480,41 +395,4 @@ class PublicIpController extends ChangeNotifier {
     _cooldown?.cancel();
     super.dispose();
   }
-}
-
-String? _parsePublicIpUnsupportedCode(Object error) {
-  // Error text is inspected only for the exact RPC marker and strict ASCII code.
-  final match = RegExp(
-    r'unsupported scoped query configuration: \[PIP_CFG:([a-z0-9_.]+)\]',
-  ).firstMatch(error.toString());
-  return match?.group(1);
-}
-
-PublicIpFailureKind _classifyPublicIpFailure(
-  Object error, {
-  bool? connected,
-  bool hasAllowlistedReason = false,
-}) {
-  if (connected == false) return PublicIpFailureKind.notConnected;
-  if (error is TimeoutException) return PublicIpFailureKind.timeout;
-  // Inspect only for categorization. The exception text is never presented.
-  final message = error.toString().toLowerCase();
-  if (hasAllowlistedReason ||
-      message.contains('unsupported scoped query configuration') ||
-      message.contains('unsupported configuration') ||
-      message.contains('unsupported') ||
-      message.contains('not supported') ||
-      message.contains('invalid configuration')) {
-    return PublicIpFailureKind.unsupportedConfiguration;
-  }
-  if (message.contains('not connected') ||
-      message.contains('requires a running') ||
-      message.contains('no active connection') ||
-      message.contains('disconnected')) {
-    return PublicIpFailureKind.notConnected;
-  }
-  if (message.contains('timeout') || message.contains('timed out')) {
-    return PublicIpFailureKind.timeout;
-  }
-  return PublicIpFailureKind.general;
 }

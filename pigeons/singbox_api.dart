@@ -94,36 +94,6 @@ class UrlTestRequestMessage {
   int startupLeaseToken;
 }
 
-class PublicIpLookupRequestMessage {
-  PublicIpLookupRequestMessage({
-    required this.requestId,
-    required this.outboundTag,
-    required this.provider,
-    required this.networkGeneration,
-    required this.timeoutMillis,
-  });
-  String requestId;
-  String outboundTag;
-  String provider;
-  int networkGeneration;
-  int timeoutMillis;
-}
-
-class PublicIpLookupResponseMessage {
-  PublicIpLookupResponseMessage({
-    required this.json,
-    required this.planId,
-    required this.coreGeneration,
-    required this.networkGeneration,
-    required this.outboundTag,
-  });
-  String json;
-  String planId;
-  String coreGeneration;
-  int networkGeneration;
-  String outboundTag;
-}
-
 class VpnNotificationPresentationMessage {
   VpnNotificationPresentationMessage({
     required this.detailed,
@@ -368,14 +338,6 @@ abstract class SingboxHostApi {
 
   @asyncCallback
   Map<String?, Object?> lookupOutboundExternalInfo(String outboundTag);
-
-  @asyncCallback
-  PublicIpLookupResponseMessage lookupPublicIp(
-    PublicIpLookupRequestMessage request,
-  );
-
-  @asyncCallback
-  void cancelPublicIp(String requestId);
 
   @asyncCallback
   NetworkInterfaceStateMessage getNetworkInterfaceState();

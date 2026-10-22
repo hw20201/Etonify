@@ -2797,24 +2797,6 @@ abstract class AppLocalizations {
   /// **'Could not refresh your IP. Try again.'**
   String get trafficDashboardPublicIpError;
 
-  /// No description provided for @trafficDashboardPublicIpUnsupported.
-  ///
-  /// In en, this message translates to:
-  /// **'This IP lookup configuration is not supported.'**
-  String get trafficDashboardPublicIpUnsupported;
-
-  /// No description provided for @trafficDashboardPublicIpNotConnected.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect to the VPN and try again.'**
-  String get trafficDashboardPublicIpNotConnected;
-
-  /// No description provided for @trafficDashboardPublicIpTimeout.
-  ///
-  /// In en, this message translates to:
-  /// **'The IP lookup timed out. Try again.'**
-  String get trafficDashboardPublicIpTimeout;
-
   /// No description provided for @trafficDashboardPublicIpCooldown.
   ///
   /// In en, this message translates to:
@@ -6358,111 +6340,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Real URL latency'**
   String get sortByRealUrlLatency;
-
-  /// No description provided for @trafficDashboardPublicIpUnsupportedDiagnostic.
-  ///
-  /// In en, this message translates to:
-  /// **'{reason} (diagnostic: {code})'**
-  String trafficDashboardPublicIpUnsupportedDiagnostic(
-    String reason,
-    String code,
-  );
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundProtocolVless.
-  ///
-  /// In en, this message translates to:
-  /// **'The selected outbound protocol is not supported for IP lookup.'**
-  String get trafficDashboardPublicIpReasonOutboundProtocolVless;
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundProtocolTrojan.
-  ///
-  /// In en, this message translates to:
-  /// **'The selected outbound protocol is not supported for IP lookup.'**
-  String get trafficDashboardPublicIpReasonOutboundProtocolTrojan;
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundProtocolOther.
-  ///
-  /// In en, this message translates to:
-  /// **'The selected outbound protocol is not supported for IP lookup.'**
-  String get trafficDashboardPublicIpReasonOutboundProtocolOther;
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundBootstrapDomain.
-  ///
-  /// In en, this message translates to:
-  /// **'The outbound server hostname cannot be safely resolved for this lookup.'**
-  String get trafficDashboardPublicIpReasonOutboundBootstrapDomain;
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundDetour.
-  ///
-  /// In en, this message translates to:
-  /// **'The selected outbound uses an unsupported detour.'**
-  String get trafficDashboardPublicIpReasonOutboundDetour;
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundOption.
-  ///
-  /// In en, this message translates to:
-  /// **'The selected outbound has an unsupported option.'**
-  String get trafficDashboardPublicIpReasonOutboundOption;
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'The selected outbound configuration is invalid for IP lookup.'**
-  String get trafficDashboardPublicIpReasonOutboundInvalid;
-
-  /// No description provided for @trafficDashboardPublicIpReasonDnsRules.
-  ///
-  /// In en, this message translates to:
-  /// **'The DNS rules cannot be used for this IP lookup.'**
-  String get trafficDashboardPublicIpReasonDnsRules;
-
-  /// No description provided for @trafficDashboardPublicIpReasonDnsDetour.
-  ///
-  /// In en, this message translates to:
-  /// **'The DNS configuration uses an unsupported detour.'**
-  String get trafficDashboardPublicIpReasonDnsDetour;
-
-  /// No description provided for @trafficDashboardPublicIpReasonDnsBootstrap.
-  ///
-  /// In en, this message translates to:
-  /// **'The DNS bootstrap configuration is unsupported.'**
-  String get trafficDashboardPublicIpReasonDnsBootstrap;
-
-  /// No description provided for @trafficDashboardPublicIpReasonDnsOption.
-  ///
-  /// In en, this message translates to:
-  /// **'The DNS configuration has an unsupported option.'**
-  String get trafficDashboardPublicIpReasonDnsOption;
-
-  /// No description provided for @trafficDashboardPublicIpReasonDnsType.
-  ///
-  /// In en, this message translates to:
-  /// **'The DNS server type is unsupported for this lookup.'**
-  String get trafficDashboardPublicIpReasonDnsType;
-
-  /// No description provided for @trafficDashboardPublicIpReasonDnsInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'The DNS configuration is invalid for this IP lookup.'**
-  String get trafficDashboardPublicIpReasonDnsInvalid;
-
-  /// No description provided for @trafficDashboardPublicIpReasonSnapshotInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'The active configuration snapshot is invalid for IP lookup.'**
-  String get trafficDashboardPublicIpReasonSnapshotInvalid;
-
-  /// No description provided for @trafficDashboardPublicIpReasonSelectionInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'The selected outbound could not be resolved from the active configuration.'**
-  String get trafficDashboardPublicIpReasonSelectionInvalid;
-
-  /// No description provided for @trafficDashboardPublicIpReasonOutboundBootstrapPinRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'No valid Reality endpoint record matches this configuration and network. Use the selected node normally, then retry. This query never falls back to local DNS or direct access.'**
-  String get trafficDashboardPublicIpReasonOutboundBootstrapPinRequired;
 }
 
 class _AppLocalizationsDelegate

@@ -5,8 +5,6 @@ import android.os.Looper
 import android.os.SystemClock
 import android.util.Log
 import com.etonify.meow_client.MeowApplication
-import com.etonify.meow_client.generated.PublicIpLookupRequestMessage
-import com.etonify.meow_client.generated.PublicIpLookupResponseMessage
 import com.etonify.meow_client.generated.runtimeEventClearLogs
 import com.etonify.meow_client.generated.runtimeEventClient
 import com.etonify.meow_client.generated.runtimeEventGroups
@@ -902,59 +900,6 @@ object SingboxController {
                 ),
             )
         }
-    }
-
-    private val publicIpCancelExecutor = java.util.concurrent.Executors.newSingleThreadExecutor { runnable ->
-        Thread(runnable, "MeowPublicIpCancel").apply { isDaemon = true }
-    }
-    private val publicIpRequests = PublicIpRequestDispatcher<CommandClient, PublicIpLookupResponseMessage>(
-        worker = lookupExecutor,
-        cancellationWorker = publicIpCancelExecutor,
-        callbacks = java.util.concurrent.Executor { task -> mainHandler.post(task) },
-        cancelCore = { client, requestId -> client.cancelPublicIP(requestId) },
-    )
-
-    fun lookupPublicIp(request: PublicIpLookupRequestMessage, callback: (Result<PublicIpLookupResponseMessage>) -> Unit) {
-        if (request.requestId.isBlank() || request.outboundTag.isBlank()) {
-            callback(Result.failure(IllegalArgumentException("request id and outbound are required")))
-            return
-        }
-        val client = commandClient
-        if (!running || activeRuntimeGeneration <= 0L || client == null) {
-            callback(Result.failure(IllegalStateException("running command client unavailable")))
-            return
-        }
-        if (request.networkGeneration != networkGeneration.get()) {
-            callback(Result.failure(IllegalStateException("stale network generation")))
-            return
-        }
-        if (request.timeoutMillis !in 1L..10000L) {
-            callback(Result.failure(IllegalArgumentException("invalid whole-query deadline")))
-            return
-        }
-        val expiresAt = SystemClock.elapsedRealtime() + request.timeoutMillis
-        val core = activeRuntimeGeneration
-        publicIpRequests.submit(request.requestId, client, { capturedClient ->
-            check(running && core == activeRuntimeGeneration && commandClient === capturedClient) { "stale runtime" }
-            check(request.networkGeneration == networkGeneration.get()) { "stale network" }
-            val remaining = expiresAt - SystemClock.elapsedRealtime()
-            check(remaining > 0) { "public IP deadline expired before worker start" }
-            val raw = capturedClient.lookupPublicIP(request.requestId, request.outboundTag, request.provider, request.networkGeneration, remaining.toInt())
-            check(core == activeRuntimeGeneration && commandClient === capturedClient && request.networkGeneration == networkGeneration.get()) { "stale lookup response" }
-            check(raw.getPlanID().isNotBlank() && raw.getCoreGeneration().isNotBlank()) { "incomplete core lookup identity" }
-            check(raw.getNetworkGeneration() == request.networkGeneration && raw.getOutboundTag() == request.outboundTag) { "core lookup identity mismatch" }
-            PublicIpLookupResponseMessage(
-                json = raw.getJSON() ?: error("missing core response JSON"),
-                planId = raw.getPlanID(),
-                coreGeneration = raw.getCoreGeneration(),
-                networkGeneration = raw.getNetworkGeneration(),
-                outboundTag = raw.getOutboundTag(),
-            )
-        }, callback)
-    }
-
-    fun cancelPublicIp(requestId: String, callback: (Result<Unit>) -> Unit) {
-        publicIpRequests.cancel(requestId, callback)
     }
 
     private val standaloneClientLock = Any()
