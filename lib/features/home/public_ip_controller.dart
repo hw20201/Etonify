@@ -1,14 +1,29 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:meow_client/models/public_ip_source.dart';
+import 'package:meow_client/singbox/singbox_api.g.dart' as pigeon;
+import 'package:meow_client/singbox/singbox_runtime.dart';
 
 export 'package:meow_client/models/public_ip_source.dart';
+
+@immutable
+class PublicIpQueryIdentity {
+  const PublicIpQueryIdentity({
+    required this.planId,
+    required this.coreGeneration,
+    required this.outboundTag,
+    required this.networkGeneration,
+    required this.source,
+  });
+  final String planId;
+  final String coreGeneration;
+  final String outboundTag;
+  final int networkGeneration;
+  final PublicIpSource source;
+}
 
 @immutable
 class PublicIpInfo {
@@ -22,6 +37,7 @@ class PublicIpInfo {
     this.asn = '',
     this.isp = '',
     this.source = PublicIpSource.ipQuery,
+    this.identity,
   });
 
   final String ip;
@@ -33,6 +49,20 @@ class PublicIpInfo {
   final String asn;
   final String isp;
   final PublicIpSource source;
+  final PublicIpQueryIdentity? identity;
+
+  PublicIpInfo withIdentity(PublicIpQueryIdentity identity) => PublicIpInfo(
+    ip: ip,
+    countryCode: countryCode,
+    country: country,
+    city: city,
+    region: region,
+    organization: organization,
+    asn: asn,
+    isp: isp,
+    source: source,
+    identity: identity,
+  );
 
   String get locationLabel {
     final countryLabel = country.isNotEmpty ? country : countryCode;
@@ -140,170 +170,88 @@ String _validatedIp(Object? value) {
   return ip;
 }
 
-class _HttpPayload {
-  const _HttpPayload(this.statusCode, this.headers, this.body);
+typedef PublicIpCoreLookup =
+    Future<pigeon.PublicIpLookupResponseMessage> Function(
+      pigeon.PublicIpLookupRequestMessage request,
+    );
+typedef PublicIpCoreCancel = Future<void> Function(String requestId);
 
-  final int statusCode;
-  final Map<String, String> headers;
-  final String body;
-}
-
-/// Queries exactly the selected provider so the chosen destination is explicit
-/// and a failed provider never silently sends the user's IP to another service.
+/// All provider traffic is performed by the running core over its selected
+/// outbound. No direct-network fallback is permitted.
 class PublicIpLookup {
-  PublicIpLookup({http.Client Function()? clientFactory})
-    : _clientFactory = clientFactory ?? http.Client.new;
-
-  static const _requestTimeout = Duration(seconds: 3);
-  static const _maxResponseBytes = 16 * 1024;
-  static const _ipApiBlockedDefault = Duration(seconds: 60);
-
-  final http.Client Function() _clientFactory;
-  http.Client? _client;
-  int _generation = 0;
-  DateTime? _ipApiBlockedUntil;
-
+  PublicIpLookup({PublicIpCoreLookup? lookup, PublicIpCoreCancel? cancel})
+    : _lookup = lookup ?? _runtimeLookup,
+      _cancelRpc = cancel ?? _runtimeCancel;
+  static Future<pigeon.PublicIpLookupResponseMessage> _runtimeLookup(
+    pigeon.PublicIpLookupRequestMessage request,
+  ) => SingboxRuntime.instance.lookupPublicIp(request);
+  static Future<void> _runtimeCancel(String requestId) =>
+      SingboxRuntime.instance.cancelPublicIp(requestId);
+  final PublicIpCoreLookup _lookup;
+  final PublicIpCoreCancel _cancelRpc;
+  String? _activeRequestId;
+  int _sequence = 0;
   Future<PublicIpInfo> load({
     PublicIpSource source = PublicIpSource.ipQuery,
+    String outboundTag = '',
+    int networkGeneration = 0,
   }) async {
-    final generation = ++_generation;
-    late final Uri uri;
-    late final String host;
-    late final String accept;
-    var observeIpApiRateLimit = false;
-
-    switch (source) {
-      case PublicIpSource.ipQuery:
-        final ipPayload = await _request(
-          Uri.https('api.ipquery.io', '/'),
-          generation,
-          accept: 'text/plain',
-        );
-        _requireOk(ipPayload, 'ipquery.io');
-        final ip = _validatedIp(ipPayload.body);
-        final detailsPayload = await _request(
-          Uri.https('api.ipquery.io', '/$ip', {'format': 'json'}),
-          generation,
-          accept: 'application/json',
-        );
-        _requireOk(detailsPayload, 'ipquery.io');
-        final result = PublicIpInfo.fromIpQueryJson(
-          _decodeJson(detailsPayload.body),
-        );
-        if (generation != _generation) throw StateError('IP request cancelled');
-        return result;
-      case PublicIpSource.ipApi:
-        final blockedUntil = _ipApiBlockedUntil;
-        if (blockedUntil != null && DateTime.now().isBefore(blockedUntil)) {
-          throw HttpException(
-            'ip-api.com rate limited; try again after ${blockedUntil.toIso8601String()}',
-          );
-        }
-        uri = Uri.http('ip-api.com', '/json/', const {
-          'fields':
-              'status,message,query,country,countryCode,regionName,city,isp,org,as',
-        });
-        host = 'ip-api.com';
-        accept = 'application/json';
-        observeIpApiRateLimit = true;
-        break;
-      case PublicIpSource.ipWho:
-        uri = Uri.https('ipwho.is', '/');
-        host = 'ipwho.is';
-        accept = 'application/json';
-        break;
+    if (outboundTag.trim().isEmpty) {
+      throw StateError('Public IP lookup requires a selected outbound');
     }
-
-    final payload = await _request(
-      uri,
-      generation,
-      accept: accept,
-      observeIpApiRateLimit: observeIpApiRateLimit,
-    );
-    _requireOk(payload, host);
-    final json = _decodeJson(payload.body);
-    final result = switch (source) {
-      PublicIpSource.ipQuery => throw StateError('unreachable IP query path'),
+    cancel();
+    final id =
+        'public-ip-${DateTime.now().microsecondsSinceEpoch}-${++_sequence}';
+    _activeRequestId = id;
+    final response =
+        await _lookup(
+          pigeon.PublicIpLookupRequestMessage(
+            requestId: id,
+            outboundTag: outboundTag,
+            provider: source.name,
+            networkGeneration: networkGeneration,
+            timeoutMillis: 10000,
+          ),
+        ).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            if (_activeRequestId == id) cancel();
+            throw TimeoutException('Public IP whole-query deadline exceeded');
+          },
+        );
+    if (_activeRequestId != id) throw StateError('IP request cancelled');
+    if (response.outboundTag != outboundTag ||
+        response.networkGeneration != networkGeneration ||
+        response.planId.trim().isEmpty ||
+        response.coreGeneration.trim().isEmpty) {
+      throw StateError('Public IP response identity is stale or incomplete');
+    }
+    final decoded = jsonDecode(response.json);
+    if (decoded is! Map) {
+      throw const FormatException('Invalid public IP JSON response');
+    }
+    final json = Map<String, dynamic>.from(decoded);
+    _activeRequestId = null;
+    final info = switch (source) {
+      PublicIpSource.ipQuery => PublicIpInfo.fromIpQueryJson(json),
       PublicIpSource.ipApi => PublicIpInfo.fromIpApiJson(json),
       PublicIpSource.ipWho => PublicIpInfo.fromIpWhoJson(json),
     };
-    if (generation != _generation) throw StateError('IP request cancelled');
-    return result;
-  }
-
-  Future<_HttpPayload> _request(
-    Uri uri,
-    int generation, {
-    required String accept,
-    bool observeIpApiRateLimit = false,
-  }) async {
-    if (generation != _generation) throw StateError('IP request cancelled');
-    final client = _clientFactory();
-    _client = client;
-    try {
-      final request = http.Request('GET', uri)
-        ..followRedirects = false
-        ..headers['Accept'] = accept
-        ..headers['Cache-Control'] = 'no-cache';
-      final response = await client.send(request).timeout(_requestTimeout);
-      if (observeIpApiRateLimit) _observeIpApiRateLimit(response);
-      final bytes = BytesBuilder(copy: false);
-      if ((response.contentLength ?? 0) > _maxResponseBytes) {
-        throw const FormatException('Public IP response too large');
-      }
-      await for (final chunk in response.stream.timeout(_requestTimeout)) {
-        if (bytes.length + chunk.length > _maxResponseBytes) {
-          throw const FormatException('Public IP response too large');
-        }
-        bytes.add(chunk);
-      }
-      if (generation != _generation) throw StateError('IP request cancelled');
-      return _HttpPayload(
-        response.statusCode,
-        response.headers,
-        utf8.decode(bytes.takeBytes()),
-      );
-    } on TimeoutException {
-      client.close();
-      rethrow;
-    } finally {
-      client.close();
-      if (identical(_client, client)) _client = null;
-    }
-  }
-
-  void _observeIpApiRateLimit(http.StreamedResponse response) {
-    final headers = response.headers;
-    final remaining = int.tryParse(headers['x-rl'] ?? '');
-    if (response.statusCode != HttpStatus.tooManyRequests && remaining != 0) {
-      return;
-    }
-    final ttlSeconds = int.tryParse(headers['x-ttl'] ?? '');
-    final ttl = ttlSeconds == null || ttlSeconds < 1
-        ? _ipApiBlockedDefault
-        : Duration(seconds: math.min(ttlSeconds, 24 * 60 * 60));
-    _ipApiBlockedUntil = DateTime.now().add(ttl);
-  }
-
-  void _requireOk(_HttpPayload response, String host) {
-    if (response.statusCode != HttpStatus.ok) {
-      throw HttpException('$host HTTP ${response.statusCode}');
-    }
-  }
-
-  Map<String, dynamic> _decodeJson(String body) {
-    final decoded = jsonDecode(body);
-    if (decoded is Map<String, dynamic>) return decoded;
-    if (decoded is Map) {
-      return decoded.map((key, value) => MapEntry('$key', value));
-    }
-    throw const FormatException('Invalid public IP JSON response');
+    return info.withIdentity(
+      PublicIpQueryIdentity(
+        planId: response.planId,
+        coreGeneration: response.coreGeneration,
+        outboundTag: outboundTag,
+        networkGeneration: networkGeneration,
+        source: source,
+      ),
+    );
   }
 
   void cancel() {
-    _generation++;
-    _client?.close();
-    _client = null;
+    final id = _activeRequestId;
+    _activeRequestId = null;
+    if (id != null) unawaited(_cancelRpc(id).catchError((Object _) {}));
   }
 }
 
@@ -313,11 +261,24 @@ class PublicIpController extends ChangeNotifier {
     Future<PublicIpInfo> Function()? load,
     VoidCallback? cancel,
     PublicIpSource Function()? sourceProvider,
+    String Function()? outboundProvider,
+    int Function()? networkGenerationProvider,
+    Object Function()? scopeProvider,
   }) {
+    _scope = () => (
+      sourceProvider?.call() ?? PublicIpSource.ipQuery,
+      outboundProvider?.call() ?? '',
+      networkGenerationProvider?.call() ?? 0,
+      scopeProvider?.call(),
+    );
+    _observedScope = _scope();
     if (load == null) {
       final lookup = PublicIpLookup();
-      _load = () =>
-          lookup.load(source: sourceProvider?.call() ?? PublicIpSource.ipQuery);
+      _load = () => lookup.load(
+        source: sourceProvider?.call() ?? PublicIpSource.ipQuery,
+        outboundTag: outboundProvider?.call() ?? '',
+        networkGeneration: networkGenerationProvider?.call() ?? 0,
+      );
       _cancel = lookup.cancel;
     } else {
       _load = load;
@@ -327,6 +288,9 @@ class PublicIpController extends ChangeNotifier {
 
   late final Future<PublicIpInfo> Function() _load;
   late final VoidCallback _cancel;
+  late final Object Function() _scope;
+  late Object _observedScope;
+  Object? _cachedScope;
   PublicIpInfo? _info;
   bool _loading = false;
   bool _failed = false;
@@ -334,13 +298,21 @@ class PublicIpController extends ChangeNotifier {
   Timer? _cooldown;
   int _generation = 0;
 
-  PublicIpInfo? get info => _info;
+  PublicIpInfo? get info => _cachedScope == _scope() ? _info : null;
   bool get loading => _loading;
   bool get failed => _failed;
   bool get canRefresh => !_disposed && !_loading && _cooldown == null;
 
+  /// Repeated group/traffic snapshots do not cancel a query unless its actual
+  /// provider/outbound/config/core/network identity changed.
+  void synchronizeScope() {
+    if (!_disposed && _observedScope != _scope()) invalidateForSourceChange();
+  }
+
   Future<void> refresh() async {
+    synchronizeScope();
     if (!canRefresh) return;
+    final scope = _scope();
     final generation = ++_generation;
     _loading = true;
     _failed = false;
@@ -352,9 +324,18 @@ class PublicIpController extends ChangeNotifier {
     try {
       final result = await _load();
       if (_disposed || generation != _generation) return;
+      if (scope != _scope()) {
+        invalidateForSourceChange();
+        return;
+      }
       _info = result;
+      _cachedScope = scope;
     } catch (_) {
       if (_disposed || generation != _generation) return;
+      if (scope != _scope()) {
+        invalidateForSourceChange();
+        return;
+      }
       _failed = true;
     } finally {
       if (!_disposed && generation == _generation) {
@@ -368,6 +349,8 @@ class PublicIpController extends ChangeNotifier {
   /// refreshable, including when a previous lookup is still in flight.
   void invalidateForSourceChange() {
     if (_disposed) return;
+    _observedScope = _scope();
+    _cachedScope = null;
     _generation++;
     _cancel();
     _cooldown?.cancel();

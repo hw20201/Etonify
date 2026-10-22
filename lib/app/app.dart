@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
 import 'dart:math';
 
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -196,6 +198,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
       {};
   late final AppTrafficMonitor _appTrafficMonitor;
   late final PublicIpController _publicIpController;
+  bool _publicIpControllerReady = false;
+  String _publicIpConfigIdentity = '';
   late final DeepLinkImportCoordinator _deepLinkImportCoordinator;
   AdBlockRuleSetStatus _adBlockStatus =
       const AdBlockRuleSetStatus.unavailable();
@@ -340,8 +344,12 @@ class _MeowClientState extends ConsumerState<MeowClient>
   String get _activeProfileId => _subscriptionCatalog.activeProfileId;
 
   String get _selectedProxyTag => _subscriptionCatalog.selectedProxyTag;
-  set _selectedProxyTag(String value) =>
-      ref.read(subscriptionCatalogProvider.notifier).selectProxy(value);
+  set _selectedProxyTag(String value) {
+    if (_selectedProxyTag != value && _publicIpControllerReady) {
+      _publicIpController.invalidateForSourceChange();
+    }
+    ref.read(subscriptionCatalogProvider.notifier).selectProxy(value);
+  }
 
   bool get _activeProfileRefreshInFlight =>
       _subscriptionCatalog.activeProfileRefreshing;
@@ -2144,7 +2152,17 @@ class _MeowClientState extends ConsumerState<MeowClient>
     _publicIpController = PublicIpController(
       sourceProvider: () =>
           ref.read(appSettingsProvider).controller.publicIpSource,
+      outboundProvider: () => _selectedProxyTag,
+      networkGenerationProvider: () => _networkInterfaceGeneration,
+      scopeProvider: () => (
+        _runtimeOperations.nativeRuntimeGeneration,
+        _publicIpConfigIdentity,
+        _activeProfileId,
+        _connected,
+        jsonEncode(SplayTreeMap<String, String>.of(_runtimeGroupSelections)),
+      ),
     );
+    _publicIpControllerReady = true;
     _singboxRuntime = ref.read(singboxRuntimeProvider);
     _appUpdateService = ref.read(appUpdateServiceProvider);
     _chinaRouteDataService = ref.read(chinaRouteDataServiceProvider);
@@ -7810,6 +7828,13 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   void _cacheLastStartedBuild(SingboxConfigBuildResult build) {
     _runtimeRecovery.cacheStartedBuild(build);
+    final content = build.configJson.isNotEmpty
+        ? build.configJson
+        : jsonEncode(build.plan.config);
+    _publicIpConfigIdentity = crypto.sha256
+        .convert(utf8.encode(content))
+        .toString();
+    if (_publicIpControllerReady) _publicIpController.synchronizeScope();
     final migration = _pendingCoreConfigMigration;
     if (migration != null) {
       _settings.coreConfigSchemaVersion =
@@ -7826,6 +7851,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
 
   void _clearLastStartedBuildCache() {
     _runtimeRecovery.clearBuildCache();
+    _publicIpConfigIdentity = '';
+    if (_publicIpControllerReady) _publicIpController.synchronizeScope();
   }
 
   SingboxConfigCoordinatorSnapshot _currentSingboxConfigSnapshot() {
@@ -8010,6 +8037,8 @@ class _MeowClientState extends ConsumerState<MeowClient>
     if (shouldSyncQuickSettingsTile) {
       unawaited(_syncQuickSettingsTileLabel());
     }
+    _singboxRuntime.updateRunningState(running);
+    _publicIpController.synchronizeScope();
     _scheduleVpnNotificationSync();
     if (hasError) {
       unawaited(_handleRuntimeError(error ?? '', wasRetryScheduled));
@@ -8035,6 +8064,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
           'networkGeneration=$networkGeneration selected=$_selectedProxyTag',
     );
     _networkInterfaceGeneration = networkGeneration;
+    _publicIpController.synchronizeScope();
     final usable =
         reason == 'default_interface' &&
         interfaceName != null &&
@@ -9216,6 +9246,7 @@ class _MeowClientState extends ConsumerState<MeowClient>
     if (result.shouldRebuildProxyCache) {
       _rebuildDerivedCaches();
     }
+    _publicIpController.synchronizeScope();
     unawaited(_syncQuickSettingsTileLabel());
     if (_connected) {
       final nextActiveOutboundTag = _currentResolvedActiveOutboundTag();

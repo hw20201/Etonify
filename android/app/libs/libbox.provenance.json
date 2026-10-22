@@ -1,11 +1,11 @@
 {
   "artifact": "libbox.aar",
-  "sha256": "0cfadcd8482f9f57fe005efa07de6ef6e9efe8472432ef3268f15289f7b475d7",
-  "source_commit": "f27b9dbcb570d49e32df06dc6fd8f0588d0db04e",
+  "sha256": "4d2442d191b394c12bf9b8e4009f996442b9fe1c90ade2c9eb6fdad344361fa5",
+  "source_commit": "5f8ccfec10e0d82b4bed9284300be427c5df2448",
   "source_version": "v1.15.0-alpha.10-etonify.3",
   "etonify_version": "v1.15.0-alpha.10-etonify.3",
   "upstream_commit": "c992297988288565a24a6d36e2cf4d77cb835fcd",
-  "go": "go version go1.27.1 linux/amd64",
+  "go": "go version go1.26.8 linux/amd64",
   "gomobile": "v0.1.13",
   "java": "openjdk 17.0.20.1 2026-08-18",
   "android_ndk": "r28",
@@ -18,5 +18,7 @@
   "sing_tun_repository": "https://github.com/yamixdev/sing-tun.git",
   "sing_tun_commit": "bb49d6fa49afd191a642debf8a3229fdc18639b0",
   "sing_tun_upstream_commit": "5c2edb183cc92eb190d41c04dedfa5519ca3e78c",
-  "sing_tun_module_version": "v0.9.7-0.20261009022811-5c2edb183cc9"
+  "sing_tun_module_version": "v0.9.7-0.20261009022811-5c2edb183cc9",
+  "source_repository": "https://github.com/hw20201/etonify-core.git",
+  "source_date_epoch": 1792445671
 }

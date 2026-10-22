@@ -1,200 +1,155 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:meow_client/features/home/public_ip_controller.dart';
+import 'package:meow_client/singbox/singbox_api.g.dart';
 
-Map<String, Object?> _ipQueryResponse() => {
-  'ip': '203.0.113.8',
-  'isp': {
-    'asn': 'AS64500',
-    'org': 'Example Organization',
-    'isp': 'Example Network',
-  },
-  'location': {
-    'country': 'Sweden',
-    'country_code': 'se',
-    'city': 'Stockholm',
-    'state': 'Stockholm County',
-  },
-};
+PublicIpLookupResponseMessage _response({
+  required PublicIpLookupRequestMessage request,
+  String? outbound,
+  int? network,
+  String plan = 'plan-1',
+  String core = 'core-1',
+}) => PublicIpLookupResponseMessage(
+  json: jsonEncode({
+    'ip': '203.0.113.8',
+    'isp': {
+      'asn': 'AS64500',
+      'org': 'Example Organization',
+      'isp': 'Example Network',
+    },
+    'location': {
+      'country': 'Sweden',
+      'country_code': 'se',
+      'city': 'Stockholm',
+      'state': 'Stockholm County',
+    },
+  }),
+  planId: plan,
+  coreGeneration: core,
+  networkGeneration: network ?? request.networkGeneration,
+  outboundTag: outbound ?? request.outboundTag,
+);
 
 void main() {
-  test(
-    'ipquery.io is queried over HTTPS and parses location information',
-    () async {
-      var requests = 0;
-      final lookup = PublicIpLookup(
-        clientFactory: () => MockClient((request) async {
-          requests++;
-          expect(request.followRedirects, isFalse);
-          expect(request.headers['Cache-Control'], 'no-cache');
-          expect(request.headers.containsKey('Authorization'), isFalse);
-          if (request.url.path == '/') {
-            expect(request.url.toString(), 'https://api.ipquery.io/');
-            expect(request.headers['Accept'], 'text/plain');
-            return http.Response('203.0.113.8\n', 200);
-          }
-          expect(request.url.scheme, 'https');
-          expect(request.url.host, 'api.ipquery.io');
-          expect(request.url.path, '/203.0.113.8');
-          expect(request.url.queryParameters['format'], 'json');
-          expect(request.headers['Accept'], 'application/json');
-          return http.Response(jsonEncode(_ipQueryResponse()), 200);
-        }),
-      );
-
-      final info = await lookup.load();
-      expect(requests, 2);
-      expect(info.ip, '203.0.113.8');
-      expect(info.countryCode, 'SE');
-      expect(info.country, 'Sweden');
-      expect(info.region, 'Stockholm County');
-      expect(info.city, 'Stockholm');
-      expect(info.organization, 'Example Organization');
-      expect(info.asn, 'AS64500');
-      expect(info.isp, 'Example Network');
-      expect(info.source, PublicIpSource.ipQuery);
-      lookup.cancel();
-    },
-  );
-
-  test('ip-api choice calls only its HTTP geolocation endpoint', () async {
-    var requests = 0;
+  testWidgets('whole app deadline cancels only the pending core request', (
+    tester,
+  ) async {
+    final pending = Completer<PublicIpLookupResponseMessage>();
+    String? requestId;
+    String? cancelledId;
     final lookup = PublicIpLookup(
-      clientFactory: () => MockClient((request) async {
-        requests++;
-        expect(request.url.scheme, 'http');
-        expect(request.url.host, 'ip-api.com');
-        expect(request.url.path, '/json/');
-        expect(request.url.queryParameters['fields'], contains('countryCode'));
-        expect(request.url.queryParameters['fields'], isNot(contains('proxy')));
-        expect(request.headers['Accept'], 'application/json');
-        return http.Response(
-          jsonEncode({
-            'status': 'success',
-            'query': '2001:db8::8',
-            'country': 'Germany',
-            'countryCode': 'DE',
-            'regionName': 'Berlin',
-            'city': 'Berlin',
-            'isp': 'Example ISP',
-            'org': 'Example Hosting GmbH',
-            'as': 'AS64501 Example Hosting GmbH',
-          }),
-          200,
-        );
-      }),
+      lookup: (request) {
+        requestId = request.requestId;
+        return pending.future;
+      },
+      cancel: (id) async {
+        cancelledId = id;
+      },
     );
-
-    final info = await lookup.load(source: PublicIpSource.ipApi);
-    expect(requests, 1);
-    expect(info.ip, '2001:db8::8');
-    expect(info.countryCode, 'DE');
-    expect(info.country, 'Germany');
-    expect(info.city, 'Berlin');
-    expect(info.organization, 'Example Hosting GmbH');
-    expect(info.asn, 'AS64501');
-    expect(info.source, PublicIpSource.ipApi);
-    lookup.cancel();
-  });
-
-  test('ipwho.is choice uses HTTPS and extracts country and ASN', () async {
-    var requests = 0;
-    final lookup = PublicIpLookup(
-      clientFactory: () => MockClient((request) async {
-        requests++;
-        expect(request.url.toString(), 'https://ipwho.is/');
-        expect(request.url.scheme, 'https');
-        return http.Response(
-          jsonEncode({
-            'success': true,
-            'ip': '198.51.100.7',
-            'country': 'Japan',
-            'country_code': 'JP',
-            'region': 'Tokyo',
-            'city': 'Tokyo',
-            'connection': {
-              'asn': 64502,
-              'org': 'Example KK',
-              'isp': 'Example ISP',
-            },
-          }),
-          200,
-        );
-      }),
-    );
-
-    final info = await lookup.load(source: PublicIpSource.ipWho);
-    expect(requests, 1);
-    expect(info.ip, '198.51.100.7');
-    expect(info.countryCode, 'JP');
-    expect(info.country, 'Japan');
-    expect(info.city, 'Tokyo');
-    expect(info.asn, 'AS64502');
-    expect(info.source, PublicIpSource.ipWho);
-    lookup.cancel();
+    final operation = lookup.load(outboundTag: 'leaf-a');
+    final assertion = expectLater(operation, throwsA(isA<TimeoutException>()));
+    await tester.pump(const Duration(seconds: 10));
+    await assertion;
+    expect(cancelledId, requestId);
   });
 
   test(
-    'a failed chosen provider is not silently replaced by another site',
+    'uses exactly the requested provider, outbound and network identity',
     () async {
-      var requests = 0;
+      PublicIpLookupRequestMessage? sent;
       final lookup = PublicIpLookup(
-        clientFactory: () => MockClient((request) async {
-          requests++;
-          expect(request.url.host, 'api.ipquery.io');
-          return http.Response('unavailable', 503);
-        }),
+        lookup: (request) async {
+          sent = request;
+          return _response(request: request);
+        },
       );
-
-      await expectLater(lookup.load(), throwsA(isA<HttpException>()));
-      expect(requests, 1);
-      lookup.cancel();
+      final result = await lookup.load(
+        source: PublicIpSource.ipQuery,
+        outboundTag: 'leaf-a',
+        networkGeneration: 7,
+      );
+      expect(sent!.provider, 'ipQuery');
+      expect(sent!.outboundTag, 'leaf-a');
+      expect(sent!.networkGeneration, 7);
+      expect(sent!.timeoutMillis, 10000);
+      expect(result.ip, '203.0.113.8');
+      expect(result.countryCode, 'SE');
+      expect(result.identity!.planId, 'plan-1');
+      expect(result.identity!.coreGeneration, 'core-1');
+      expect(result.identity!.source, PublicIpSource.ipQuery);
+      expect(result.identity!.outboundTag, 'leaf-a');
+      expect(result.identity!.networkGeneration, 7);
     },
   );
 
-  test(
-    'ip-api rate limit response prevents immediate repeated requests',
-    () async {
-      var requests = 0;
-      final lookup = PublicIpLookup(
-        clientFactory: () => MockClient((request) async {
-          requests++;
-          return http.Response(
-            'rate limited',
-            429,
-            headers: const {'x-rl': '0', 'x-ttl': '60'},
-          );
-        }),
-      );
+  test('fails closed if selected outbound is unavailable', () async {
+    final lookup = PublicIpLookup(
+      lookup: (_) async => throw StateError('should not run'),
+    );
+    await expectLater(lookup.load(), throwsStateError);
+  });
 
-      await expectLater(
-        lookup.load(source: PublicIpSource.ipApi),
-        throwsA(isA<HttpException>()),
+  test('rejects stale or incomplete response identity', () async {
+    final lookup = PublicIpLookup(
+      lookup: (request) async => _response(request: request, outbound: 'other'),
+    );
+    await expectLater(
+      lookup.load(outboundTag: 'leaf-a', networkGeneration: 7),
+      throwsStateError,
+    );
+    final incomplete = PublicIpLookup(
+      lookup: (request) async =>
+          _response(request: request, plan: '', core: ''),
+    );
+    await expectLater(
+      incomplete.load(outboundTag: 'leaf-a', networkGeneration: 7),
+      throwsStateError,
+    );
+  });
+
+  test('cancel sends one matching request id and drops late result', () async {
+    String? cancelled;
+    final pending = Completer<PublicIpLookupResponseMessage>();
+    final lookup = PublicIpLookup(
+      lookup: (_) => pending.future,
+      cancel: (id) async {
+        cancelled = id;
+      },
+    );
+    final operation = lookup.load(outboundTag: 'leaf-a', networkGeneration: 7);
+    lookup.cancel();
+    expect(cancelled, isNotNull);
+    pending.complete(
+      _response(
+        request: PublicIpLookupRequestMessage(
+          requestId: cancelled!,
+          outboundTag: 'leaf-a',
+          provider: 'ipQuery',
+          networkGeneration: 7,
+          timeoutMillis: 10000,
+        ),
+      ),
+    );
+    await expectLater(operation, throwsStateError);
+  });
+
+  test(
+    'core error never changes provider or falls back to another request',
+    () async {
+      final sent = <String>[];
+      final lookup = PublicIpLookup(
+        lookup: (request) async {
+          sent.add(request.provider);
+          throw StateError('unsupported fixed DNS dependency');
+        },
       );
       await expectLater(
-        lookup.load(source: PublicIpSource.ipApi),
-        throwsA(isA<HttpException>()),
+        lookup.load(source: PublicIpSource.ipWho, outboundTag: 'leaf-a'),
+        throwsStateError,
       );
-      expect(requests, 1);
-      lookup.cancel();
+      expect(sent, ['ipWho']);
     },
   );
-
-  test('invalid public IP text is rejected before a details request', () async {
-    var requests = 0;
-    final lookup = PublicIpLookup(
-      clientFactory: () => MockClient((request) async {
-        requests++;
-        return http.Response('not-an-ip', 200);
-      }),
-    );
-
-    await expectLater(lookup.load(), throwsFormatException);
-    expect(requests, 1);
-    lookup.cancel();
-  });
 }

@@ -402,6 +402,112 @@ data class UrlTestRequestMessage (
 }
 
 /** Generated class from Pigeon that represents data sent in messages. */
+data class PublicIpLookupRequestMessage (
+  val requestId: String,
+  val outboundTag: String,
+  val provider: String,
+  val networkGeneration: Long,
+  val timeoutMillis: Long
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PublicIpLookupRequestMessage {
+      val requestId = pigeonVar_list[0] as String
+      val outboundTag = pigeonVar_list[1] as String
+      val provider = pigeonVar_list[2] as String
+      val networkGeneration = pigeonVar_list[3] as Long
+      val timeoutMillis = pigeonVar_list[4] as Long
+      return PublicIpLookupRequestMessage(requestId, outboundTag, provider, networkGeneration, timeoutMillis)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      requestId,
+      outboundTag,
+      provider,
+      networkGeneration,
+      timeoutMillis,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PublicIpLookupRequestMessage
+    return SingboxApiPigeonUtils.deepEquals(this.requestId, other.requestId) && SingboxApiPigeonUtils.deepEquals(this.outboundTag, other.outboundTag) && SingboxApiPigeonUtils.deepEquals(this.provider, other.provider) && SingboxApiPigeonUtils.deepEquals(this.networkGeneration, other.networkGeneration) && SingboxApiPigeonUtils.deepEquals(this.timeoutMillis, other.timeoutMillis)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.requestId)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.outboundTag)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.provider)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.networkGeneration)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.timeoutMillis)
+    return result
+  }
+  override fun toString(): String {
+    return "PublicIpLookupRequestMessage(requestId=$requestId, outboundTag=$outboundTag, provider=$provider, networkGeneration=$networkGeneration, timeoutMillis=$timeoutMillis)"
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class PublicIpLookupResponseMessage (
+  val json: String,
+  val planId: String,
+  val coreGeneration: String,
+  val networkGeneration: Long,
+  val outboundTag: String
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PublicIpLookupResponseMessage {
+      val json = pigeonVar_list[0] as String
+      val planId = pigeonVar_list[1] as String
+      val coreGeneration = pigeonVar_list[2] as String
+      val networkGeneration = pigeonVar_list[3] as Long
+      val outboundTag = pigeonVar_list[4] as String
+      return PublicIpLookupResponseMessage(json, planId, coreGeneration, networkGeneration, outboundTag)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      json,
+      planId,
+      coreGeneration,
+      networkGeneration,
+      outboundTag,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PublicIpLookupResponseMessage
+    return SingboxApiPigeonUtils.deepEquals(this.json, other.json) && SingboxApiPigeonUtils.deepEquals(this.planId, other.planId) && SingboxApiPigeonUtils.deepEquals(this.coreGeneration, other.coreGeneration) && SingboxApiPigeonUtils.deepEquals(this.networkGeneration, other.networkGeneration) && SingboxApiPigeonUtils.deepEquals(this.outboundTag, other.outboundTag)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.json)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.planId)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.coreGeneration)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.networkGeneration)
+    result = 31 * result + SingboxApiPigeonUtils.deepHash(this.outboundTag)
+    return result
+  }
+  override fun toString(): String {
+    return "PublicIpLookupResponseMessage(json=$json, planId=$planId, coreGeneration=$coreGeneration, networkGeneration=$networkGeneration, outboundTag=$outboundTag)"
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
 data class VpnNotificationPresentationMessage (
   val detailed: Boolean,
   val trafficDisplayMode: String,
@@ -957,45 +1063,55 @@ private open class SingboxApiPigeonCodec : StandardMessageCodec() {
       }
       132.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          VpnNotificationPresentationMessage.fromList(it)
+          PublicIpLookupRequestMessage.fromList(it)
         }
       }
       133.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          HttpHeaderMessage.fromList(it)
+          PublicIpLookupResponseMessage.fromList(it)
         }
       }
       134.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          UnderlyingNetworkFetchRequestMessage.fromList(it)
+          VpnNotificationPresentationMessage.fromList(it)
         }
       }
       135.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          UnderlyingNetworkFetchResponseMessage.fromList(it)
+          HttpHeaderMessage.fromList(it)
         }
       }
       136.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          OutboundFetchRequestMessage.fromList(it)
+          UnderlyingNetworkFetchRequestMessage.fromList(it)
         }
       }
       137.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          UnderlyingNetworkDownloadRequestMessage.fromList(it)
+          UnderlyingNetworkFetchResponseMessage.fromList(it)
         }
       }
       138.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          UnderlyingNetworkDownloadResponseMessage.fromList(it)
+          OutboundFetchRequestMessage.fromList(it)
         }
       }
       139.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          ApkInspectionMessage.fromList(it)
+          UnderlyingNetworkDownloadRequestMessage.fromList(it)
         }
       }
       140.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          UnderlyingNetworkDownloadResponseMessage.fromList(it)
+        }
+      }
+      141.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          ApkInspectionMessage.fromList(it)
+        }
+      }
+      142.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           InstalledAppMessage.fromList(it)
         }
@@ -1017,40 +1133,48 @@ private open class SingboxApiPigeonCodec : StandardMessageCodec() {
         stream.write(131)
         writeValue(stream, value.toList())
       }
-      is VpnNotificationPresentationMessage -> {
+      is PublicIpLookupRequestMessage -> {
         stream.write(132)
         writeValue(stream, value.toList())
       }
-      is HttpHeaderMessage -> {
+      is PublicIpLookupResponseMessage -> {
         stream.write(133)
         writeValue(stream, value.toList())
       }
-      is UnderlyingNetworkFetchRequestMessage -> {
+      is VpnNotificationPresentationMessage -> {
         stream.write(134)
         writeValue(stream, value.toList())
       }
-      is UnderlyingNetworkFetchResponseMessage -> {
+      is HttpHeaderMessage -> {
         stream.write(135)
         writeValue(stream, value.toList())
       }
-      is OutboundFetchRequestMessage -> {
+      is UnderlyingNetworkFetchRequestMessage -> {
         stream.write(136)
         writeValue(stream, value.toList())
       }
-      is UnderlyingNetworkDownloadRequestMessage -> {
+      is UnderlyingNetworkFetchResponseMessage -> {
         stream.write(137)
         writeValue(stream, value.toList())
       }
-      is UnderlyingNetworkDownloadResponseMessage -> {
+      is OutboundFetchRequestMessage -> {
         stream.write(138)
         writeValue(stream, value.toList())
       }
-      is ApkInspectionMessage -> {
+      is UnderlyingNetworkDownloadRequestMessage -> {
         stream.write(139)
         writeValue(stream, value.toList())
       }
-      is InstalledAppMessage -> {
+      is UnderlyingNetworkDownloadResponseMessage -> {
         stream.write(140)
+        writeValue(stream, value.toList())
+      }
+      is ApkInspectionMessage -> {
+        stream.write(141)
+        writeValue(stream, value.toList())
+      }
+      is InstalledAppMessage -> {
+        stream.write(142)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1084,6 +1208,8 @@ interface SingboxHostApi {
   fun cancelUrlTest(groupTag: String, targetOutboundTag: String, callback: (Result<Unit>) -> Unit)
   fun status(callback: (Result<Map<String?, Any?>>) -> Unit)
   fun lookupOutboundExternalInfo(outboundTag: String, callback: (Result<Map<String?, Any?>>) -> Unit)
+  fun lookupPublicIp(request: PublicIpLookupRequestMessage, callback: (Result<PublicIpLookupResponseMessage>) -> Unit)
+  fun cancelPublicIp(requestId: String, callback: (Result<Unit>) -> Unit)
   fun getNetworkInterfaceState(callback: (Result<NetworkInterfaceStateMessage>) -> Unit)
   fun exportLogs(content: String, suggestedName: String, callback: (Result<String?>) -> Unit)
   fun canInstallApks(callback: (Result<Boolean>) -> Unit)
@@ -1531,6 +1657,45 @@ interface SingboxHostApi {
               } else {
                 val data = result.getOrNull()
                 reply.reply(SingboxApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.meow_client.SingboxHostApi.lookupPublicIp$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestArg = args[0] as PublicIpLookupRequestMessage
+            api.lookupPublicIp(requestArg) { result: Result<PublicIpLookupResponseMessage> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(SingboxApiPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(SingboxApiPigeonUtils.wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.meow_client.SingboxHostApi.cancelPublicIp$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val requestIdArg = args[0] as String
+            api.cancelPublicIp(requestIdArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(SingboxApiPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(SingboxApiPigeonUtils.wrapResult(null))
               }
             }
           }

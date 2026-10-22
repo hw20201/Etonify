@@ -100,7 +100,32 @@ class SingboxRuntime {
   // call replaces that handler, and cancelling it disconnects other consumers.
   late final Stream<Map<String, dynamic>> events = _events
       .receiveBroadcastStream()
-      .map((event) => Map<String, dynamic>.from(event as Map));
+      .map((event) => Map<String, dynamic>.from(event as Map))
+      .map((event) {
+        if (event['type'] == 'state' && event['running'] is bool) {
+          _lastRuntimeRunning = event['running'] as bool;
+        }
+        return event;
+      });
+
+  bool get isRunning => _lastRuntimeRunning;
+  bool _lastRuntimeRunning = false;
+
+  Future<pigeon.PublicIpLookupResponseMessage> lookupPublicIp(
+    pigeon.PublicIpLookupRequestMessage request,
+  ) {
+    if (!Platform.isAndroid || !_lastRuntimeRunning) {
+      throw StateError('Public IP lookup requires a running Android core');
+    }
+    return _hostApi.lookupPublicIp(request);
+  }
+
+  Future<void> cancelPublicIp(String requestId) {
+    if (!Platform.isAndroid) return Future<void>.value();
+    return _hostApi.cancelPublicIp(requestId);
+  }
+
+  void updateRunningState(bool running) => _lastRuntimeRunning = running;
 
   Map<String, dynamic> _normalizeMap(Object? value) {
     if (value is! Map) {
