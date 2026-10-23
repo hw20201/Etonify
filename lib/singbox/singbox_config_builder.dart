@@ -232,6 +232,20 @@ class SingboxConfigBuilder {
         adBlockEnabled && _validRuleSetPath(adBlockBlockRuleSetPath);
     final adBlockAllowActive =
         adBlockActive && _validRuleSetPath(adBlockAllowRuleSetPath);
+    // An adblock exception only exempts a domain from rejection. Routing it
+    // immediately to the default outbound/resolver would skip China and custom
+    // policy (and FakeIP), potentially sending domestic CDN traffic via proxy.
+    final adBlockRejectMatch = <String, Object>{
+      if (adBlockAllowActive) ...{
+        'type': 'logical',
+        'mode': 'and',
+        'rules': [
+          {'rule_set': 'adblock-block'},
+          {'rule_set': 'adblock-allow', 'invert': true},
+        ],
+      } else
+        'rule_set': 'adblock-block',
+    };
     final normalizedSelectedProxyTag = normalizeProxySelectionTag(
       selectedProxyTag,
     );
@@ -307,15 +321,9 @@ class SingboxConfigBuilder {
               adBlockActive ||
               fakeIpActive)
             'rules': [
-              if (adBlockAllowActive)
-                {
-                  'rule_set': 'adblock-allow',
-                  'action': 'route',
-                  'server': dnsFinal,
-                },
               if (adBlockActive)
                 {
-                  'rule_set': 'adblock-block',
+                  ...adBlockRejectMatch,
                   'action': 'reject',
                   'method': 'default',
                 },
@@ -532,10 +540,7 @@ class SingboxConfigBuilder {
                 {'rule_set': tag, 'outbound': 'select'},
             if (rulesModeActive && bypassLocalNetwork)
               {'ip_is_private': true, 'outbound': 'direct'},
-            if (adBlockAllowActive)
-              {'rule_set': 'adblock-allow', 'outbound': routeFinal},
-            if (adBlockActive)
-              {'rule_set': 'adblock-block', 'action': 'reject'},
+            if (adBlockActive) {...adBlockRejectMatch, 'action': 'reject'},
             if (chinaRouteDataActive)
               {'rule_set': 'cn-geosite-cn', 'outbound': 'direct'},
             if (chinaRouteDataActive)

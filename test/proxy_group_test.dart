@@ -3275,6 +3275,126 @@ void main() {
     expect(tunInbound.containsKey('exclude_package'), isFalse);
   });
 
+  for (final mode in TrafficRoutingMode.values) {
+    for (final hasProxies in [true, false]) {
+      test(
+        'adblock allow only exempts rejection: ${mode.name}, proxy=$hasProxies',
+        () {
+          final subscription = Subscription(
+            id: 'allow-fallthrough',
+            name: 'Allow fallthrough',
+            url: '',
+            outbounds: hasProxies
+                ? const [
+                    Outbound(
+                      tag: 'node',
+                      name: 'Node',
+                      config: {
+                        'type': 'socks',
+                        'server': 'node.example',
+                        'server_port': 1080,
+                      },
+                    ),
+                  ]
+                : const [],
+          );
+          final config = _defaultBuilder(
+            subscription,
+            routingMode: mode,
+            vpnInboundEnabled: true,
+            experimentalFakeIpEnabled: true,
+            chinaGeositePath: _testRuleSetPath('geosite-cn.srs'),
+            chinaGeoipPath: _testRuleSetPath('geoip-cn.srs'),
+            adBlockEnabled: true,
+            adBlockBlockRuleSetPath: _testRuleSetPath('adblock-block.srs'),
+            adBlockAllowRuleSetPath: _testRuleSetPath('adblock-allow.srs'),
+            customRoutingRules: [
+              CustomRoutingRule.create(
+                type: CustomRouteRuleType.domain,
+                value: 'api.bilibili.com',
+                action: CustomRouteAction.direct,
+              ),
+            ],
+          ).build();
+          final dns = config['dns'] as Map;
+          final route = config['route'] as Map;
+          for (final section in [dns, route]) {
+            final rules = (section['rules'] as List)
+                .cast<Map<dynamic, dynamic>>();
+            // An allow list must not select a DNS server or outbound. In rules
+            // mode it must fall through to custom/China policy; in global mode
+            // it must retain the global default, without an implicit direct rule.
+            expect(
+              rules.where((rule) => rule['rule_set'] == 'adblock-allow'),
+              isEmpty,
+            );
+            final reject = rules.singleWhere(
+              (rule) => rule['action'] == 'reject' && rule['method'] != 'drop',
+            );
+            expect(reject['type'], 'logical');
+            expect(reject['mode'], 'and');
+            expect(reject['rules'], [
+              {'rule_set': 'adblock-block'},
+              {'rule_set': 'adblock-allow', 'invert': true},
+            ]);
+            expect(reject.containsKey('server'), isFalse);
+            expect(reject.containsKey('outbound'), isFalse);
+            final customIndex = rules.indexWhere(
+              (rule) =>
+                  (rule['domain_suffix'] as List?)?.contains(
+                    'api.bilibili.com',
+                  ) ==
+                  true,
+            );
+            final chinaIndex = rules.indexWhere(
+              (rule) => rule['rule_set'] == 'cn-geosite-cn',
+            );
+            if (mode == TrafficRoutingMode.rules) {
+              expect(customIndex, greaterThanOrEqualTo(0));
+              expect(chinaIndex, greaterThan(customIndex));
+              final key = identical(section, dns) ? 'server' : 'outbound';
+              expect(
+                rules[customIndex][key],
+                identical(section, dns) ? 'dns-direct' : 'direct',
+              );
+              expect(
+                rules[chinaIndex][key],
+                identical(section, dns) ? 'dns-direct' : 'direct',
+              );
+            } else {
+              expect(customIndex, -1);
+              expect(chinaIndex, -1);
+            }
+          }
+          expect(route['final'], hasProxies ? 'select' : 'direct');
+          expect(dns['final'], hasProxies ? 'dns-remote' : 'dns-direct');
+          expect((dns['rules'] as List).last['server'], 'dns-fakeip');
+        },
+      );
+    }
+  }
+
+  test('adblock without an allow list keeps a plain rejection rule', () {
+    const subscription = Subscription(
+      id: 'block-only',
+      name: 'Block only',
+      url: '',
+      outbounds: [],
+    );
+    final config = _defaultBuilder(
+      subscription,
+      adBlockEnabled: true,
+      adBlockBlockRuleSetPath: _testRuleSetPath('adblock-block.srs'),
+    ).build();
+    for (final section in [config['dns'] as Map, config['route'] as Map]) {
+      final reject = (section['rules'] as List)
+          .cast<Map<dynamic, dynamic>>()
+          .singleWhere((rule) => rule['action'] == 'reject');
+      expect(reject['rule_set'], 'adblock-block');
+      expect(reject.containsKey('type'), isFalse);
+    }
+  });
+
   test('split, local, adblock and China route rules keep stable priority', () {
     const subscription = Subscription(
       id: 'route-priority',
@@ -3312,7 +3432,7 @@ void main() {
       (rule) => rule.containsKey('ip_is_private'),
     );
     final adBlockIndex = routeRules.indexWhere(
-      (rule) => rule['rule_set'] == 'adblock-block',
+      (rule) => rule['action'] == 'reject' && rule['type'] == 'logical',
     );
     final chinaDomainIndex = routeRules.indexWhere(
       (rule) => rule['rule_set'] == 'cn-geosite-cn',
